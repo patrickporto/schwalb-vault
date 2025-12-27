@@ -1,6 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { joinRoom, selfId } from 'trystero';
+  import { _ } from 'svelte-i18n'
+
 
   // Configuração da sala (usando tracker público de BitTorrent por padrão)
   const roomConfig = { appId: 'weird-wizard-vault' };
@@ -77,7 +79,7 @@
       on:keydown={e => e.key === 'Enter' && enviar()}
     />
     <button class="bg-blue-600 text-white px-4 rounded" on:click={enviar}>
-      Enviar
+      {$_('chat.send')}
     </button>
   </div>
 </main>
