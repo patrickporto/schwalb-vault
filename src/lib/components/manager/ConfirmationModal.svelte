@@ -41,7 +41,7 @@
         <p class="text-slate-400 mb-6">{message}</p>
         <div class="flex gap-3">
             <button onclick={onCancel} class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded transition-colors">{cancelText}</button>
-            <button onclick={onConfirm} class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded transition-colors">{confirmText}</button>
+            <button onclick={onConfirm} class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded transition-colors shadow-lg shadow-emerald-900/20">{confirmText}</button>
         </div>
     </div>
 </div>

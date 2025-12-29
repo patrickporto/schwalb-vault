@@ -2,7 +2,7 @@
     import { page } from '$app/stores';
     import { liveCharacters } from '$lib/stores/live';
     import { character } from '$lib/stores/characterStore';
-    import { Users, Check, Wifi } from 'lucide-svelte';
+    import { Users, Check, Wifi, AlertTriangle } from 'lucide-svelte';
     import { goto } from '$app/navigation';
     import { joinCampaignRoom, isGmOnline } from '$lib/logic/sync';
     import { onMount } from 'svelte';
@@ -12,6 +12,9 @@
     // Get campaign info from the character store which is updated by the getCampaign sync action
     let campaignName = $derived($character.campaignName || 'Buscando campanha...');
     let gmName = $derived($character.gmName || '...');
+
+    // Filter out characters that are already in a campaign
+    let availableCharacters = $derived($liveCharacters.filter(c => !c.campaignId));
 
     let selectedCharId = $state<string | null>(null);
     let showConfirm = $state(false);
@@ -24,6 +27,14 @@
 
     function handleJoin() {
         if (!selectedCharId || !campaignId) return;
+        
+        // Double-check that the character is not already in a campaign
+        const char = $liveCharacters.find(c => c.id === selectedCharId);
+        if (char?.campaignId) {
+            alert('Este personagem já está em uma campanha!');
+            return;
+        }
+        
         showConfirm = true;
     }
 
@@ -32,6 +43,13 @@
 
         const char = $liveCharacters.find(c => c.id === selectedCharId);
         if (char) {
+            // Final check before joining
+            if (char.campaignId) {
+                alert('Este personagem já está em uma campanha!');
+                showConfirm = false;
+                return;
+            }
+            
             import('$lib/db').then(({ charactersMap }) => {
                 charactersMap.set(selectedCharId!, {
                     ...char,
@@ -70,7 +88,7 @@
             <!-- svelte-ignore a11y_label_has_associated_control -->
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Escolha seu Personagem</label>
             <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-                {#each $liveCharacters as char}
+                {#each availableCharacters as char}
                     <button 
                         onclick={() => selectedCharId = char.id}
                         class="w-full flex items-center gap-3 p-3 rounded-xl border transition-all {selectedCharId === char.id ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'}"
@@ -87,10 +105,18 @@
                         {/if}
                     </button>
                 {/each}
-                {#if $liveCharacters.length === 0}
-                    <div class="text-center py-8 text-slate-600 italic text-sm">
-                        Nenhum personagem encontrado.<br/>
-                        Crie um personagem primeiro!
+                {#if availableCharacters.length === 0}
+                    <div class="text-center py-8 text-slate-600 italic text-sm space-y-2">
+                        {#if $liveCharacters.length === 0}
+                            <div>Nenhum personagem encontrado.</div>
+                            <div>Crie um personagem primeiro!</div>
+                        {:else}
+                            <div class="flex flex-col items-center gap-2">
+                                <AlertTriangle size={24} class="text-amber-500" />
+                                <div class="text-amber-500 font-bold">Todos os seus personagens já estão em campanhas.</div>
+                                <div class="text-xs text-slate-500">Crie um novo personagem ou saia de uma campanha existente.</div>
+                            </div>
+                        {/if}
                     </div>
                 {/if}
             </div>
