@@ -20,8 +20,9 @@
     // Derived values
     let isPlayer = $derived(entity.type === 'player');
     let damage = $derived(entity.damage || 0);
-    let maxHealth = $derived(entity.health || entity.normalHealth || 10);
-    // Current health is now independent mostly
+    // normalHealth is the base max health; health is effectiveMaxHealth with modifiers
+    let maxHealth = $derived(entity.normalHealth || entity.health || 10);
+    // Current health is the actual current cap (can be reduced from normal)
     let currentHealth = $derived(entity.currentHealth ?? maxHealth);
     
     // In Weird Wizard, you are incapacitated if Damage >= Health

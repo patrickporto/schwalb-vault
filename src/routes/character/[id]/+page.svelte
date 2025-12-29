@@ -116,12 +116,14 @@
         // Load or Initialize
         if (charactersMap.has(id)) {
             const data = charactersMap.get(id);
-            character.set({ ...defaultCharacter, ...data });
+            // Include id in character store for sync identification
+            character.set({ ...defaultCharacter, ...data, id });
             if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
             if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
             if (data.damage !== undefined) damage.set(data.damage);
         } else {
             const newChar = JSON.parse(JSON.stringify(defaultCharacter));
+            newChar.id = id; // Include id for sync
             newChar.normalHealth = 24;
             newChar.currentHealth = 24;
             newChar.damage = 0;

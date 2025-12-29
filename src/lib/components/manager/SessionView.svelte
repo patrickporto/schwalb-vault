@@ -64,16 +64,28 @@ import { joinCampaignRoom, syncCombat, syncCampaign } from '$lib/logic/sync';
     let campaignMembers = $derived(campaign?.members || []);
     
     // Players present in the campaign - includes those in the session roster and anyone who joined via invite
-    // IMPORTANT: Merge local data with campaignMembers to preserve lastUpdate for online status
+    // IMPORTANT: Member data (synced via WebRTC) takes priority for real-time fields like health/damage
     let players = $derived((() => {
         const allMemberIds = Array.from(new Set([...roster, ...campaignMembers.map(m => m.id)]));
         return allMemberIds.map(pid => {
             const local = $liveCharacters.find(c => c.id === pid);
             const member = campaignMembers.find(m => m.id === pid);
             
-            // Merge: local data takes precedence for character info, but include lastUpdate from member
+            // Merge: local provides base info, member data overrides with synced real-time values
             if (local && member) {
-                return { ...local, lastUpdate: member.lastUpdate };
+                return { 
+                    ...local, 
+                    // Synced fields from member take priority
+                    damage: member.damage ?? local.damage,
+                    currentHealth: member.currentHealth ?? local.currentHealth,
+                    normalHealth: member.normalHealth ?? local.normalHealth,
+                    health: member.health ?? local.health,
+                    defense: member.defense ?? local.defense,
+                    afflictions: member.afflictions ?? local.afflictions,
+                    initiative: member.initiative ?? local.initiative,
+                    acted: member.acted ?? local.acted,
+                    lastUpdate: member.lastUpdate 
+                };
             }
             if (local) return local;
             return member;
