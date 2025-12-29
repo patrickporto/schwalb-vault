@@ -9,7 +9,7 @@
     import { flip } from 'svelte/animate';
     import { calculateDiceRoll } from '$lib/logic/dice';
 import { onMount } from 'svelte';
-import { joinCampaignRoom, syncCombat } from '$lib/logic/sync';
+import { joinCampaignRoom, syncCombat, syncCampaign } from '$lib/logic/sync';
 
     let { campaign } = $props<{ campaign: any }>();
 
@@ -48,12 +48,20 @@ import { joinCampaignRoom, syncCombat } from '$lib/logic/sync';
     let roster = $derived(campaign?.sessionRoster || []);
     let combat = $derived(campaign?.combat || defaultCombat);
     let activeEnemies = $derived(campaign?.activeEnemies || []);
+    let campaignMembers = $derived(campaign?.members || []);
     
-    // Players present in the roster
-    let players = $derived(roster.map(pid => $liveCharacters.find(c => c.id === pid)).filter(Boolean));
+    // Players present in the campaign - includes those in the session roster and anyone who joined via invite
+    let players = $derived((() => {
+        const allMemberIds = Array.from(new Set([...roster, ...campaignMembers.map(m => m.id)]));
+        return allMemberIds.map(pid => {
+            const local = $liveCharacters.find(c => c.id === pid);
+            if (local) return local;
+            return campaignMembers.find(m => m.id === pid);
+        }).filter(Boolean);
+    })());
     
-    // Available characters (not in roster)
-    let availableCharacters = $derived($liveCharacters.filter(c => !roster.includes(c.id)));
+    // Available characters to manually add (local characters not already in roster/members)
+    let availableCharacters = $derived($liveCharacters.filter(c => !roster.includes(c.id) && !campaignMembers.some(m => m.id === c.id)));
 
     // Helpers to update Campaign in DB - Using Map directly to avoid stale prop issues
     function updateCampaign(updates: any) {
@@ -65,6 +73,11 @@ import { joinCampaignRoom, syncCombat } from '$lib/logic/sync';
         // Sync combat state if it changed
         if (updates.combat) {
             syncCombat(campaign.id, updates.combat);
+        }
+
+        // Sync campaign info if name or gmName changed
+        if (updates.name || updates.gmName) {
+            syncCampaign(campaign.id, { name: updated.name, gmName: updated.gmName });
         }
     }
 

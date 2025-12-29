@@ -27,11 +27,20 @@
 
     let expanded = $state(false);
 
+    import { syncCharacter } from '$lib/logic/sync';
+
     // Helper for player updates
     function updatePlayer(updates: any) {
         if (entity.type !== 'player') return;
         const current = charactersMap.get(entity.id) || entity;
-        charactersMap.set(entity.id, { ...current, ...updates });
+        const updated = { ...current, ...updates };
+        charactersMap.set(entity.id, updated);
+        
+        // Sync to the room if it's a player character
+        syncCharacter({
+            id: entity.id,
+            ...updated
+        });
     }
 
     function handleDamageInput(e: any) {

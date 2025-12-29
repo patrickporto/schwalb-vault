@@ -1,11 +1,16 @@
-<script>
-    import { activeTab, modalState, rollHistory, character, defaultCharacter, isHistoryOpen, normalHealth, currentHealth, damage } from '$lib/stores/characterStore';
+<script lang="ts">
+    import { 
+        activeTab, modalState, rollHistory, character, defaultCharacter, 
+        isHistoryOpen, normalHealth, currentHealth, damage, totalDefense,
+        effectiveMaxHealth, characterActions
+    } from '$lib/stores/characterStore';
     
     // Yjs / DB
     import { page } from '$app/stores';
     import { charactersMap, waitForSync } from '$lib/db';
     import { get } from 'svelte/store';
     import { onDestroy } from 'svelte';
+    import { syncCharacter, joinCampaignRoom } from '$lib/logic/sync';
 
     // Components
     import CharacterHeader from '$lib/components/character/CharacterHeader.svelte';
@@ -26,33 +31,52 @@
     import InventoryTab from '$lib/components/character/InventoryTab.svelte';
     import NotesTab from '$lib/components/character/NotesTab.svelte';
     import { ChevronRight, Clover, Users } from 'lucide-svelte';
-    // goto removed as it moved to CharacterHeader.svelte
 
-    let loaded = false;
-    let currentId = null;
+    let loaded = $state(false);
+    let currentId = $state<string | null>(null);
     
-    // Reactive saving for all stores
-    $: if (loaded && currentId) {
-        saveCharacterData(currentId, $character, $normalHealth, $currentHealth, $damage);
-    }
+    // Auto-save and Auto-sync effect
+    $effect(() => {
+        if (!loaded || !currentId) return;
 
-    function saveCharacterData(id, charData, nh, ch, dmg) {
-        // Debounce or just set. Yjs is fast enough for local?
-        // To avoid loops, we rely on Yjs or valid changes.
-        // We accumulate data into one object.
+        const charData = $character;
+        const nh = $normalHealth;
+        const ch = $currentHealth;
+        const dmg = $damage;
+        const def = $totalDefense;
+        const maxH = $effectiveMaxHealth;
+
+        // Save to local Yjs
         const toSave = { ...charData, normalHealth: nh, currentHealth: ch, damage: dmg };
-        charactersMap.set(id, toSave);
-    }
+        charactersMap.set(currentId, toSave);
 
-    // Reactive statement to handle ID changes
-    $: if ($page.params.id) {
-        handleIdChange($page.params.id);
-    }
+        // Sync to GM if in campaign
+        if (charData.campaignId) {
+            syncCharacter({
+                id: currentId,
+                type: 'player',
+                name: charData.name,
+                level: charData.level,
+                ancestry: charData.ancestry,
+                damage: dmg,
+                currentHealth: ch,
+                health: maxH,
+                defense: def,
+                afflictions: charData.afflictions || []
+            });
+        }
+    });
 
-    async function handleIdChange(id) {
-        if (currentId !== id) loaded = false;
-        
-        if (currentId === id) return;
+    // Handle ID changes
+    $effect(() => {
+        const id = $page.params.id;
+        if (id && id !== currentId) {
+            handleIdChange(id);
+        }
+    });
+
+    async function handleIdChange(id: string) {
+        loaded = false;
         currentId = id;
         
         await waitForSync();
@@ -61,14 +85,11 @@
         if (charactersMap.has(id)) {
             const data = charactersMap.get(id);
             character.set({ ...defaultCharacter, ...data });
-            // Sync specific stores
             if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
             if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
             if (data.damage !== undefined) damage.set(data.damage);
         } else {
-            // Initialize with default
             const newChar = JSON.parse(JSON.stringify(defaultCharacter));
-            // Set defaults for separate stores
             newChar.normalHealth = 24;
             newChar.currentHealth = 24;
             newChar.damage = 0;
@@ -77,25 +98,17 @@
             normalHealth.set(24);
             currentHealth.set(24);
             damage.set(0);
-            
             charactersMap.set(id, newChar);
         }
         
-        // Auto-join campaign room if in a campaign
+        // Auto-join campaign room
         const charData = get(character);
         if (charData.campaignId) {
-            import('$lib/logic/sync').then(({ joinCampaignRoom }) => {
-                joinCampaignRoom(charData.campaignId, false);
-            });
+            joinCampaignRoom(charData.campaignId, false);
         }
         
         loaded = true;
     }
-
-    // No explicit subscription to clean up
-    onDestroy(() => {
-        // cleanup if needed
-    });
 </script>
 
 <div class="min-h-screen bg-slate-950 text-slate-100 font-sans pb-20 relative overflow-x-hidden">
