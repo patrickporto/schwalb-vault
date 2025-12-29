@@ -1,7 +1,7 @@
 <script>
     import { modalState, characterActions, character, activeEffects, damage, normalHealth, currentHealth } from '$lib/stores/characterStore';
     import { X, Trash2, Plus, Minus, Zap, Wand2, Check } from 'lucide-svelte';
-    import { ITEM_TYPES, GRIPS, MAGIC_TRADITIONS, DURATION_TYPES, MOD_TYPES, MOD_TARGETS } from '../../../../routes/sofww';
+    import { ITEM_TYPES, GRIPS, MAGIC_TRADITIONS, DURATION_TYPES, MOD_TYPES, MOD_TARGETS, AFFLICTIONS_DATA } from '../../../../routes/sofww';
 
     // Local state for forms
     let formData = {};
@@ -177,6 +177,7 @@
             {:else if $modalState.type === 'health'}Vigor & Dano
             {:else if $modalState.type === 'attribute'}Atributo
             {:else if $modalState.type === 'stat'}{formData.name}
+            {:else if $modalState.type === 'affliction'}Gerenciar Aflições
             {:else}Informação
             {/if}
           </h3>
@@ -551,6 +552,35 @@
                             <p class="text-slate-500 italic text-sm">Grimório vazio.</p>
                         </div>
                     {/each}
+                </div>
+
+             {:else if $modalState.type === 'affliction'}
+                <div class="grid grid-cols-2 gap-2">
+                    {#each Object.keys(AFFLICTIONS_DATA) as aff}
+                        <button 
+                            on:click={() => characterActions.toggleAffliction(aff)}
+                            class="p-3 rounded-lg border text-sm font-bold transition-all text-left flex justify-between items-center {$character.afflictions.includes(aff) ? 'bg-red-900/40 border-red-500 text-red-200 shadow-lg shadow-red-900/20' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500 hover:bg-slate-850'}"
+                        >
+                            {aff}
+                            {#if $character.afflictions.includes(aff)}
+                                <Check size={14} />
+                            {/if}
+                        </button>
+                    {/each}
+                </div>
+                <div class="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-2">Resumo dos Efeitos</p>
+                    <div class="space-y-2">
+                        {#each $character.afflictions as aff}
+                            <div class="text-xs">
+                                <span class="text-red-400 font-bold">{aff}:</span> 
+                                <span class="text-slate-400">{AFFLICTIONS_DATA[aff]?.effect || ''}</span>
+                            </div>
+                        {/each}
+                        {#if $character.afflictions.length === 0}
+                            <p class="text-xs text-slate-600 italic text-center">Nenhuma aflição selecionada.</p>
+                        {/if}
+                    </div>
                 </div>
 
             {/if}
