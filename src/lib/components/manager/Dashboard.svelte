@@ -222,32 +222,37 @@
 </script>
 
 <div class="animate-in fade-in p-4 md:p-8 max-w-7xl mx-auto pb-20">
-   <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-800 pb-6">
-      <div>
-        <h1 class="text-3xl font-bold text-white flex items-center gap-2 text-gradient">
-          <Skull class="text-indigo-500" /> Weird Wizard Vault
-        </h1>
-        <p class="text-slate-400 mt-1">Gestor de Personagens e Campanhas</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <GoogleSignIn />
+    <header class="mb-8 flex flex-col gap-6 border-b border-slate-800 pb-6">
+       <!-- Top Bar: Logo & Login -->
+       <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div class="text-center sm:text-left">
+             <h1 class="text-3xl font-bold text-white flex items-center justify-center sm:justify-start gap-2 text-gradient">
+               <Skull class="text-indigo-500" /> Weird Wizard Vault
+             </h1>
+             <p class="text-slate-400 mt-1 text-sm">Gestor de Personagens e Campanhas</p>
+          </div>
+          
+          <GoogleSignIn className="w-full sm:w-auto justify-center" />
+       </div>
 
-        <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 glass shadow-xl">
-          <button 
-              onclick={() => activeTab = 'characters'} 
-              class="px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'characters' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
-          >
-              <Users size={16}/> Personagens
-          </button>
-          <button 
-              onclick={() => activeTab = 'campaigns'} 
-              class="px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'campaigns' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
-          >
-              <Scroll size={16}/> Campanhas
-          </button>
-        </div>
-      </div>
-   </header>
+       <!-- Navigation Tabs -->
+       <div class="flex justify-center sm:justify-start">
+         <div class="flex w-full sm:w-auto bg-slate-900 p-1 rounded-2xl border border-slate-800 glass shadow-xl">
+           <button 
+               onclick={() => activeTab = 'characters'} 
+               class="flex-1 sm:flex-none justify-center px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'characters' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
+           >
+               <Users size={18}/> Personagens
+           </button>
+           <button 
+               onclick={() => activeTab = 'campaigns'} 
+               class="flex-1 sm:flex-none justify-center px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'campaigns' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
+           >
+               <Scroll size={18}/> Campanhas
+           </button>
+         </div>
+       </div>
+    </header>
 
    <div class="min-h-[500px]">
        {#if activeTab === 'characters'}
