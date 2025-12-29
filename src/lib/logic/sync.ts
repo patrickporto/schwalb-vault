@@ -256,3 +256,8 @@ export function syncCharacter(charData: any) {
         broadcastCharacterUpdate(charData);
     }
 }
+
+export function resetSyncStateForTesting() {
+    lobby = null;
+    room = null;
+}
