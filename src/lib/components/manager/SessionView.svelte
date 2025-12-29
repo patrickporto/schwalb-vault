@@ -221,9 +221,7 @@
                 {/if}
             </div>
             
-            <button on:click={() => isHistoryOpen.update(v => !v)} class="w-full mt-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white py-2 rounded flex items-center justify-center gap-2 text-xs font-bold transition-colors border border-slate-700">
-                <History size={14}/> { $isHistoryOpen ? 'Fechar Histórico' : 'Abrir Histórico' }
-            </button>
+
         </div>
 
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col h-[400px]">
