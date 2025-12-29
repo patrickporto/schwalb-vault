@@ -2,7 +2,7 @@
     import { liveCharacters, liveEnemies, liveEncounters } from '$lib/stores/live';
     import { characterActions, isHistoryOpen } from '$lib/stores/characterStore';
     import { campaignsMap } from '$lib/db';
-    import { Users, Ghost, GripVertical, Plus, Minus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History, Layers, Play } from 'lucide-svelte';
+    import { Users, UserPlus, Ghost, GripVertical, Plus, Minus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History, Layers, Play, Copy, QrCode, Check } from 'lucide-svelte';
     import CombatCard from './CombatCard.svelte';
     import HistorySidebar from '$lib/components/character/HistorySidebar.svelte';
     import ConfirmationModal from './ConfirmationModal.svelte';
@@ -14,6 +14,9 @@ import { joinCampaignRoom, syncCombat } from '$lib/logic/sync';
     let { campaign } = $props<{ campaign: any }>();
 
     let isAddCharOpen = $state(false);
+    let showCopyTooltip = $state(false);
+    let showQrCode = $state(false);
+    
     const defaultCombat = { active: false, round: 1 };
     
     // Quick Add Tab
@@ -32,11 +35,13 @@ import { joinCampaignRoom, syncCombat } from '$lib/logic/sync';
         }
     });
 
+    const inviteUrl = $derived(typeof window !== 'undefined' ? `${window.location.origin}/campaign/${campaign?.id}/invite?name=${encodeURIComponent(campaign?.name || '')}` : '');
+
     function copyInviteLink() {
-        // Updated URL structure as requested: /campaign/[id]/invite
-        const inviteUrl = window.location.origin + `/campaign/${campaign.id}/invite?name=${encodeURIComponent(campaign.name)}`;
+        if (!inviteUrl) return;
         navigator.clipboard.writeText(inviteUrl);
-        alert('Link de convite copiado!');
+        showCopyTooltip = true;
+        setTimeout(() => { showCopyTooltip = false; }, 2000);
     }
 
     // Reactively extract data from prop
@@ -249,47 +254,100 @@ import { joinCampaignRoom, syncCombat } from '$lib/logic/sync';
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full relative">
     <!-- Left Col -->
     <div class="space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                 <h3 class="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Users size={14}/> Personagens</h3>
-                 <button onclick={() => isAddCharOpen = !isAddCharOpen} class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded flex items-center gap-1 border border-slate-700">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-4">
+            <div class="flex justify-between items-center bg-slate-950/50 p-2 rounded-lg border border-slate-800">
+                 <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Users size={14} class="text-indigo-500"/> Personagens</h3>
+                 <button 
+                    onclick={() => isAddCharOpen = !isAddCharOpen} 
+                    class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1.5 rounded-md font-bold transition-all border border-slate-700 active:scale-95"
+                >
                      {isAddCharOpen ? 'Fechar' : 'Gerenciar'}
                  </button>
             </div>
             
-            {#if isAddCharOpen}
-                <div class="mb-3 p-2 bg-slate-950 rounded border border-slate-800 max-h-40 overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2">
-                     <h4 class="text-[10px] uppercase font-bold text-slate-500 mb-2">Adicionar à Sessão</h4>
-                     {#each availableCharacters as char}
-                         <button onclick={() => toggleSessionPresence(char.id)} class="w-full text-left flex items-center justify-between p-1.5 hover:bg-indigo-900/20 rounded group">
-                             <span class="text-sm font-bold text-slate-300 group-hover:text-white">{char.name}</span>
-                             <Plus size={14} class="text-indigo-500"/>
-                         </button>
-                     {/each}
-                     {#if availableCharacters.length === 0}
-                         <div class="text-[10px] text-slate-600 italic">Todos os personagens já estão na sessão.</div>
-                     {/if}
-                </div>
-            {/if}
-
-            <div class="space-y-2">
-                {#each players as char (char.id)}
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <div class="p-2 rounded border flex items-center gap-3 transition-colors bg-indigo-900/30 border-indigo-500/50">
-                        <div class="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></div>
-                        <div class="flex-1">
-                             <div class="font-bold text-sm text-white">{char.name}</div>
-                             <div class="text-[10px] text-slate-400">Lvl {char.level} • {char.ancestry}</div>
-                        </div>
-                        <button onclick={() => toggleSessionPresence(char.id)} class="text-slate-500 hover:text-red-400 p-1" title="Remover da Sessão"><X size={14}/></button>
+            <div class="space-y-2 flex-1 overflow-y-auto max-h-[300px] custom-scrollbar pr-1">
+                {#if isAddCharOpen}
+                    <div class="p-2 bg-indigo-500/5 rounded-lg border border-indigo-500/20 mb-2 animate-in slide-in-from-top-2">
+                         <h4 class="text-[9px] uppercase font-black text-indigo-400 mb-2 tracking-tighter text-center">Disponíveis para Adicionar</h4>
+                         <div class="space-y-1">
+                             {#each availableCharacters as char}
+                                 <button onclick={() => toggleSessionPresence(char.id)} class="w-full text-left flex items-center justify-between p-2 hover:bg-indigo-500/10 rounded-lg group transition-colors">
+                                     <span class="text-xs font-bold text-slate-400 group-hover:text-white transition-colors">{char.name}</span>
+                                     <Plus size={14} class="text-indigo-500 opacity-50 group-hover:opacity-100 transition-opacity"/>
+                                 </button>
+                             {/each}
+                             {#if availableCharacters.length === 0}
+                                 <div class="text-[10px] text-slate-600 italic text-center py-2">Nenhum personagem disponível.</div>
+                             {/if}
+                         </div>
                     </div>
-                {/each}
-                {#if players.length === 0}
-                    <div class="text-xs text-slate-500 italic p-2 border border-dashed border-slate-800 rounded">Nenhum jogador na sessão.</div>
                 {/if}
-            </div>
-            
 
+                <div class="space-y-2">
+                    {#each players as char (char.id)}
+                        <div class="p-2.5 rounded-xl border flex items-center gap-3 transition-all bg-indigo-900/10 border-indigo-500/20 hover:border-indigo-500/40 group shadow-sm">
+                            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(74,222,128,0.4)]"></div>
+                            <div class="flex-1">
+                                 <div class="font-bold text-sm text-white group-hover:text-indigo-300 transition-colors">{char.name}</div>
+                                 <div class="text-[10px] text-slate-500 font-medium">Lvl {char.level} • {char.ancestry}</div>
+                            </div>
+                            <button onclick={() => toggleSessionPresence(char.id)} class="text-slate-600 hover:text-red-400 p-1.5 hover:bg-red-400/10 rounded-lg transition-all" title="Remover da Sessão"><X size={14}/></button>
+                        </div>
+                    {/each}
+                    {#if players.length === 0}
+                        <div class="text-xs text-slate-600 italic p-6 border-2 border-dashed border-slate-800 rounded-xl text-center">Nenhum jogador na sessão.</div>
+                    {/if}
+                </div>
+            </div>
+
+            <!-- Invitation Footer -->
+            <div class="pt-4 border-t border-slate-800 space-y-3">
+                 <div class="flex items-center justify-between">
+                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Link de Convite</span>
+                     <button 
+                        onclick={() => showQrCode = !showQrCode} 
+                        class="text-indigo-400 hover:text-indigo-300 transition-colors p-1"
+                        title="Ver QR Code"
+                    >
+                        <QrCode size={14} />
+                    </button>
+                 </div>
+                 
+                 {#if showQrCode}
+                    <div class="flex justify-center p-3 bg-white rounded-xl mb-2 animate-in zoom-in-95 duration-200 shadow-xl mx-auto w-32 h-32">
+                        <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(inviteUrl)}`} 
+                            alt="QR Code de Convite"
+                            class="w-24 h-24"
+                        />
+                    </div>
+                 {/if}
+
+                 <div class="relative group">
+                     <div class="flex gap-1">
+                         <!-- svelte-ignore a11y_click_events_have_key_events -->
+                         <!-- svelte-ignore a11y_no_static_element_interactions -->
+                         <div 
+                            onclick={copyInviteLink} 
+                            class="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-[10px] text-slate-400 font-mono truncate cursor-pointer hover:border-slate-700 transition-colors flex items-center"
+                        >
+                            {inviteUrl}
+                         </div>
+                         <button 
+                            onclick={copyInviteLink} 
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg transition-all active:scale-95 shadow-lg shadow-indigo-900/20 relative"
+                            aria-label="Copiar link"
+                        >
+                             {#if showCopyTooltip}
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded shadow-lg animate-in fade-in slide-in-from-bottom-1 whitespace-nowrap">
+                                    <Check size={10} class="inline mr-1" /> Copiado!
+                                </div>
+                             {/if}
+                             <Copy size={14} />
+                         </button>
+                     </div>
+                 </div>
+            </div>
         </div>
 
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col h-[400px]">
