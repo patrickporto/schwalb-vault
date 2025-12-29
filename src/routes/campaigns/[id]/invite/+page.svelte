@@ -7,17 +7,25 @@
     import { joinCampaignRoom, isGmOnline } from '$lib/logic/sync';
     import { onMount } from 'svelte';
     import ConfirmationModal from '$lib/components/manager/ConfirmationModal.svelte';
+    import { verifyPassword } from '$lib/logic/crypto';
 
     const campaignId = $page.params.id;
     // Get campaign info from the character store which is updated by the getCampaign sync action
     let campaignName = $derived($character.campaignName || 'Buscando campanha...');
     let gmName = $derived($character.gmName || '...');
+    let passwordHash = $derived($character.passwordHash);
 
     // Filter out characters that are already in a campaign
     let availableCharacters = $derived($liveCharacters.filter(c => !c.campaignId));
 
     let selectedCharId = $state<string | null>(null);
     let showConfirm = $state(false);
+    
+    // Password state
+    let passwordInput = $state('');
+    let passwordError = $state(false);
+    let isVerifying = $state(false);
+    let generalError = $state('');
 
     onMount(() => {
         if (campaignId) {
@@ -25,16 +33,36 @@
         }
     });
 
-    function handleJoin() {
+    async function handleJoin() {
+        generalError = '';
         if (!selectedCharId || !campaignId) return;
         
         // Double-check that the character is not already in a campaign
         const char = $liveCharacters.find(c => c.id === selectedCharId);
         if (char?.campaignId) {
-            alert('Este personagem já está em uma campanha!');
+            generalError = 'Este personagem já está em uma campanha!';
             return;
         }
+
+        // Verify password if required
+        if (passwordHash) {
+            if (!passwordInput) {
+                passwordError = true;
+                return;
+            }
+            
+            isVerifying = true;
+            const valid = await verifyPassword(passwordInput, passwordHash);
+            isVerifying = false;
+            
+            if (!valid) {
+                passwordError = true;
+                // No need for general error, input specific error is enough
+                return;
+            }
+        }
         
+        passwordError = false;
         showConfirm = true;
     }
 
@@ -45,7 +73,7 @@
         if (char) {
             // Final check before joining
             if (char.campaignId) {
-                alert('Este personagem já está em uma campanha!');
+                generalError = 'Este personagem já está em uma campanha!';
                 showConfirm = false;
                 return;
             }
@@ -57,7 +85,7 @@
                     campaignName,
                     gmName
                 });
-                goto(`/character/${selectedCharId}`);
+                goto(`/characters/${selectedCharId}`);
             });
         }
     }
@@ -84,13 +112,37 @@
             {/if}
         </div>
 
+        {#if generalError}
+            <div class="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-3">
+                <AlertTriangle size={20} class="text-red-500 mb-0.5" />
+                <p class="text-red-400 text-sm font-bold">{generalError}</p>
+            </div>
+        {/if}
+
+        {#if passwordHash}
+            <div class="mb-6 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                     <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div> Senha Necessária
+                 </label>
+                 <input 
+                    type="password" 
+                    placeholder="Digite a senha da campanha..."
+                    bind:value={passwordInput}
+                    class="w-full bg-slate-900 border {passwordError ? 'border-red-500' : 'border-slate-700'} rounded-lg p-3 text-white outline-none focus:border-indigo-500 transition-colors"
+                 />
+                 {#if passwordError}
+                    <p class="text-red-400 text-xs mt-1">Senha incorreta.</p>
+                 {/if}
+            </div>
+        {/if}
+
         <div class="space-y-4 mb-8">
             <!-- svelte-ignore a11y_label_has_associated_control -->
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Escolha seu Personagem</label>
             <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
                 {#each availableCharacters as char}
                     <button 
-                        onclick={() => selectedCharId = char.id}
+                        onclick={() => { selectedCharId = char.id; generalError = ''; }}
                         class="w-full flex items-center gap-3 p-3 rounded-xl border transition-all {selectedCharId === char.id ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'}"
                     >
                         <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold">
@@ -125,11 +177,15 @@
         <div class="flex gap-3">
             <button onclick={() => goto('/')} class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all">Recusar</button>
             <button 
-                disabled={!selectedCharId}
+                disabled={!selectedCharId || isVerifying || (!!passwordHash && !passwordInput)}
                 onclick={handleJoin} 
-                class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition-all shadow-lg shadow-indigo-900/20"
+                class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition-all shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2"
             >
-                Aceitar Convite
+                {#if isVerifying}
+                    <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Validando...
+                {:else}
+                    Aceitar Convite
+                {/if}
             </button>
         </div>
     </div>

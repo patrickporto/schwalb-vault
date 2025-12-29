@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { get } from 'svelte/store';
     import { liveCharacters, liveCampaigns } from '$lib/stores/live';
     import { uuidv7 } from 'uuidv7';
     import { charactersMap, campaignsMap } from '$lib/db';
@@ -8,6 +9,7 @@
     import ConfirmationModal from './ConfirmationModal.svelte';
     import CampaignModal from './CampaignModal.svelte';
     import CharacterModal from './CharacterModal.svelte';
+    import { hashPassword } from '$lib/logic/crypto';
 
     let activeTab = $state('characters');
     
@@ -65,7 +67,7 @@
         isCharModalOpen = false;
         
         if (!editingCharId) {
-             goto(`/character/${id}`);
+             goto(`/characters/${id}`);
         }
     }
 
@@ -81,11 +83,11 @@
         isCampModalOpen = true;
     }
     
-    function saveCampaign(formData: any) {
+    async function saveCampaign(formData: any) {
         const id = editingCampId || uuidv7();
         const current = editingCampId ? (campaignsMap.get(id) as any) : {};
         
-        const newCamp = {
+        const newCamp: any = {
             ...current,
             id,
             name: formData.name,
@@ -93,6 +95,14 @@
             gmName: formData.gmName,
             players: current.players || []
         };
+
+        // Handle password updates
+        if (formData.removePassword) {
+            delete newCamp.passwordHash;
+        } else if (formData.password) {
+            newCamp.passwordHash = await hashPassword(formData.password);
+        }
+
         campaignsMap.set(id, newCamp);
         isCampModalOpen = false;
     }
@@ -106,6 +116,7 @@
             title: 'Excluir Campanha',
             message: 'Tem certeza que deseja apagar esta campanha permanentemente?',
             onConfirm: () => {
+                // Unpublish implicit by deletion (stops heartbeat), but we can also handle any other cleanup if needed
                 campaignsMap.delete(id);
                 isConfirmOpen = false;
             }
@@ -118,6 +129,35 @@
             title: 'Excluir Personagem',
             message: 'Tem certeza que deseja apagar este personagem permanentemente?',
             onConfirm: () => {
+                // REMOVE FROM LOCAL CAMPAIGNS
+                // Check if this character is a member of any local campaign and remove them
+                const campaigns = get(liveCampaigns);
+                campaigns.forEach(camp => {
+                    let changed = false;
+                    
+                    // Remove from members
+                    if (camp.members && camp.members.some((m: any) => m.id === id)) {
+                        camp.members = camp.members.filter((m: any) => m.id !== id);
+                        changed = true;
+                    }
+
+                    // Remove from session roster if present
+                    if (camp.sessionRoster && camp.sessionRoster.includes(id)) {
+                        camp.sessionRoster = camp.sessionRoster.filter((cid: string) => cid !== id);
+                        changed = true;
+                    }
+                    
+                    // Remove from activeEnemies if it's there (rare for player chars but possible)
+                    if (camp.activeEnemies && camp.activeEnemies.some((e: any) => e.id === id)) {
+                        camp.activeEnemies = camp.activeEnemies.filter((e: any) => e.id !== id);
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        campaignsMap.set(camp.id, camp);
+                    }
+                });
+
                 charactersMap.delete(id);
                 isConfirmOpen = false;
             }
@@ -195,7 +235,7 @@
                   </div>
 
                   <button 
-                    onclick={() => goto(`/character/${char.id}`)}
+                    onclick={() => goto(`/characters/${char.id}`)}
                     class="w-full bg-slate-800 hover:bg-indigo-600 text-white py-3 rounded-2xl font-bold transition-all active:scale-[0.98] border border-slate-700 hover:border-indigo-400/30 flex items-center justify-center gap-2"
                   >
                     Abrir Ficha <Play size={14} fill="currentColor" />
@@ -233,7 +273,7 @@
                    
                    <div class="flex gap-3 mt-4">
                      <button 
-                        onclick={() => goto(`/campaign/${camp.id}`)} 
+                        onclick={() => goto(`/campaigns/${camp.id}`)} 
                         class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 border border-indigo-400/20 shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98]"
                     >
                         <Play size={18} fill="currentColor"/> Gerir Sessão
@@ -275,7 +315,7 @@
                       <p class="text-sm text-slate-400 line-clamp-3 leading-relaxed mb-6 h-15">{camp.description || 'Uma jornada por terras desconhecidas aguarada heróis.'}</p>
                    </div>
                    <button 
-                        onclick={() => goto(`/campaign/${camp.id}/invite`)} 
+                        onclick={() => goto(`/campaigns/${camp.id}/invite`)} 
                         class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-2xl font-black uppercase text-xs tracking-[0.1em] flex items-center justify-center gap-2 border border-emerald-400/20 transition-all active:scale-[0.98] group"
                     >
                         Participar da Aventura <Plus size={18} class="group-hover:rotate-90 transition-transform"/>

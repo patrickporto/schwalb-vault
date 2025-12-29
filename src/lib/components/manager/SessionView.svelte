@@ -48,7 +48,7 @@ import { joinCampaignRoom, syncCombat, syncCampaign } from '$lib/logic/sync';
         }
     });
 
-    const inviteUrl = $derived(typeof window !== 'undefined' ? `${window.location.origin}/campaign/${campaign?.id}/invite` : '');
+    const inviteUrl = $derived(typeof window !== 'undefined' ? `${window.location.origin}/campaigns/${campaign?.id}/invite` : '');
 
     function copyInviteLink() {
         if (!inviteUrl) return;

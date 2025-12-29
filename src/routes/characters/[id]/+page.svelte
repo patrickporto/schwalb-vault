@@ -11,6 +11,7 @@
     import { get } from 'svelte/store';
     import { onDestroy } from 'svelte';
     import { syncCharacter, joinCampaignRoom } from '$lib/logic/sync';
+    import { goto } from '$app/navigation';
 
     // Components
     import CharacterHeader from '$lib/components/character/CharacterHeader.svelte';
@@ -31,14 +32,15 @@
     import TalentsTab from '$lib/components/character/TalentsTab.svelte';
     import InventoryTab from '$lib/components/character/InventoryTab.svelte';
     import NotesTab from '$lib/components/character/NotesTab.svelte';
-    import { ChevronRight, Clover, Users } from 'lucide-svelte';
+    import { ChevronRight, Clover, Users, Ghost, ArrowLeft } from 'lucide-svelte';
 
     let loaded = $state(false);
+    let notFound = $state(false);
     let currentId = $state<string | null>(null);
     
     // Auto-save and Auto-sync effect
     $effect(() => {
-        if (!loaded || !currentId) return;
+        if (!loaded || notFound || !currentId) return;
 
         const charData = $character;
         const nh = $normalHealth;
@@ -73,7 +75,7 @@
 
     // Heartbeat for online status
     $effect(() => {
-        if (!loaded || !currentId) return;
+        if (!loaded || notFound || !currentId) return;
         const charData = get(character);
         if (!charData.campaignId) return;
 
@@ -109,11 +111,12 @@
 
     async function handleIdChange(id: string) {
         loaded = false;
+        notFound = false;
         currentId = id;
         
         await waitForSync();
 
-        // Load or Initialize
+        // Load or 404
         if (charactersMap.has(id)) {
             const data = charactersMap.get(id);
             // Include id in character store for sync identification
@@ -121,24 +124,14 @@
             if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
             if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
             if (data.damage !== undefined) damage.set(data.damage);
-        } else {
-            const newChar = JSON.parse(JSON.stringify(defaultCharacter));
-            newChar.id = id; // Include id for sync
-            newChar.normalHealth = 24;
-            newChar.currentHealth = 24;
-            newChar.damage = 0;
             
-            character.set(newChar);
-            normalHealth.set(24);
-            currentHealth.set(24);
-            damage.set(0);
-            charactersMap.set(id, newChar);
-        }
-        
-        // Auto-join campaign room with character ID for bidirectional sync
-        const charData = get(character);
-        if (charData.campaignId) {
-            joinCampaignRoom(charData.campaignId, false, currentId);
+            // Auto-join campaign room with character ID for bidirectional sync
+            const charData = get(character);
+            if (charData.campaignId) {
+                joinCampaignRoom(charData.campaignId, false, currentId);
+            }
+        } else {
+            notFound = true;
         }
         
         loaded = true;
@@ -148,79 +141,91 @@
 <div class="min-h-screen bg-slate-950 text-slate-100 font-sans pb-20 relative overflow-x-hidden">
   
   {#if loaded}
-  <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
-  
-  <ModalManager />
-
-  <CharacterHeader />
-  
-  <!-- History toggle was simulated in header, real toggle logic is via local state or store. 
-       We can pass isHistoryOpen binding or equivalent. 
-       Ideally Header should emit event or use store. 
-       For now, let's leave it simple: Header buttons might not work without connecting events.
-  -->
-
-  <main class="max-w-6xl mx-auto px-4 mt-6 lg:mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-     
-     <!-- SIDEBAR ESQUERDA -->
-     <aside class="lg:col-span-3 space-y-4">
-        <AttributesSection />
-
-        <button onclick={() => modalState.set({type: 'pre_roll', isOpen: true, data: {type:'luck', source: {name:'Sorte'}}})} class="w-full bg-slate-900 hover:bg-slate-800 p-3 rounded-xl border border-slate-800 flex items-center justify-between group transition-colors">
-            <div class="flex items-center gap-2 font-bold text-slate-400 group-hover:text-green-400 uppercase text-xs"><Clover size={14}/> Teste de Sorte</div><ChevronRight size={14} class="text-slate-600"/>
-        </button>
-
-        <VitalsSection />
-        <CurrencySection />
-        <LanguagesSection />
-        <AfflictionsSection />
-
-        <div class="hidden lg:block pt-2">
-            <CampaignStatus />
+      {#if notFound}
+        <div class="min-h-screen flex flex-col items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+                <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-600">
+                    <Ghost size={40} />
+                </div>
+                <h1 class="text-2xl font-black text-white mb-2 uppercase tracking-tight">Personagem Não Encontrado</h1>
+                <p class="text-slate-400 mb-8">Este personagem não existe na sua base local. Crie um novo personagem através da página inicial.</p>
+                <button 
+                    onclick={() => goto('/')}
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                >
+                    <ArrowLeft size={18} /> Voltar ao Início
+                </button>
+            </div>
         </div>
-     </aside>
+      {:else}
+          <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
+          
+          <ModalManager />
 
-     <!-- MAIN CONTENT -->
-     <section class="lg:col-span-9">
-        <div class="bg-slate-900 rounded-xl border border-slate-800 min-h-[60vh]">
-           <TabNavigation />
+          <CharacterHeader />
+          
+          <main class="max-w-6xl mx-auto px-4 mt-6 lg:mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+             
+             <!-- SIDEBAR ESQUERDA -->
+             <aside class="lg:col-span-3 space-y-4">
+                <AttributesSection />
 
-           <div class="p-4 md:p-6">
-              {#if $activeTab === 'acoes'}
-                 <ActionsTab />
-              {/if}
+                <button onclick={() => modalState.set({type: 'pre_roll', isOpen: true, data: {type:'luck', source: {name:'Sorte'}}})} class="w-full bg-slate-900 hover:bg-slate-800 p-3 rounded-xl border border-slate-800 flex items-center justify-between group transition-colors">
+                    <div class="flex items-center gap-2 font-bold text-slate-400 group-hover:text-green-400 uppercase text-xs"><Clover size={14}/> Teste de Sorte</div><ChevronRight size={14} class="text-slate-600"/>
+                </button>
 
-              {#if $activeTab === 'efeitos'}
-                 <EffectsTab />
-              {/if}
+                <VitalsSection />
+                <CurrencySection />
+                <LanguagesSection />
+                <AfflictionsSection />
 
-              {#if $activeTab === 'magias'}
-                 <SpellsTab />
-              {/if}
+                <div class="hidden lg:block pt-2">
+                    <CampaignStatus />
+                </div>
+             </aside>
 
-              {#if $activeTab === 'talentos'}
-                 <TalentsTab />
-              {/if}
-              
-              {#if $activeTab === 'equipamento'}
-                 <InventoryTab />
-              {/if}
+             <!-- MAIN CONTENT -->
+             <section class="lg:col-span-9">
+                <div class="bg-slate-900 rounded-xl border border-slate-800 min-h-[60vh]">
+                   <TabNavigation />
 
-              {#if $activeTab === 'notas'}
-                 <NotesTab />
-              {/if}
-           </div>
+                   <div class="p-4 md:p-6">
+                      {#if $activeTab === 'acoes'}
+                         <ActionsTab />
+                      {/if}
+
+                      {#if $activeTab === 'efeitos'}
+                         <EffectsTab />
+                      {/if}
+
+                      {#if $activeTab === 'magias'}
+                         <SpellsTab />
+                      {/if}
+
+                      {#if $activeTab === 'talentos'}
+                         <TalentsTab />
+                      {/if}
+                      
+                      {#if $activeTab === 'equipamento'}
+                         <InventoryTab />
+                      {/if}
+
+                      {#if $activeTab === 'notas'}
+                         <NotesTab />
+                      {/if}
+                   </div>
+                </div>
+             </section>
+          </main>
+      
+          <div class="lg:hidden px-4 mt-6">
+             <CampaignStatus banner />
+          </div>
+      {/if}
+    {:else}
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
         </div>
-     </section>
-  </main>
-
-   <div class="lg:hidden px-4 mt-6">
-      <CampaignStatus banner />
-   </div>
-  {:else}
-    <div class="flex items-center justify-center min-h-screen">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-    </div>
-  {/if}
+    {/if}
 </div>
 ```

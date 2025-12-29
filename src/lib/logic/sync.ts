@@ -108,7 +108,8 @@ export function joinCampaignRoom(campaignId: string, isGM: boolean = false, char
             character.update(c => ({
                 ...c,
                 campaignName: data.name,
-                gmName: data.gmName
+                gmName: data.gmName,
+                passwordHash: data.passwordHash
             }));
         }
     });
@@ -193,7 +194,8 @@ export function joinCampaignRoom(campaignId: string, isGM: boolean = false, char
                 if (current.combat) sendCombat(current.combat);
                 sendCampaign({
                     name: current.name,
-                    gmName: current.gmName || 'Mestre'
+                    gmName: current.gmName || 'Mestre',
+                    passwordHash: current.passwordHash
                 });
             }
         }
@@ -216,7 +218,8 @@ export function syncCampaign(campaignId: string, campaignData: any) {
     if (broadcastCampaign) {
         broadcastCampaign({
             name: campaignData.name,
-            gmName: campaignData.gmName || 'Mestre'
+            gmName: campaignData.gmName || 'Mestre',
+            passwordHash: campaignData.passwordHash
         });
     }
 }
