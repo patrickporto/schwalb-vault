@@ -1,8 +1,8 @@
 <script>
-    import { liveCharacters, liveEnemies } from '$lib/stores/live';
+    import { liveCharacters, liveEnemies, liveEncounters } from '$lib/stores/live';
     import { characterActions, isHistoryOpen } from '$lib/stores/characterStore';
     import { campaignsMap, charactersMap } from '$lib/db';
-    import { Users, Ghost, GripVertical, Plus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History } from 'lucide-svelte';
+    import { Users, Ghost, GripVertical, Plus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History, Layers, Play } from 'lucide-svelte';
     import CombatCard from './CombatCard.svelte';
     import { flip } from 'svelte/animate';
     
@@ -10,7 +10,14 @@
 
     let isAddCharOpen = false;
     const defaultCombat = { active: false, round: 1 };
+    
+    // Quick Add Tab
+    let activeQuickTab = 'enemies'; // 'enemies' | 'encounters'
 
+    // End of Round Modal
+    let isEoRModalOpen = false;
+    let endOfRoundEffects = [];
+    
     // Reactively extract data from prop
     $: roster = campaign?.sessionRoster || [];
     $: combat = campaign?.combat || defaultCombat;
@@ -52,11 +59,51 @@
         updateCampaign({ activeEnemies: [...currentEnemies, newEnemy] });
     }
 
+    function addToCombatEncounter(enc) {
+        const current = campaignsMap.get(campaign.id) || campaign;
+        const currentEnemies = current.activeEnemies || [];
+        
+        let newEnemies = [];
+        enc.enemies.forEach(item => {
+             const template = $liveEnemies.find(e => e.id === item.enemyId);
+             if (template) {
+                for(let i=0; i<item.count; i++) {
+                    newEnemies.push({
+                        ...template,
+                        instanceId: `e_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                        damage: 0, 
+                        currentHealth: template.health,
+                        afflictions: [],
+                        acted: false,
+                        initiative: false
+                    });
+                }
+             }
+        });
+        
+        updateCampaign({ activeEnemies: [...currentEnemies, ...newEnemies] });
+    }
+
     function startCombat() {
         updateCampaign({ combat: { active: true, round: 1 } });
     }
 
     function nextRound() {
+        // Check for End of Round effects
+        const activeEffects = activeEnemies
+            .filter(e => e.damage < (e.currentHealth ?? e.health) && e.endOfRound && e.endOfRound.length > 0)
+            .map(e => ({ name: e.name, effects: e.endOfRound }));
+
+        if (activeEffects.length > 0) {
+            endOfRoundEffects = activeEffects;
+            isEoRModalOpen = true;
+            return; // Wait for confirmation
+        }
+
+        proceedRound();
+    }
+    
+    function proceedRound() {
         const current = campaignsMap.get(campaign.id) || campaign;
         const nextRoundNum = (current.combat?.round || 1) + 1;
         const newEnemies = (current.activeEnemies || []).map(e => ({ ...e, acted: false }));
@@ -65,6 +112,7 @@
             combat: { ...current.combat, round: nextRoundNum },
             activeEnemies: newEnemies
         });
+        isEoRModalOpen = false;
     }
 
     function endCombat(clearEnemies) {
@@ -112,15 +160,25 @@
 
     // Explicit derivation of sorted combatants
     $: sortedCombatants = (() => {
-        const playersWithInit = roster.map(pid => $liveCharacters.find(c => c.id === pid)).filter(c => c && c.initiative).map(c => ({...c, type: 'player'}));
+        const playersWithInit = roster.map(pid => $liveCharacters.find(c => c.id === pid)).filter(c => c && c.initiative).map(c => ({...c, id: c.id, type: 'player'}));
         const enemies = activeEnemies.map(e => ({...e, type: 'enemy'}));
-        const playersNoInit = roster.map(pid => $liveCharacters.find(c => c.id === pid)).filter(c => c && !c.initiative).map(c => ({...c, type: 'player'}));
-        return [...playersWithInit, ...enemies, ...playersNoInit];
+        const playersNoInit = roster.map(pid => $liveCharacters.find(c => c.id === pid)).filter(c => c && !c.initiative).map(c => ({...c, id: c.id, type: 'player'}));
+        
+        const all = [...playersWithInit, ...enemies, ...playersNoInit];
+        
+        // Final safety: ensure absolute uniqueness by the key we use in the each block
+        const seen = new Set();
+        return all.filter(entity => {
+            const key = entity.type === 'player' ? entity.id : entity.instanceId;
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
     })();
 
 </script>
 
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full relative">
     <!-- Left Col -->
     <div class="space-y-6">
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -168,21 +226,44 @@
             </button>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <h3 class="text-sm font-bold text-slate-400 uppercase mb-3 flex items-center gap-2"><Ghost size={14}/> Adicionar Rápido</h3>
-            <div class="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                {#each $liveEnemies as enemy (enemy.id)}
-                    <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
-                        <div class="truncate flex-1 flex items-center gap-2">
-                             <GripVertical size={12} class="text-slate-600 cursor-grab"/>
-                             <div>
-                                 <div class="text-sm font-bold text-white truncate">{enemy.name}</div>
-                                 <div class="text-[10px] text-slate-500">Dif {enemy.difficulty}</div>
-                             </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col h-[400px]">
+            <div class="flex items-center gap-2 mb-3 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                 <button on:click={() => activeQuickTab = 'enemies'} class="flex-1 text-xs font-bold py-1.5 rounded flex items-center justify-center gap-2 transition-colors {activeQuickTab === 'enemies' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}"><Ghost size={14}/> Inimigos</button>
+                 <button on:click={() => activeQuickTab = 'encounters'} class="flex-1 text-xs font-bold py-1.5 rounded flex items-center justify-center gap-2 transition-colors {activeQuickTab === 'encounters' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}"><Layers size={14}/> Encontros</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
+                {#if activeQuickTab === 'enemies'}
+                    {#each $liveEnemies as enemy (enemy.id)}
+                        <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 group hover:border-indigo-500/30 transition-all">
+                            <div class="truncate flex-1 flex items-center gap-2">
+                                 <!-- Draggable hint -->
+                                 <GripVertical size={12} class="text-slate-600 cursor-grab"/>
+                                 <div>
+                                     <div class="text-sm font-bold text-white truncate">{enemy.name}</div>
+                                     <div class="text-[10px] text-slate-500">Dif {enemy.difficulty}</div>
+                                 </div>
+                            </div>
+                            <button on:click={() => addToCombat(enemy)} class="text-slate-500 hover:text-indigo-400 p-1 ml-2 bg-slate-900 rounded border border-slate-800"><Plus size={16}/></button>
                         </div>
-                        <button on:click={() => addToCombat(enemy)} class="text-indigo-400 hover:text-white p-1 ml-2"><Plus size={16}/></button>
-                    </div>
-                {/each}
+                    {/each}
+                    {#if $liveEnemies.length === 0}
+                         <div class="text-center text-slate-600 italic text-xs mt-4">Nenhum inimigo.</div>
+                    {/if}
+                {:else}
+                    {#each $liveEncounters as enc (enc.id)}
+                        <div class="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800 group hover:border-indigo-500/30 transition-all">
+                            <div class="truncate flex-1">
+                                 <div class="text-sm font-bold text-white truncate">{enc.name}</div>
+                                 <div class="text-[10px] text-slate-500">{enc.enemies?.reduce((a,c) => a + c.count, 0) || 0} Inimigos</div>
+                            </div>
+                            <button on:click={() => addToCombatEncounter(enc)} class="text-slate-500 hover:text-indigo-400 p-1 ml-2 bg-slate-900 rounded border border-slate-800"><Play size={14}/></button>
+                        </div>
+                    {/each}
+                     {#if $liveEncounters.length === 0}
+                         <div class="text-center text-slate-600 italic text-xs mt-4">Nenhum encontro.</div>
+                    {/if}
+                {/if}
             </div>
         </div>
     </div>
@@ -230,3 +311,40 @@
         </div>
     </div>
 </div>
+
+{#if isEoRModalOpen}
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" on:click|self={() => {}}>
+    <div class="bg-slate-800 rounded-xl w-full max-w-lg border border-slate-700 shadow-2xl p-6 relative">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="p-3 bg-yellow-900/20 rounded-full border border-yellow-500/30 text-yellow-500">
+                <Clock size={24} />
+            </div>
+            <div>
+                 <h3 class="font-bold text-white text-xl">Fim da Rodada</h3>
+                 <p class="text-slate-400 text-sm">Resumo dos efeitos que ocorrem agora.</p>
+            </div>
+        </div>
+
+        <div class="space-y-4 mb-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+             {#each endOfRoundEffects as item}
+                 <div class="bg-slate-900 border border-slate-700 rounded-lg p-4">
+                      <h4 class="font-bold text-white mb-2 pb-2 border-b border-slate-800 flex items-center gap-2"><Ghost size={14} class="text-slate-500"/> {item.name}</h4>
+                      <div class="space-y-2">
+                           {#each item.effects as effect}
+                                <div class="text-sm">
+                                    <span class="font-bold text-yellow-500">{effect.name}:</span> <span class="text-slate-300">{effect.desc}</span>
+                                </div>
+                           {/each}
+                      </div>
+                 </div>
+             {/each}
+        </div>
+        
+        <div class="flex gap-3">
+             <button on:click={() => isEoRModalOpen = false} class="flex-1 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-bold">Cancelar</button>
+             <button on:click={proceedRound} class="flex-1 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold">Avançar Rodada</button>
+        </div>
+    </div>
+</div>
+{/if}

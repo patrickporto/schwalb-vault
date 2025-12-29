@@ -5,15 +5,18 @@ import { charactersMap, campaignsMap, enemiesMap, encountersMap, waitForSync } f
 function createLiveStore(yMap) {
     const store = writable([]);
     
+    const update = () => {
+        // Ensure we only have objects with valid IDs and no duplicates
+        const values = Array.from(yMap.values()).filter(v => v && v.id);
+        const unique = Array.from(new Map(values.map(v => [v.id, v])).values());
+        store.set(unique);
+    };
+
     // Initial fetch
-    store.set(Array.from(yMap.toJSON().values ? Object.values(yMap.toJSON()) : Array.from(yMap.values()))); 
+    update();
 
     // Observer
-    yMap.observe(() => {
-        // toJSON returns an object for Map, we want an array of values usually? 
-        // Or Array.from(yMap.values())
-        store.set(Array.from(yMap.values()));
-    });
+    yMap.observe(update);
 
     return store;
 }
@@ -28,8 +31,14 @@ export const liveEncounters = createLiveStore(encountersMap);
 
 // Ensure we update once synced (just in case)
 waitForSync().then(() => {
-    liveCharacters.set(Array.from(charactersMap.values()));
-    liveCampaigns.set(Array.from(campaignsMap.values()));
-    liveEnemies.set(Array.from(enemiesMap.values()));
-    liveEncounters.set(Array.from(encountersMap.values()));
+    // Re-trigger updates to catch synced data
+    [charactersMap, campaignsMap, enemiesMap, encountersMap].forEach(m => {
+        const values = Array.from(m.values()).filter(v => v && v.id);
+        const unique = Array.from(new Map(values.map(v => [v.id, v])).values());
+        // Find which store it belongs to (a bit hacky but works for the init)
+        if (m === charactersMap) liveCharacters.set(unique);
+        if (m === campaignsMap) liveCampaigns.set(unique);
+        if (m === enemiesMap) liveEnemies.set(unique);
+        if (m === encountersMap) liveEncounters.set(unique);
+    });
 });
