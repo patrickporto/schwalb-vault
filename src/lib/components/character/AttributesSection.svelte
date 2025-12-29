@@ -16,32 +16,41 @@
     }
 </script>
 
-<div class="grid grid-cols-2 gap-2">
+<div class="grid grid-cols-2 gap-3">
     {#each $character.attributes as attr}
        <!-- svelte-ignore a11y_click_events_have_key_events -->
-       <!-- svelte-ignore a11y_no_static_element_interactions -->
        <div 
            onclick={() => handleAttributeClick(attr)} 
-           class="bg-slate-900 p-2 rounded border border-slate-800 text-center cursor-pointer hover:bg-slate-800 transition-colors group relative"
+           class="bg-slate-900 overflow-hidden rounded-2xl border border-slate-800 text-center transition-all hover:bg-slate-800 active:scale-[0.98] group relative shadow-lg shadow-black/20 cursor-pointer"
            role="button"
            tabindex="0"
+           aria-label={`Rolar teste de ${attr.name}`}
        >
-          <span class="text-[10px] uppercase text-slate-500 font-bold group-hover:text-indigo-400 transition-colors">{attr.name}</span>
-          <div class="text-xl font-bold text-white flex justify-center items-center gap-1">
-              {$derivedStats[attr.key]}
-              {#if $derivedStats[attr.key] !== attr.value}
-                  <span class="text-[10px] ml-1 {$derivedStats[attr.key] > attr.value ? 'text-green-400' : 'text-red-400'}">
-                      ({$derivedStats[attr.key] > attr.value ? '+' : ''}{$derivedStats[attr.key] - attr.value})
-                  </span>
-              {/if}
+          <div class="py-2.5 px-2">
+            <div class="text-[9px] uppercase text-slate-500 font-black tracking-widest group-hover:text-indigo-400 transition-colors mb-1">{attr.name}</div>
+            
+            <div class="flex items-center justify-center gap-1.5 mb-1.5">
+                <div class="text-2xl font-black text-white leading-none">
+                    {$derivedStats[attr.key]}
+                </div>
+                {#if $derivedStats[attr.key] !== attr.value}
+                    <div class="text-[11px] font-bold {$derivedStats[attr.key] > attr.value ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'} px-1 rounded-md">
+                        {$derivedStats[attr.key] > attr.value ? '+' : ''}{$derivedStats[attr.key] - attr.value}
+                    </div>
+                {/if}
+            </div>
+
+            <div class="inline-flex px-2 py-0.5 bg-indigo-500/10 rounded-lg">
+                <div class="text-xs text-indigo-400 font-black tracking-tight">mod +{ $derivedStats[attr.key] - 10}</div>
+            </div>
           </div>
-          <div class="text-xs text-indigo-400 font-mono">+{ $derivedStats[attr.key] - 10}</div>
+
           <button 
               onclick={(e) => handleEditClick(e, attr)} 
-              class="absolute top-1 right-1 text-slate-600 hover:text-white"
+              class="absolute top-1.5 right-1.5 p-1 text-slate-700 hover:text-white hover:bg-white/5 rounded-md transition-all"
               aria-label="Editar {attr.name}"
           >
-              <Edit size={10} />
+              <Edit size={12} />
           </button>
        </div>
     {/each}

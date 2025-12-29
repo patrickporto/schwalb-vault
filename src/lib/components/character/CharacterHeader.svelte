@@ -2,6 +2,7 @@
   import { character, modalState, damage, effectiveMaxHealth, tempHealth, isInjured, isIncapacitated, damagePercentage, rollHistory, isHistoryOpen } from '$lib/stores/characterStore';
   import { Settings, Moon, Dices, ChevronLeft, LayoutDashboard } from 'lucide-svelte';
   import { goto } from '$app/navigation';
+  import CampaignStatus from './CampaignStatus.svelte';
 
   function openModal(type: string) {
     modalState.update(m => ({ ...m, type: type, isOpen: true }));
@@ -33,7 +34,7 @@
                     {$character.name.charAt(0)}
                 </div>
                 <div class="hidden xs:block">
-                   <div class="flex items-center gap-1">
+                   <div class="flex items-center gap-2">
                        <h1 class="text-xs sm:text-sm font-bold text-white leading-tight truncate max-w-[80px] sm:max-w-none group-hover:text-indigo-400 transition-colors">{$character.name}</h1>
                    </div>
                    <p class="text-[10px] text-slate-500 font-medium">Nv {$character.level}</p>
