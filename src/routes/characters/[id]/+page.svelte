@@ -13,6 +13,7 @@
     import { syncCharacter, joinCampaignRoom } from '$lib/logic/sync';
     import { goto } from '$app/navigation';
     import { resolve } from '$app/paths';
+    import { browser } from '$app/environment';
 
     // Components
     import CharacterHeader from '$lib/components/character/CharacterHeader.svelte';
@@ -138,6 +139,16 @@
             notFound = true;
         }
         
+        
+        if (browser) {
+            const isMobile = window.innerWidth < 768;
+            if (isMobile) {
+                activeTab.set('stats');
+            } else if (get(activeTab) === 'stats') {
+                activeTab.set('acoes');
+            }
+        }
+
         loaded = true;
     }
 </script>

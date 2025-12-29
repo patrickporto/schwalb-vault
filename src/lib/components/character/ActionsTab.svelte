@@ -1,9 +1,15 @@
 <script lang="ts">
-    import { character, modalState, characterActions } from '$lib/stores/characterStore';
-    import { Sword, Bomb, Wand2, Zap } from 'lucide-svelte';
+    import { activeTab, character, modalState, characterActions } from '$lib/stores/characterStore';
+    import { Sword, Bomb, Wand2, Zap, Backpack } from 'lucide-svelte';
+    import { fade } from 'svelte/transition';
     import { ITEM_TYPES } from '../../../routes/sofww';
 
     const { useConsumable } = characterActions;
+
+    let actions = $derived($character.equipment.filter(i => (i.type === ITEM_TYPES.WEAPON && i.equippedState) || i.type === ITEM_TYPES.EXPLOSIVE));
+    let hasSpells = $derived($character.spells.length > 0);
+    let hasTalents = $derived($character.talents.length > 0);
+    let isEmpty = $derived(actions.length === 0 && !hasSpells && !hasTalents);
 
     function openModal(type: string, data: any = null) {
         modalState.update(m => ({ ...m, type, isOpen: true, data }));
@@ -16,7 +22,7 @@
 </script>
 
 <div class="space-y-4">
-    {#each $character.equipment.filter(i => (i.type === ITEM_TYPES.WEAPON && i.equippedState) || i.type === ITEM_TYPES.EXPLOSIVE) as item}
+    {#each actions as item}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div 
@@ -57,7 +63,8 @@
             </div>
         </div>
     {/each}
-    {#if $character.spells.length > 0}
+
+    {#if hasSpells}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div 
@@ -78,7 +85,8 @@
             </div>
         </div>
     {/if}
-    {#if $character.talents.length > 0}
+
+    {#if hasTalents}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div 
@@ -99,4 +107,61 @@
             </div>
         </div>
     {/if}
- </div>
+
+    {#if isEmpty}
+        <div 
+            in:fade={{ duration: 300 }}
+            class="flex flex-col items-center justify-center py-16 px-6 text-center bg-gradient-to-b from-slate-900/50 to-slate-950/50 rounded-[2.5rem] border border-dashed border-slate-800 shadow-2xl relative overflow-hidden group mt-4"
+        >
+            <!-- Background Decor -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 blur-[100px] rounded-full"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/10 blur-[100px] rounded-full"></div>
+
+            <div class="relative">
+                <div class="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center text-indigo-400 mb-6 mx-auto transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-xl border border-slate-700">
+                    <Sword size={40} class="opacity-80" />
+                </div>
+                
+                <h3 class="text-2xl font-black text-white mb-3 uppercase tracking-tight">Pronto para o Combate?</h3>
+                <p class="text-slate-400 mb-8 max-w-sm mx-auto leading-relaxed">
+                    Sua lista de ações rápidas está vazia. Equipe seu herói para ver armas, magias e talentos ativos aqui.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
+                    <button 
+                        onclick={() => activeTab.set('equipamento')}
+                        class="flex flex-col items-center gap-2 p-4 bg-slate-900/80 hover:bg-slate-800 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all active:scale-95 group/btn"
+                    >
+                        <div class="p-2 bg-slate-800 rounded-lg text-slate-400 group-hover/btn:text-indigo-400 transition-colors">
+                            <Backpack size={20} />
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover/btn:text-slate-300">Inventário</span>
+                    </button>
+
+                    <button 
+                        onclick={() => activeTab.set('magias')}
+                        class="flex flex-col items-center gap-2 p-4 bg-slate-900/80 hover:bg-slate-800 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all active:scale-95 group/btn"
+                    >
+                        <div class="p-2 bg-slate-800 rounded-lg text-slate-400 group-hover/btn:text-indigo-400 transition-colors">
+                            <Wand2 size={20} />
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover/btn:text-slate-300">Magias</span>
+                    </button>
+
+                    <button 
+                        onclick={() => activeTab.set('talentos')}
+                        class="flex flex-col items-center gap-2 p-4 bg-slate-900/80 hover:bg-slate-800 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all active:scale-95 group/btn"
+                    >
+                        <div class="p-2 bg-slate-800 rounded-lg text-slate-400 group-hover/btn:text-indigo-400 transition-colors">
+                            <Zap size={20} />
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover/btn:text-slate-300">Talentos</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {/if}
+
+</div>
+
+
