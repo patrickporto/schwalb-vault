@@ -1,5 +1,5 @@
 <script>
-    import { activeTab, modalState, rollHistory, character, defaultCharacter, isHistoryOpen } from '$lib/stores/characterStore';
+    import { activeTab, modalState, rollHistory, character, defaultCharacter, isHistoryOpen, normalHealth, currentHealth, damage } from '$lib/stores/characterStore';
     
     // Yjs / DB
     import { page } from '$app/stores';
@@ -25,11 +25,24 @@
     import TalentsTab from '$lib/components/character/TalentsTab.svelte';
     import InventoryTab from '$lib/components/character/InventoryTab.svelte';
     import NotesTab from '$lib/components/character/NotesTab.svelte';
-    import { ChevronRight, Clover } from 'lucide-svelte';
+    import { ChevronRight, Clover, ChevronLeft } from 'lucide-svelte';
+    import { goto } from '$app/navigation'; // Added for back button
 
     let loaded = false;
     let currentId = null;
-    let unsubscribeStore = null;
+    
+    // Reactive saving for all stores
+    $: if (loaded && currentId) {
+        saveCharacterData(currentId, $character, $normalHealth, $currentHealth, $damage);
+    }
+
+    function saveCharacterData(id, charData, nh, ch, dmg) {
+        // Debounce or just set. Yjs is fast enough for local?
+        // To avoid loops, we rely on Yjs or valid changes.
+        // We accumulate data into one object.
+        const toSave = { ...charData, normalHealth: nh, currentHealth: ch, damage: dmg };
+        charactersMap.set(id, toSave);
+    }
 
     // Reactive statement to handle ID changes
     $: if ($page.params.id) {
@@ -37,43 +50,43 @@
     }
 
     async function handleIdChange(id) {
-        // If switching IDs, show loading to prevent showing previous character data
         if (currentId !== id) loaded = false;
         
         if (currentId === id) return;
         currentId = id;
         
-        // Clean up previous subscription
-        if (unsubscribeStore) {
-            unsubscribeStore();
-            unsubscribeStore = null;
-        }
-
         await waitForSync();
 
         // Load or Initialize
         if (charactersMap.has(id)) {
             const data = charactersMap.get(id);
             character.set(data);
+            // Sync specific stores
+            if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
+            if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
+            if (data.damage !== undefined) damage.set(data.damage);
         } else {
-            // Initialize with default (deep copy to avoid ref issues if modified)
+            // Initialize with default
             const newChar = JSON.parse(JSON.stringify(defaultCharacter));
+            // Set defaults for separate stores
+            newChar.normalHealth = 24;
+            newChar.currentHealth = 24;
+            newChar.damage = 0;
+            
             character.set(newChar);
+            normalHealth.set(24);
+            currentHealth.set(24);
+            damage.set(0);
+            
             charactersMap.set(id, newChar);
         }
-
-        // Subscribe to changes
-        unsubscribeStore = character.subscribe(val => {
-           if (currentId === id) {
-               charactersMap.set(id, val);
-           }
-        });
         
         loaded = true;
     }
 
+    // No explicit subscription to clean up
     onDestroy(() => {
-        if (unsubscribeStore) unsubscribeStore();
+        // cleanup if needed
     });
 </script>
 
@@ -85,6 +98,9 @@
   <ModalManager />
 
   <!-- HEADER -->
+  <div class="max-w-6xl mx-auto px-4 mt-4">
+      <button on:click={() => goto('/')} class="inline-flex items-center text-slate-400 hover:text-white transition-colors font-bold text-sm"><ChevronLeft size={16}/> Dashboard</button>
+  </div>
   <CharacterHeader />
   <!-- History toggle was simulated in header, real toggle logic is via local state or store. 
        We can pass isHistoryOpen binding or equivalent. 

@@ -12,6 +12,9 @@ export const provider = isBrowser
     : null;
 
 export const charactersMap = doc.getMap('characters');
+export const campaignsMap = doc.getMap('campaigns');
+export const enemiesMap = doc.getMap('enemies');
+export const encountersMap = doc.getMap('encounters');
 
 // Helper to wait for sync
 export const waitForSync = () => {
