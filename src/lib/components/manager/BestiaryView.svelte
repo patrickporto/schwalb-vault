@@ -112,56 +112,70 @@
 </script>
 
 <div>
-    <div class="mb-8 border-b border-slate-800 pb-8">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-sm font-bold text-slate-500 uppercase flex items-center gap-2"><Layers size={14}/> Encontros Prontos</h3>
-            <button on:click={() => openEncounterModal()} class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded text-xs font-bold border border-slate-700 flex items-center gap-2 transition-colors"><Plus size={14}/> Novo Encontro</button>
+    <div class="mb-12">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-sm font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                <Layers size={16}/> Encontros Prontos
+            </h3>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             <!-- Placeholder Card: Novo Encontro -->
+             <button 
+                on:click={() => openEncounterModal()} 
+                class="min-h-[120px] border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-500 hover:border-indigo-500 hover:text-indigo-400 transition-all hover:bg-indigo-500/5 gap-2 group"
+             >
+                <Plus size={28} class="group-hover:scale-110 transition-transform"/>
+                <span class="font-bold text-sm">Novo Encontro</span>
+             </button>
+
              {#each $liveEncounters as enc (enc.id)}
                  <!-- svelte-ignore a11y-no-static-element-interactions -->
                  <div 
-                    class="bg-slate-900 border border-slate-800 rounded-xl p-4 transition-all hover:border-indigo-500/30"
+                    class="bg-slate-900 border border-slate-800 rounded-2xl p-5 transition-all hover:border-indigo-500/30 group relative flex flex-col justify-between shadow-lg hover:shadow-indigo-500/10"
                     on:dragover={handleDragOver}
                     on:drop={(e) => handleDrop(e, enc)}
                  >
-                     <div class="flex justify-between items-center mb-2">
-                        <div>
-                            <div class="font-bold text-white text-lg mb-1">{enc.name}</div>
-                            <div class="space-y-1">
+                     <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="font-bold text-white text-lg mb-2 group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{enc.name}</div>
+                            <div class="space-y-1.5">
                                 {#each enc.enemies || [] as item}
                                     {@const enemy = $liveEnemies.find(e => e.id === item.enemyId)}
-                                    <div class="text-xs text-slate-400 flex items-center gap-2">
-                                        <span class="bg-slate-800 px-1.5 rounded text-white font-mono">{item.count}x</span>
-                                        <span>{enemy ? enemy.name : 'Desconhecido'}</span>
+                                    <div class="text-xs text-slate-400 flex items-center gap-2 bg-slate-950/50 p-1.5 rounded-lg border border-slate-800/50">
+                                        <span class="bg-indigo-600/20 text-indigo-400 px-2 py-0.5 rounded-md text-[10px] font-black">{item.count}x</span>
+                                        <span class="font-medium">{enemy ? enemy.name : 'Desconhecido'}</span>
                                     </div>
                                 {/each}
-                                {#if !enc.enemies?.length}<div class="text-xs text-slate-600 italic">Vazio</div>{/if}
+                                {#if !enc.enemies?.length}<div class="text-xs text-slate-600 italic px-2">Nenhum inimigo adicionado. Arraste inimigos aqui!</div>{/if}
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                             <button on:click={() => runEncounter(enc)} class="bg-indigo-900/50 hover:bg-indigo-600 text-indigo-200 hover:text-white p-2 rounded transition-colors" title="Rodar Encontro"><Play size={16}/></button>
-                             <button on:click={() => openEncounterModal(enc)} class="text-slate-600 hover:text-white p-2" title="Editar"><Edit size={16}/></button>
-                             <button on:click={() => deleteEncounter(enc.id)} class="text-slate-600 hover:text-red-400 p-2"><Trash2 size={16}/></button>
-                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-4 pt-4 border-t border-slate-800/50">
+                        <button on:click={() => runEncounter(enc)} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-indigo-900/20"><Play size={16} fill="currentColor"/> Iniciar</button>
+                        <button on:click={() => openEncounterModal(enc)} class="p-2.5 text-slate-400 hover:text-white bg-slate-800/50 rounded-xl border border-slate-800 transition-all" title="Editar"><Edit size={16}/></button>
+                        <button on:click={() => deleteEncounter(enc.id)} class="p-2.5 text-slate-400 hover:text-red-400 bg-slate-800/50 rounded-xl border border-slate-800 hover:border-red-900/30 transition-all"><Trash2 size={16}/></button>
                     </div>
                  </div>
              {/each}
-             {#if $liveEncounters.length === 0}
-                 <div class="text-slate-500 text-sm italic col-span-3">Nenhum encontro salvo.</div>
-             {/if}
         </div>
     </div>
     
-    <div class="flex justify-between items-center mb-6">
-        <h3 class="text-sm font-bold text-slate-500 uppercase flex items-center gap-2"><Ghost size={14}/> Lista de Inimigos</h3>
-        <!-- <h2 class="text-xl font-bold text-white flex items-center gap-2"><Ghost size={20} class="text-indigo-500"/> Bestiário</h2> replaced by subheader -->
-        <div class="flex gap-2">
-            <button on:click={() => openEnemyModal()} class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"><Plus size={18}/> Novo Inimigo</button>
-        </div>
+    <div class="mb-6">
+        <h3 class="text-sm font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-6">
+            <Ghost size={16}/> Biblioteca de Inimigos
+        </h3>
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Placeholder Card: Novo Inimigo -->
+        <button 
+            on:click={() => openEnemyModal()} 
+            class="min-h-[180px] border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-500 hover:border-indigo-500 hover:text-indigo-400 transition-all hover:bg-indigo-500/5 gap-2 group"
+        >
+            <Plus size={32} class="group-hover:scale-110 transition-transform"/>
+            <span class="font-bold text-sm">Novo Inimigo</span>
+        </button>
+
         {#each $liveEnemies as enemy (enemy.id)}
              <!-- svelte-ignore a11y-no-static-element-interactions -->
              <div 
