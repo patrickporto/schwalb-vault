@@ -12,7 +12,7 @@
     ];
 </script>
 
-<nav class="flex bg-slate-900/80 backdrop-blur-md border-b border-slate-800 overflow-x-auto no-scrollbar sticky top-[60px] z-30" role="tablist">
+<div class="flex bg-slate-900/80 backdrop-blur-md border-b border-slate-800 overflow-x-auto no-scrollbar sticky top-[60px] z-30" role="tablist">
     {#each tabs as tab}
        <button 
            onclick={() => {
@@ -31,4 +31,5 @@
            {/if}
        </button>
     {/each}
-</nav>
+</div>
+<div class="h-4 bg-slate-950"></div>

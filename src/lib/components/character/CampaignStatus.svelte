@@ -102,6 +102,6 @@
     {/if}
 {/if}
 
-<script lang="ts" context="module">
+<script lang="ts" module>
     import { Clock } from 'lucide-svelte';
 </script>

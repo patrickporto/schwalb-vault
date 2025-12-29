@@ -3,93 +3,94 @@
     import { liveCharacters } from '$lib/stores/live';
     import { character } from '$lib/stores/characterStore';
     import { Users, Check, Wifi, AlertTriangle } from 'lucide-svelte';
-    import { goto } from '$app/navigation';
-    import { joinCampaignRoom, isGmOnline } from '$lib/logic/sync';
-    import { onMount } from 'svelte';
-    import ConfirmationModal from '$lib/components/manager/ConfirmationModal.svelte';
-    import { verifyPassword } from '$lib/logic/crypto';
+	import { goto } from '$app/navigation';
+	import { resolveRoute } from '$app/paths';
+	import { joinCampaignRoom, isGmOnline } from '$lib/logic/sync';
+	import { onMount } from 'svelte';
+	import ConfirmationModal from '$lib/components/manager/ConfirmationModal.svelte';
+	import { verifyPassword } from '$lib/logic/crypto';
 
-    const campaignId = $page.params.id;
-    // Get campaign info from the character store which is updated by the getCampaign sync action
-    let campaignName = $derived($character.campaignName || 'Buscando campanha...');
-    let gmName = $derived($character.gmName || '...');
-    let passwordHash = $derived($character.passwordHash);
+	const campaignId = $page.params.id;
+	// Get campaign info from the character store which is updated by the getCampaign sync action
+	let campaignName = $derived($character.campaignName || 'Buscando campanha...');
+	let gmName = $derived($character.gmName || '...');
+	let passwordHash = $derived($character.passwordHash);
 
-    // Filter out characters that are already in a campaign
-    let availableCharacters = $derived($liveCharacters.filter(c => !c.campaignId));
+	// Filter out characters that are already in a campaign
+	let availableCharacters = $derived($liveCharacters.filter(c => !c.campaignId));
 
-    let selectedCharId = $state<string | null>(null);
-    let showConfirm = $state(false);
-    
-    // Password state
-    let passwordInput = $state('');
-    let passwordError = $state(false);
-    let isVerifying = $state(false);
-    let generalError = $state('');
+	let selectedCharId = $state<string | null>(null);
+	let showConfirm = $state(false);
+	
+	// Password state
+	let passwordInput = $state('');
+	let passwordError = $state(false);
+	let isVerifying = $state(false);
+	let generalError = $state('');
 
-    onMount(() => {
-        if (campaignId) {
-            joinCampaignRoom(campaignId, false);
-        }
-    });
+	onMount(() => {
+		if (campaignId) {
+			joinCampaignRoom(campaignId, false);
+		}
+	});
 
-    async function handleJoin() {
-        generalError = '';
-        if (!selectedCharId || !campaignId) return;
-        
-        // Double-check that the character is not already in a campaign
-        const char = $liveCharacters.find(c => c.id === selectedCharId);
-        if (char?.campaignId) {
-            generalError = 'Este personagem já está em uma campanha!';
-            return;
-        }
+	async function handleJoin() {
+		generalError = '';
+		if (!selectedCharId || !campaignId) return;
+		
+		// Double-check that the character is not already in a campaign
+		const char = $liveCharacters.find(c => c.id === selectedCharId);
+		if (char?.campaignId) {
+			generalError = 'Este personagem já está em uma campanha!';
+			return;
+		}
 
-        // Verify password if required
-        if (passwordHash) {
-            if (!passwordInput) {
-                passwordError = true;
-                return;
-            }
-            
-            isVerifying = true;
-            const valid = await verifyPassword(passwordInput, passwordHash);
-            isVerifying = false;
-            
-            if (!valid) {
-                passwordError = true;
-                // No need for general error, input specific error is enough
-                return;
-            }
-        }
-        
-        passwordError = false;
-        showConfirm = true;
-    }
+		// Verify password if required
+		if (passwordHash) {
+			if (!passwordInput) {
+				passwordError = true;
+				return;
+			}
+			
+			isVerifying = true;
+			const valid = await verifyPassword(passwordInput, passwordHash);
+			isVerifying = false;
+			
+			if (!valid) {
+				passwordError = true;
+				// No need for general error, input specific error is enough
+				return;
+			}
+		}
+		
+		passwordError = false;
+		showConfirm = true;
+	}
 
-    function confirmJoin() {
-        if (!selectedCharId || !campaignId) return;
+	function confirmJoin() {
+		if (!selectedCharId || !campaignId) return;
 
-        const char = $liveCharacters.find(c => c.id === selectedCharId);
-        if (char) {
-            // Final check before joining
-            if (char.campaignId) {
-                generalError = 'Este personagem já está em uma campanha!';
-                showConfirm = false;
-                return;
-            }
-            
-            import('$lib/db').then(({ charactersMap }) => {
-                charactersMap.set(selectedCharId!, {
-                    ...char,
-                    campaignId,
-                    campaignName,
-                    gmName,
-                    campaignApproval: 'pending'
-                });
-                goto(`/characters/${selectedCharId}`);
-            });
-        }
-    }
+		const char = $liveCharacters.find(c => c.id === selectedCharId);
+		if (char) {
+			// Final check before joining
+			if (char.campaignId) {
+				generalError = 'Este personagem já está em uma campanha!';
+				showConfirm = false;
+				return;
+			}
+			
+			import('$lib/db').then(({ charactersMap }) => {
+				charactersMap.set(selectedCharId!, {
+					...char,
+					campaignId,
+					campaignName,
+					gmName,
+					campaignApproval: 'pending'
+				});
+				goto(resolveRoute('/characters/[id]', { id: selectedCharId }));
+			});
+		}
+	}
 </script>
 
 <div class="min-h-screen bg-slate-950 flex items-center justify-center p-4">

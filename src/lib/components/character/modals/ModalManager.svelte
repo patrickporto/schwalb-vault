@@ -190,30 +190,46 @@
             {#if $modalState.type === 'item'}
                 <div class="space-y-3">
                     <div>
-                        <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold mb-1" placeholder="Nome" bind:value={formData.name} />
+                        <label class="text-xs font-bold text-slate-400 uppercase">Nome <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold mb-1" placeholder="Nome" bind:value={formData.name} /></label>
                         {#if !formData.name}<p class="text-[10px] text-red-500">* Nome obrigatório</p>{/if}
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <select class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" bind:value={formData.type}>
-                            {#each Object.values(ITEM_TYPES) as t}<option value={t}>{t}</option>{/each}
-                        </select>
-                        <input type="number" class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Qtd" bind:value={formData.quantity} />
+                        <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Tipo</span>
+                            <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" bind:value={formData.type}>
+                                {#each Object.values(ITEM_TYPES) as t}<option value={t}>{t}</option>{/each}
+                            </select>
+                        </label>
+                        <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Qtd</span>
+                            <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Qtd" bind:value={formData.quantity} />
+                        </label>
                     </div>
                     {#if formData.type === ITEM_TYPES.WEAPON}
                         <div class="grid grid-cols-3 gap-2">
-                            <input type="number" class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Dano (d6)" bind:value={formData.damageDice} />
-                            <input class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs col-span-2" placeholder="Traits" bind:value={formData.traits} />
-                            <select class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" bind:value={formData.grip}>{#each Object.values(GRIPS) as g}<option value={g}>{g}</option>{/each}</select>
-                            <input class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs col-span-2" placeholder="Range" bind:value={formData.range} />
+                            <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Dano</span>
+                                <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Dano (d6)" bind:value={formData.damageDice} />
+                            </label>
+                            <label class="block col-span-2"><span class="text-[10px] text-slate-500 uppercase font-bold">Traits</span>
+                                <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Traits" bind:value={formData.traits} />
+                            </label>
+                            <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Empunhadura</span>
+                                <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" bind:value={formData.grip}>{#each Object.values(GRIPS) as g}<option value={g}>{g}</option>{/each}</select>
+                            </label>
+                            <label class="block col-span-2"><span class="text-[10px] text-slate-500 uppercase font-bold">Alcance</span>
+                                <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Range" bind:value={formData.range} />
+                            </label>
                         </div>
                     {/if}
                     {#if formData.type === ITEM_TYPES.ARMOR}
                          <div class="grid grid-cols-2 gap-2">
-                             <input type="number" class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Fixed Def" bind:value={formData.defenseFixed} />
-                             <input type="number" class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Mod Def" bind:value={formData.defenseMod} />
+                             <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Def. Fixa</span>
+                                <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Fixed Def" bind:value={formData.defenseFixed} />
+                             </label>
+                             <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Def. Mod</span>
+                                <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Mod Def" bind:value={formData.defenseMod} />
+                             </label>
                          </div>
                     {/if}
-                    <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" rows={3} placeholder="Descrição" bind:value={formData.description}></textarea>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Descrição <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" rows={3} placeholder="Descrição" bind:value={formData.description}></textarea></label>
                     <div class="flex gap-2">
                         {#if $modalState.data}<button onclick={() => { characterActions.deleteItem($modalState.data.id); closeModal(); }} class="bg-red-900/50 hover:bg-red-900 text-red-200 p-2 rounded" title="Excluir"><Trash2 size={18}/></button>{/if}
                         <button onclick={saveItem} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">Salvar</button>
@@ -223,15 +239,19 @@
             {:else if $modalState.type === 'spell'}
                 <div class="space-y-3">
                     <div>
-                        <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold mb-1" placeholder="Nome" bind:value={formData.name} />
+                        <label class="text-xs font-bold text-slate-400 uppercase">Nome <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold mb-1" placeholder="Nome" bind:value={formData.name} /></label>
                         {#if !formData.name}<p class="text-[10px] text-red-500">* Nome obrigatório</p>{/if}
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <select class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" bind:value={formData.tier}>
-                             {#each ['Novice', 'Expert', 'Master'] as t}<option value={t}>{t}</option>{/each}
-                        </select>
+                        <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Tier</span>
+                            <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" bind:value={formData.tier}>
+                                 {#each ['Novice', 'Expert', 'Master'] as t}<option value={t}>{t}</option>{/each}
+                            </select>
+                        </label>
                         <div class="relative">
-                            <input list="traditions" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Tradição" bind:value={formData.tradition} />
+                            <label class="block"><span class="text-[10px] text-slate-500 uppercase font-bold">Tradição</span>
+                                <input list="traditions" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Tradição" bind:value={formData.tradition} />
+                            </label>
                             <datalist id="traditions">
                                 {#each MAGIC_TRADITIONS as t}<option value={t}>{t}</option>{/each}
                             </datalist>
@@ -247,7 +267,7 @@
                              {formData.effect ? 'Configurado' : 'Nenhum'}
                          </button>
                     </div>
-                    <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" rows={4} placeholder="Descrição" bind:value={formData.description}></textarea>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Descrição <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" rows={4} placeholder="Descrição" bind:value={formData.description}></textarea></label>
                     <div class="flex gap-2">
                         {#if $modalState.data}<button onclick={() => { characterActions.deleteSpell($modalState.data.id); closeModal(); }} class="bg-red-900/50 hover:bg-red-900 text-red-200 p-2 rounded" title="Excluir"><Trash2 size={18}/></button>{/if}
                         <button onclick={saveSpell} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">Salvar</button>
@@ -257,7 +277,7 @@
             {:else if $modalState.type === 'talent'}
                 <div class="space-y-3">
                     <div>
-                        <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold mb-1" placeholder="Nome" bind:value={formData.name} />
+                        <label class="text-xs font-bold text-slate-400 uppercase">Nome <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold mb-1" placeholder="Nome" bind:value={formData.name} /></label>
                         {#if !formData.name}<p class="text-[10px] text-red-500">* Nome obrigatório</p>{/if}
                     </div>
                     <div class="flex items-center gap-2 bg-slate-900 p-2 rounded border border-slate-700">
@@ -276,7 +296,7 @@
                              {formData.effect ? 'Configurado' : 'Nenhum'}
                          </button>
                     </div>
-                    <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" rows={4} placeholder="Descrição" bind:value={formData.description}></textarea>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Descrição <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" rows={4} placeholder="Descrição" bind:value={formData.description}></textarea></label>
                     <div class="flex gap-2">
                         {#if $modalState.data}<button onclick={() => { characterActions.deleteTalent($modalState.data.id); closeModal(); }} class="bg-red-900/50 hover:bg-red-900 text-red-200 p-2 rounded" title="Excluir"><Trash2 size={18}/></button>{/if}
                         <button onclick={saveTalent} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">Salvar</button>
@@ -325,7 +345,7 @@
                         </div>
                     </div>
                     {#if !$modalState.data?.parentType}
-                         <div><label class="text-xs font-bold text-slate-400 uppercase">Descrição</label><textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.description}></textarea></div>
+                         <div><label class="text-xs font-bold text-slate-400 uppercase">Descrição <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.description}></textarea></label></div>
                     {/if}
                     <button onclick={saveEffect} class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">Salvar Efeito</button>
                 </div>
@@ -333,38 +353,38 @@
             {:else if $modalState.type === 'attribute'}
                 <div class="space-y-4">
                     <h3 class="text-white font-bold text-lg">{formData.name}</h3>
-                    <div><label class="text-xs text-slate-400 uppercase font-bold">Valor Base</label><input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.value} /></div>
+                    <div><label class="text-xs text-slate-400 uppercase font-bold">Valor Base <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.value} /></label></div>
                     <button onclick={saveAttribute} class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">Salvar</button>
                 </div>
 
             {:else if $modalState.type === 'stat'}
                 <div class="space-y-4">
                     <h3 class="text-white font-bold text-lg uppercase">{formData.name}</h3>
-                    <div><label class="text-xs text-slate-400 uppercase font-bold">Valor Base</label><input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.value} /></div>
+                    <div><label class="text-xs text-slate-400 uppercase font-bold">Valor Base <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.value} /></label></div>
                     <button onclick={saveStat} class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">Salvar</button>
                 </div>
 
             {:else if $modalState.type === 'health'}
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-xs text-slate-400 uppercase font-bold">Vida Normal</label><input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.nh} /></div>
-                        <div><label class="text-xs text-slate-400 uppercase font-bold">Vida Atual</label><input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.ch} /></div>
+                        <div><label class="text-xs text-slate-400 uppercase font-bold">Vida Normal <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.nh} /></label></div>
+                        <div><label class="text-xs text-slate-400 uppercase font-bold">Vida Atual <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.ch} /></label></div>
                     </div>
-                    <div><label class="text-xs text-red-400 uppercase font-bold">Dano</label><input type="number" class="w-full bg-slate-900 border border-red-900/50 rounded p-2 text-white" bind:value={formData.d} /></div>
+                    <div><label class="text-xs text-red-400 uppercase font-bold">Dano <input type="number" class="w-full bg-slate-900 border border-red-900/50 rounded p-2 text-white" bind:value={formData.d} /></label></div>
                     <button onclick={saveHealth} class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">Atualizar</button>
                 </div>
 
             {:else if $modalState.type === 'character_info'}
                 <div class="space-y-4">
-                        <div><label class="text-xs font-bold text-slate-400 uppercase">Nome</label><input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.name} /></div>
+                        <div><label class="text-xs font-bold text-slate-400 uppercase">Nome <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.name} /></label></div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-xs font-bold text-slate-400 uppercase">Nível</label><input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.level} /></div>
-                            <div><label class="text-xs font-bold text-slate-400 uppercase">Ancestralidade</label><input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.ancestry} /></div>
+                            <div><label class="text-xs font-bold text-slate-400 uppercase">Nível <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.level} /></label></div>
+                            <div><label class="text-xs font-bold text-slate-400 uppercase">Ancestralidade <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.ancestry} /></label></div>
                         </div>
                         <div class="pt-2 border-t border-slate-700 space-y-3">
-                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Novice</label><input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.novicePath} /></div>
-                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Expert</label><input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.expertPath} /></div>
-                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Master</label><input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.masterPath} /></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Novice <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.novicePath} /></label></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Expert <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.expertPath} /></label></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase">Master <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.masterPath} /></label></div>
                         </div>
                         <button onclick={saveCharacterInfo} class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded mt-2">Salvar</button>
                 </div>
