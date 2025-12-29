@@ -72,7 +72,8 @@
                 initiative: charData.initiative,
                 acted: charData.acted,
                 afflictions: charData.afflictions || [],
-                campaignApproval: charData.campaignApproval
+                campaignApproval: charData.campaignApproval,
+                imageUrl: charData.imageUrl
             });
         }
     });
@@ -99,7 +100,8 @@
                 initiative: current.initiative,
                 acted: current.acted,
                 afflictions: current.afflictions || [],
-                campaignApproval: current.campaignApproval
+                campaignApproval: current.campaignApproval,
+                imageUrl: current.imageUrl
             });
         }, 30000); // 30 seconds heartbeat
 

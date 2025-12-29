@@ -1,5 +1,8 @@
 <script lang="ts">
-    import { X, Plus, Trash2, Save, Eye } from 'lucide-svelte';
+    import { X, Plus, Trash2, Save, Eye, Camera } from 'lucide-svelte';
+    import Avatar from '../common/Avatar.svelte';
+    import ImageCropperModal from '../common/ImageCropperModal.svelte';
+    import { saveImage } from '$lib/logic/image';
     
     interface Props {
         isOpen: boolean;
@@ -13,10 +16,39 @@
     let form = $state(createDefaultForm());
     let tab = $state<'stats' | 'attributes' | 'abilities'>('stats');
 
+    let isCropperOpen = $state(false);
+    let tempImage = $state('');
+    let fileInput = $state<HTMLInputElement>();
+
+    function handleFileSelect(e: Event) {
+       const files = (e.target as HTMLInputElement).files;
+       if (files && files.length > 0) {
+           const file = files[0];
+           const reader = new FileReader();
+           reader.onload = () => {
+               tempImage = reader.result as string;
+               isCropperOpen = true;
+           };
+           reader.readAsDataURL(file);
+       }
+       if (e.target) (e.target as HTMLInputElement).value = '';
+    }
+
+    async function handleCrop(blob: Blob) {
+        try {
+            const hash = await saveImage(blob);
+            form.imageUrl = hash;
+            isCropperOpen = false;
+        } catch (e: any) {
+            console.error(e);
+            alert(e.message || "Erro ao salvar imagem");
+        }
+    }
+
     function createDefaultForm() {
         return { 
             name: '', difficulty: 1, defense: 10, health: 10, damage: 0, size: 1, speed: 10, 
-            description: '', senses: '', languages: '', immune: '',
+            description: '', senses: '', languages: '', immune: '', imageUrl: '',
             stats: { str: 10, agi: 10, int: 10, wil: 10 },
             traits: [] as {name: string, desc: string}[], 
             actions: [] as {name: string, desc: string}[], 
@@ -77,7 +109,22 @@
                 <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-800/50">
                     {#if tab === 'stats'}
                         <div class="space-y-4">
-                             <div><label for="enemy-name" class="text-xs text-slate-500 uppercase font-bold block mb-1">Nome</label><input id="enemy-name" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold text-lg" bind:value={form.name} /></div>
+                             <div class="flex items-center gap-4">
+                                <div class="relative group cursor-pointer" onclick={() => fileInput?.click()}>
+                                    <div class="w-16 h-16 rounded-xl overflow-hidden border border-slate-700">
+                                        {#key form.imageUrl}
+                                            <Avatar hash={form.imageUrl} alt={form.name} size="custom" fallbackText="?" />
+                                        {/key}
+                                    </div>
+                                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
+                                        <Camera size={20} class="text-white"/>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <label for="enemy-name" class="text-xs text-slate-500 uppercase font-bold block mb-1">Nome</label>
+                                    <input id="enemy-name" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold text-lg" bind:value={form.name} />
+                                </div>
+                             </div>
                              <div class="grid grid-cols-2 gap-4">
                                  <div><label for="enemy-diff" class="text-xs text-slate-500 uppercase font-bold block mb-1">Dificuldade</label><input id="enemy-diff" type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={form.difficulty} /></div>
                                  <div><label for="enemy-size" class="text-xs text-slate-500 uppercase font-bold block mb-1">Tamanho (Size)</label><input id="enemy-size" type="number" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={form.size} /></div>
@@ -163,8 +210,18 @@
                      <!-- Card Preview -->
                      <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl p-5 shadow-2xl relative">
                          <div class="absolute -top-3 -right-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border border-red-400">Dificuldade {form.difficulty}</div>
-                         <h2 class="text-2xl font-bold text-white mb-1 font-serif tracking-wide">{form.name || "Inimigo"}</h2>
-                         <div class="h-1 w-20 bg-red-600 mb-4 rounded-full"></div>
+                         
+                         <div class="flex items-center gap-3 mb-4">
+                            {#if form.imageUrl}
+                            <div class="w-16 h-16 rounded-lg overflow-hidden border border-slate-700 shadow-lg flex-shrink-0">
+                                <Avatar hash={form.imageUrl} alt={form.name} size="custom" />
+                            </div>
+                            {/if}
+                            <div class="flex-1 min-w-0">
+                                <h2 class="text-2xl font-bold text-white mb-1 font-serif tracking-wide truncate">{form.name || "Inimigo"}</h2>
+                                <div class="h-1 w-20 bg-red-600 rounded-full"></div>
+                            </div>
+                         </div>
                          
                          <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
                              <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center"><span class="text-slate-500 uppercase font-bold text-[10px]">Defesa</span> <span class="text-white font-mono font-bold text-lg">{form.defense}</span></div>
@@ -229,4 +286,18 @@
           </div>
     </div>
 </div>
+
+<input 
+    type="file" 
+    bind:this={fileInput} 
+    onchange={handleFileSelect} 
+    hidden 
+    accept="image/*" 
+/>
+<ImageCropperModal 
+    isOpen={isCropperOpen}
+    imageUrl={tempImage}
+    onClose={() => isCropperOpen = false}
+    onCrop={handleCrop}
+/>
 {/if}

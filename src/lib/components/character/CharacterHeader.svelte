@@ -4,10 +4,49 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import CampaignStatus from './CampaignStatus.svelte';
+  
+  import Avatar from '../common/Avatar.svelte';
+  import ImageCropperModal from '../common/ImageCropperModal.svelte';
+  import { saveImage } from '$lib/logic/image';
+  import { Camera, UserCog } from 'lucide-svelte';
+
+  let isMenuOpen = $state(false);
+  let isCropperOpen = $state(false);
+  let tempImage = $state('');
+  let fileInput = $state<HTMLInputElement>();
 
   function openModal(type: string) {
     modalState.update(m => ({ ...m, type: type, isOpen: true }));
   }
+
+  function handleFileSelect(e: Event) {
+       const files = (e.target as HTMLInputElement).files;
+       if (files && files.length > 0) {
+           const file = files[0];
+           const reader = new FileReader();
+           reader.onload = () => {
+               tempImage = reader.result as string;
+               isCropperOpen = true;
+               isMenuOpen = false;
+           };
+           reader.readAsDataURL(file);
+       }
+       // Reset input
+       if (e.target) (e.target as HTMLInputElement).value = '';
+   }
+
+   async function handleCrop(blob: Blob) {
+        console.log('CharacterHeader: handleCrop started', blob);
+        try {
+            const hash = await saveImage(blob);
+            console.log('CharacterHeader: Image saved, hash:', hash);
+            character.update(c => ({ ...c, imageUrl: hash }));
+            isCropperOpen = false;
+        } catch (e: any) {
+            console.error('CharacterHeader: Error in handleCrop:', e);
+            alert(e.message || "Erro ao salvar imagem");
+        }
+   }
 </script>
 
 <header class="bg-slate-900/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 shadow-2xl">
@@ -26,21 +65,50 @@
                 <LayoutDashboard size={18} class="hidden sm:block opacity-50"/>
              </button>
 
-             <button 
-                class="flex items-center gap-2 group text-left" 
-                onclick={() => openModal('character_info')}
-                aria-label="Informações do Personagem"
-             >
-                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-600 rounded-lg sm:rounded-full border border-white/10 flex items-center justify-center text-sm sm:text-lg font-black shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                    {$character.name.charAt(0)}
-                </div>
-                <div class="hidden xs:block">
-                   <div class="flex items-center gap-2">
-                       <h1 class="text-xs sm:text-sm font-bold text-white leading-tight truncate max-w-[80px] sm:max-w-none group-hover:text-indigo-400 transition-colors">{$character.name}</h1>
-                   </div>
-                   <p class="text-[10px] text-slate-500 font-medium">Nv {$character.level}</p>
-                </div>
-             </button>
+             <div class="relative">
+                 <button 
+                    class="flex items-center gap-2 group text-left relative" 
+                    onclick={() => isMenuOpen = !isMenuOpen}
+                    aria-label="Opções do Personagem"
+                 >
+                    <div class="rounded-lg sm:rounded-full overflow-hidden border border-white/10 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform w-8 h-8 sm:w-10 sm:h-10">
+                         <Avatar 
+                            hash={$character.imageUrl} 
+                            alt={$character.name} 
+                            fallbackText={$character.name.charAt(0)} 
+                            size="custom" 
+                         />
+                    </div>
+                    
+                    <div class="hidden xs:block">
+                       <div class="flex items-center gap-2">
+                           <h1 class="text-xs sm:text-sm font-bold text-white leading-tight truncate max-w-[80px] sm:max-w-none group-hover:text-indigo-400 transition-colors">{$character.name}</h1>
+                       </div>
+                       <p class="text-[10px] text-slate-500 font-medium">Nv {$character.level}</p>
+                    </div>
+                 </button>
+
+                 <!-- Menu Dropdown -->
+                 {#if isMenuOpen}
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <div class="fixed inset-0 z-40" onclick={() => isMenuOpen = false}></div>
+                    <div class="absolute top-full left-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden animate-in slide-in-from-top-2 fade-in duration-200">
+                        <button 
+                            onclick={() => fileInput.click()}
+                            class="w-full text-left px-4 py-3 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-700 flex items-center gap-3 transition-colors border-b border-slate-700/50"
+                        >
+                            <Camera size={16} class="text-indigo-400"/> Alterar Foto
+                        </button>
+                        <button 
+                            onclick={() => { openModal('character_info'); isMenuOpen = false; }}
+                            class="w-full text-left px-4 py-3 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-700 flex items-center gap-3 transition-colors"
+                        >
+                            <UserCog size={16} class="text-slate-400"/> Editar Informações
+                        </button>
+                    </div>
+                 {/if}
+             </div>
           </div>
 
            <!-- Centro: Vida (Improved UX) -->
@@ -128,6 +196,22 @@
        </div>
     </div>
   </header>
+
+
+<input 
+    type="file" 
+    bind:this={fileInput} 
+    onchange={handleFileSelect} 
+    hidden 
+    accept="image/*" 
+/>
+
+<ImageCropperModal 
+    isOpen={isCropperOpen}
+    imageUrl={tempImage}
+    onClose={() => isCropperOpen = false}
+    onCrop={handleCrop}
+/>
 
 <style>
     /* Suporte para telas muito pequenas */

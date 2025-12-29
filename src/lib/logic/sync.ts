@@ -206,7 +206,8 @@ export function joinCampaignRoom(campaignId: string, isGM: boolean = false, char
                     afflictions: charData.afflictions || c.afflictions,
                     initiative: charData.initiative !== undefined ? charData.initiative : (c.initiative ?? false),
                     acted: charData.acted !== undefined ? charData.acted : (c.acted ?? false),
-                    campaignApproval: charData.campaignApproval || c.campaignApproval
+                    campaignApproval: charData.campaignApproval || c.campaignApproval,
+                    imageUrl: charData.imageUrl || c.imageUrl
                 }));
                 if (charData.damage !== undefined) damage.set(charData.damage);
                 if (charData.currentHealth !== undefined) currentHealth.set(charData.currentHealth);
