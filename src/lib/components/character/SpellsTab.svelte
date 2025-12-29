@@ -1,6 +1,6 @@
 <script>
     import { character, modalState } from '$lib/stores/characterStore';
-    import { Plus, Edit } from 'lucide-svelte';
+    import { Plus, Edit, Wand2 } from 'lucide-svelte';
 
     function openModal(type, data = null) {
         modalState.update(m => ({ ...m, type, isOpen: true, data }));

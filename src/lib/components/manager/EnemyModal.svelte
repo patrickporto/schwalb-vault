@@ -157,6 +157,19 @@
                              {/each}
                          </div>
                          
+                         <!-- Resistances/Senses -->
+                         <div class="mb-6 space-y-2 text-xs">
+                            {#if form.senses}
+                                <div class="flex gap-2"><span class="font-bold text-slate-500 uppercase">Sentidos:</span> <span class="text-white">{form.senses}</span></div>
+                            {/if}
+                            {#if form.languages}
+                                <div class="flex gap-2"><span class="font-bold text-slate-500 uppercase">Idiomas:</span> <span class="text-white">{form.languages}</span></div>
+                            {/if}
+                            {#if form.immune}
+                                <div class="flex gap-2"><span class="font-bold text-slate-500 uppercase">Imunidades:</span> <span class="text-white">{form.immune}</span></div>
+                            {/if}
+                         </div>
+                         
                          <div class="space-y-5 text-sm">
                               {#if form.traits.length > 0}
                                   <div><h4 class="font-bold text-indigo-400 uppercase text-xs mb-2 tracking-wider">Traços</h4>
@@ -170,7 +183,20 @@
                                      <div class="mb-2 pl-3 border-l-2 border-red-900/50"><span class="font-bold text-white">{t.name}:</span> <span class="text-slate-300">{t.desc}</span></div>
                                   {/each}</div>
                               {/if}
-                              <!-- Reactions & End of Round omitted for brevity but logic is same -->
+                               
+                              {#if form.reactions.length > 0}
+                                  <div><h4 class="font-bold text-orange-400 uppercase text-xs mb-2 tracking-wider">Reações</h4>
+                                  {#each form.reactions as t}
+                                     <div class="mb-2 pl-3 border-l-2 border-orange-900/50"><span class="font-bold text-white">{t.name}:</span> <span class="text-slate-300">{t.desc}</span></div>
+                                  {/each}</div>
+                              {/if}
+
+                              {#if form.endOfRound.length > 0}
+                                  <div><h4 class="font-bold text-yellow-500 uppercase text-xs mb-2 tracking-wider">Fim da Rodada</h4>
+                                  {#each form.endOfRound as t}
+                                     <div class="mb-2 pl-3 border-l-2 border-yellow-900/50"><span class="font-bold text-white">{t.name}:</span> <span class="text-slate-300">{t.desc}</span></div>
+                                  {/each}</div>
+                              {/if}
                          </div>
                     </div>
                 </div>

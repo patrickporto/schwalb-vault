@@ -7,53 +7,75 @@
     export let updateEnemy = () => {};
     export let removeFromCombat = () => {};
 
-    const isPlayer = entity.type === 'player';
+    // Derived values
+    $: isPlayer = entity.type === 'player';
+    $: damage = entity.damage || 0;
+    $: maxHealth = entity.health || entity.normalHealth || 10;
+    // Current health is now independent mostly
+    $: currentHealth = entity.currentHealth ?? maxHealth;
+    
+    // In Weird Wizard, you are incapacitated if Damage >= Health
+    $: isIncapacitated = damage >= currentHealth;
+    $: isInjured = (damage >= currentHealth / 2) && !isIncapacitated; 
+    
+    // Bar should fill based on Damage relative to Current Health (the "container")
+    $: damagePercent = currentHealth > 0 ? Math.min(100, Math.max(0, (damage / currentHealth) * 100)) : 100;
+
     let expanded = false;
 
-    // We modify local vars but for persistence we must call updateEnemy/charactersMap
+    // Helper for player updates
+    function updatePlayer(updates) {
+        if (entity.type !== 'player') return;
+        const current = charactersMap.get(entity.id) || entity;
+        charactersMap.set(entity.id, { ...current, ...updates });
+    }
+
+    function handleDamageInput(e) {
+        const val = parseInt(e.target.value);
+        if (isNaN(val)) return; 
+        const d = Math.max(0, val);
+        // Damage is independent, but typically shouldn't exceed health in a permeating way?
+        // Rules say: "Damage beyond Health is ignored". 
+        // We will just set it. If it exceeds, they are Incapacitated.
+        const updates = { damage: d };
+        if(entity.type === 'player') updatePlayer(updates);
+        else updateEnemy(entity.instanceId, updates);
+    }
+
+    function handleHealthInput(e) {
+        const val = parseInt(e.target.value);
+        if (isNaN(val)) return;
+        const h = Math.max(0, val);
+        
+        // Rule: If Health drops below Damage, Damage is reduced to equal Health.
+        // Otherwise, Damage is staying as is.
+        let d = damage;
+        if (h < damage) {
+            d = h;
+        }
+
+        const updates = { currentHealth: h, damage: d };
+        if(entity.type === 'player') updatePlayer(updates);
+        else updateEnemy(entity.instanceId, updates);
+    }
     
     function toggleActed() {
-        if(isPlayer) {
-             charactersMap.set(entity.id, { ...entity, acted: !entity.acted });
-        } else {
-             updateEnemy(entity.instanceId, { acted: !entity.acted });
-        }
+        const newVal = !entity.acted;
+        if(entity.type === 'player') updatePlayer({ acted: newVal });
+        else updateEnemy(entity.instanceId, { acted: newVal });
     }
 
     function toggleInitiative() {
-        if(isPlayer) {
-             charactersMap.set(entity.id, { ...entity, initiative: !entity.initiative });
-        }
+        if(entity.type === 'player') updatePlayer({ initiative: !entity.initiative });
     }
 
-    function setDamage(val) {
-        const d = Math.max(0, parseInt(val) || 0);
-        if(isPlayer) charactersMap.set(entity.id, { ...entity, damage: d });
-        else updateEnemy(entity.instanceId, { damage: d });
-    }
-
-    function setCurrentHealth(val) {
-        const h = Math.max(0, parseInt(val) || 0);
-        if(isPlayer) charactersMap.set(entity.id, { ...entity, currentHealth: h });
-        else updateEnemy(entity.instanceId, { currentHealth: h });
-    }
-    
     function toggleAffliction(aff) {
          const list = entity.afflictions || [];
          const newList = list.includes(aff) ? list.filter(a => a !== aff) : [...list, aff];
-         if(isPlayer) charactersMap.set(entity.id, { ...entity, afflictions: newList });
-         else updateEnemy(entity.instanceId, { afflictions: newList });
+         const updates = { afflictions: newList };
+         if(entity.type === 'player') updatePlayer(updates);
+         else updateEnemy(entity.instanceId, updates);
     }
-
-    // Derived
-    $: damage = entity.damage || 0;
-    $: limitHealth = entity.currentHealth || 1; 
-    $: referenceMax = entity.health || (entity.normalHealth || 10);
-    $: currentHealth = entity.currentHealth || 0;
-    
-    $: isIncapacitated = damage >= limitHealth;
-    $: isInjured = damage >= limitHealth / 2 && !isIncapacitated; 
-    $: damagePercent = Math.min(100, Math.max(0, (damage / limitHealth) * 100));
 
     const AFFLICTIONS = ["Blinded", "Confused", "Controlled", "Cursed", "Deafened", "Frightened", "Held", "Impaired", "Incapacitated", "On Fire", "Poisoned", "Prone", "Slowed", "Stunned", "Unconscious", "Vulnerable", "Weakened"];
 </script>
@@ -67,6 +89,7 @@
         <button on:click={toggleActed}
             class="w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-all shadow-lg {isIncapacitated ? 'bg-red-900/20 border-red-600 text-red-500' : entity.acted ? 'bg-slate-800 border-slate-700 text-slate-500' : isPlayer ? 'bg-indigo-600 hover:bg-indigo-500 border-indigo-400 text-white' : 'bg-red-900/50 hover:bg-red-800 border-red-700 text-red-200'}"
             title={entity.acted ? "Já agiu" : "Agir"}
+            aria-label={entity.acted ? "Já agiu" : "Agir"}
         >
             {#if isIncapacitated}
                 <Skull size={24} class="animate-pulse"/>
@@ -88,22 +111,32 @@
             <div class="relative w-full h-5 bg-slate-950 rounded-lg mt-1 overflow-hidden border border-slate-800 group">
                 <div class="absolute top-0 left-0 h-full transition-all duration-300 {isIncapacitated ? 'bg-red-600' : isInjured ? 'bg-orange-600' : 'bg-red-900/60'}" style="width: {damagePercent}%"></div>
                 
-                <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md tracking-wider">
+                <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md tracking-wider" aria-hidden="true">
                     {isIncapacitated ? 'INCAPACITADO' : isInjured ? 'FERIDO' : `${damage} Dano`}
                 </div>
             </div>
 
             <div class="flex flex-wrap gap-2 mt-2">
                 {#each (entity.afflictions || []) as aff}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <span on:click={() => toggleAffliction(aff)} class="text-[9px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-800 flex items-center gap-1 cursor-pointer hover:bg-red-900/60 transition-colors">{aff} <X size={8}/></span>
+                    <button 
+                        on:click={() => toggleAffliction(aff)} 
+                        class="text-[9px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-800 flex items-center gap-1 cursor-pointer hover:bg-red-900/60 transition-colors"
+                        title="Remover {aff}"
+                    >
+                        {aff} <X size={8}/>
+                    </button>
                 {/each}
                 <div class="relative group/aff">
-                    <button class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 hover:text-white flex items-center gap-1"><Plus size={8}/> Aflição</button>
-                    <div class="absolute top-full left-0 mt-1 bg-slate-800 border border-slate-700 rounded shadow-xl p-2 w-40 z-20 hidden group-hover/aff:block max-h-40 overflow-y-auto custom-scrollbar">
+                    <button class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 hover:text-white flex items-center gap-1" aria-haspopup="true"><Plus size={8}/> Aflição</button>
+                    <div class="absolute top-full left-0 mt-1 bg-slate-800 border border-slate-700 rounded shadow-xl p-2 w-40 z-20 hidden group-hover/aff:block max-h-40 overflow-y-auto custom-scrollbar" role="menu">
                         {#each AFFLICTIONS as a}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div on:click={() => toggleAffliction(a)} class="text-xs text-slate-300 hover:text-white hover:bg-slate-700 p-1 cursor-pointer rounded">{a}</div>
+                            <button 
+                                on:click={() => toggleAffliction(a)} 
+                                class="w-full text-left text-xs text-slate-300 hover:text-white hover:bg-slate-700 p-1 cursor-pointer rounded"
+                                role="menuitem"
+                            >
+                                {a}
+                            </button>
                         {/each}
                     </div>
                 </div>
@@ -113,32 +146,32 @@
         <div class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
             <div class="text-center w-10 border-r border-slate-800 pr-2 mr-1">
                 <div class="text-[8px] text-slate-500 uppercase font-bold">Def</div>
-                <div class="font-mono font-bold text-white text-lg">{entity.defense}</div>
+                <div class="font-mono font-bold text-white text-lg">{entity.defense || 10}</div>
             </div>
             
-            <div class="text-center">
+            <label class="text-center">
                  <div class="text-[8px] text-red-400 uppercase font-bold mb-0.5">Dano</div>
                  <input 
                     type="number" 
                     class="w-12 bg-slate-900 border border-slate-800 text-center text-white font-mono font-bold rounded focus:border-red-500 focus:outline-none" 
                     value={damage} 
-                    on:input={(e) => setDamage(e.target.value)}
+                    on:input={handleDamageInput}
                  />
-            </div>
+            </label>
 
-            <div class="text-center">
+            <label class="text-center">
                  <div class="text-[8px] text-green-400 uppercase font-bold mb-0.5">Atual</div>
                  <input 
                     type="number" 
                     class="w-12 bg-slate-900 border border-slate-800 text-center text-white font-mono font-bold rounded focus:border-green-500 focus:outline-none" 
                     value={currentHealth} 
-                    on:input={(e) => setCurrentHealth(e.target.value)}
+                    on:input={handleHealthInput}
                  />
-            </div>
+            </label>
 
             <div class="text-center pl-2 ml-1 border-l border-slate-800">
                  <div class="text-[8px] text-slate-500 uppercase font-bold mb-0.5">Máx</div>
-                 <div class="text-slate-400 font-mono font-bold">{referenceMax}</div>
+                 <div class="text-slate-400 font-mono font-bold">{maxHealth}</div>
             </div>
         </div>
         

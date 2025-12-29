@@ -56,8 +56,8 @@
         const campId = $page.params.id;
         if (!campId || !campaignsMap.has(campId)) return;
         
-        const camp = campaignsMap.get(campId);
-        const activeEnemies = camp.activeEnemies || [];
+        const latestCamp = campaignsMap.get(campId);
+        const activeEnemies = latestCamp.activeEnemies || [];
         
         let newEnemies = [];
         enc.enemies.forEach(item => {
@@ -77,8 +77,37 @@
              }
         });
         
-        campaignsMap.set(campId, { ...camp, activeEnemies: [...activeEnemies, ...newEnemies] });
+        campaignsMap.set(campId, { ...latestCamp, activeEnemies: [...activeEnemies, ...newEnemies] });
         alert('Inimigos adicionados ao Combate!'); // Simple feedback
+    }
+
+    // Drag and Drop Logic
+    function handleDragStart(e, enemy) {
+        e.dataTransfer.setData('text/plain', enemy.id);
+        e.dataTransfer.effectAllowed = 'copy';
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        return false;
+    }
+
+    function handleDrop(e, enc) {
+        e.preventDefault();
+        const enemyId = e.dataTransfer.getData('text/plain');
+        if (!enemyId) return;
+        
+        const currentEnemies = enc.enemies || [];
+        const existing = currentEnemies.find(x => x.enemyId === enemyId);
+        
+        let newEnemies;
+        if (existing) {
+            newEnemies = currentEnemies.map(x => x.enemyId === enemyId ? { ...x, count: x.count + 1 } : x);
+        } else {
+            newEnemies = [...currentEnemies, { enemyId, count: 1 }];
+        }
+        
+        encountersMap.set(enc.id, { ...enc, enemies: newEnemies });
     }
 </script>
 
@@ -90,7 +119,12 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
              {#each $liveEncounters as enc (enc.id)}
-                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 transition-all hover:border-indigo-500/30">
+                 <!-- svelte-ignore a11y-no-static-element-interactions -->
+                 <div 
+                    class="bg-slate-900 border border-slate-800 rounded-xl p-4 transition-all hover:border-indigo-500/30"
+                    on:dragover={handleDragOver}
+                    on:drop={(e) => handleDrop(e, enc)}
+                 >
                      <div class="flex justify-between items-center mb-2">
                         <div>
                             <div class="font-bold text-white">{enc.name}</div>
@@ -120,7 +154,12 @@
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {#each $liveEnemies as enemy (enemy.id)}
-             <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/30 transition-all relative group">
+             <!-- svelte-ignore a11y-no-static-element-interactions -->
+             <div 
+                class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/30 transition-all relative group cursor-move hover:shadow-lg hover:shadow-indigo-500/10 active:scale-95"
+                draggable="true"
+                on:dragstart={(e) => handleDragStart(e, enemy)}
+             >
                   <div class="flex justify-between items-start mb-2">
                       <h3 class="font-bold text-lg text-white flex items-center gap-2">{enemy.name}</h3>
                       <span class="text-xs font-bold bg-slate-800 px-2 py-1 rounded text-slate-400">Dif {enemy.difficulty}</span>

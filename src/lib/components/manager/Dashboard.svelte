@@ -117,29 +117,35 @@
 <div class="animate-in fade-in p-4 md:p-8 max-w-7xl mx-auto">
    <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-800 pb-6">
       <div>
-        <h1 class="text-3xl font-bold text-white flex items-center gap-2">
+        <h1 class="text-3xl font-bold text-white flex items-center gap-2 text-gradient">
           <Skull class="text-indigo-500" /> Weird Wizard Vault
         </h1>
         <p class="text-slate-400 mt-1">Gestor de Personagens e Campanhas</p>
       </div>
-      <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-800">
-        <button on:click={() => activeTab = 'characters'} class="px-4 py-2 rounded-md text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'characters' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}"><Users size={16}/> Personagens</button>
-        <button on:click={() => activeTab = 'campaigns'} class="px-4 py-2 rounded-md text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'campaigns' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}"><Scroll size={16}/> Campanhas</button>
+      <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 glass">
+        <button on:click={() => activeTab = 'characters'} class="px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'characters' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"><Users size={16}/> Personagens</button>
+        <button on:click={() => activeTab = 'campaigns'} class="px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'campaigns' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"><Scroll size={16}/> Campanhas</button>
       </div>
    </header>
 
    {#if activeTab === 'characters'}
-     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <button on:click={() => openCharModal()} class="h-full min-h-[160px] border-2 border-dashed border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-500 hover:border-indigo-500 hover:text-indigo-500 transition-colors gap-2"><Plus size={32}/><span class="font-bold">Novo Personagem</span></button>
+     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <button on:click={() => openCharModal()} class="h-full min-h-[160px] border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-500 hover:border-indigo-500 hover:text-indigo-500 transition-all hover:bg-indigo-500/5 gap-2 group"><Plus size={32} class="group-hover:scale-110 transition-transform"/><span class="font-bold">Novo Personagem</span></button>
         
         {#each $liveCharacters as char (char.id)}
-           <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-indigo-500/50 transition-all relative group flex flex-col justify-between">
+           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/50 transition-all relative group flex flex-col justify-between shadow-lg hover:shadow-indigo-500/10">
               <div class="flex justify-between items-start">
                  <!-- svelte-ignore a11y-click-events-have-key-events -->
-                 <div on:click={() => goto(`/character/${char.id}`)} class="cursor-pointer">
-                    <h3 class="font-bold text-xl text-white mb-1 hover:text-indigo-400 transition-colors">{char.name}</h3>
-                    <p class="text-sm text-indigo-400 font-bold uppercase tracking-wide">{char.ancestry || 'Ancestralidade'} • Nível {char.level || 0}</p>
-                    <p class="text-xs text-slate-500 font-bold mt-1 max-w-[200px] truncate">{char.paths?.novice || "-"}</p>
+                 <div 
+                    on:click={() => goto(`/character/${char.id}`)} 
+                    on:keydown={(e) => e.key === 'Enter' && goto(`/character/${char.id}`)}
+                    class="cursor-pointer flex-1"
+                    role="button"
+                    tabindex="0"
+                 >
+                    <h3 class="font-bold text-xl text-white mb-1 group-hover:text-indigo-400 transition-colors">{char.name}</h3>
+                    <p class="text-sm text-indigo-400 font-bold uppercase tracking-wider">{char.ancestry || 'Ancestralidade'} • Nível {char.level || 0}</p>
+                    <p class="text-xs text-slate-500 font-medium mt-2 max-w-[240px] truncate">{char.paths?.novice || "-"}</p>
                  </div>
                  <div class="flex gap-1">
                      <button on:click={() => openCharModal(char)} class="text-slate-600 hover:text-white p-2 rounded hover:bg-slate-800 transition-colors"><Edit size={16}/></button>
@@ -152,16 +158,18 @@
    {/if}
 
    {#if activeTab === 'campaigns'}
-     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <button on:click={() => openCampModal()} class="h-full min-h-[160px] border-2 border-dashed border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-500 hover:border-indigo-500 hover:text-indigo-500 transition-colors gap-2"><Plus size={32}/><span class="font-bold">Nova Campanha</span></button>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+         <button on:click={() => openCampModal()} class="h-full min-h-[160px] border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-500 hover:border-indigo-500 hover:text-indigo-500 transition-all hover:bg-indigo-500/5 gap-2 group"><Plus size={32} class="group-hover:scale-110 transition-transform"/><span class="font-bold">Nova Campanha</span></button>
          {#each $liveCampaigns as camp (camp.id)}
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition-all group relative">
-               <h3 class="font-bold text-xl text-white mb-1">{camp.name}</h3>
-               <p class="text-xs text-slate-400 mb-2">{camp.description}</p>
-               <div class="flex gap-2 mt-4">
-                 <button on:click={() => goto(`/campaign/${camp.id}`)} class="flex-1 bg-indigo-900/50 hover:bg-indigo-600 text-indigo-200 hover:text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 border border-indigo-500/30"><Play size={16}/> Gerir Campanha</button>
-                  <button on:click={() => openCampModal(camp)} class="p-2 text-slate-500 hover:text-white bg-slate-950 rounded border border-slate-800"><Edit size={16}/></button>
-                   <button on:click={() => deleteCampaign(camp.id)} class="p-2 text-slate-500 hover:text-red-400 bg-slate-950 rounded border border-slate-800"><Trash2 size={16}/></button>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/50 transition-all group relative flex flex-col justify-between shadow-lg hover:shadow-indigo-500/10">
+               <div>
+                  <h3 class="font-bold text-2xl text-white mb-2 group-hover:text-indigo-400 transition-colors">{camp.name}</h3>
+                  <p class="text-sm text-slate-400 mb-4 line-clamp-2 leading-relaxed">{camp.description || 'Sem descrição.'}</p>
+               </div>
+               <div class="flex gap-3 mt-4">
+                 <button on:click={() => goto(`/campaign/${camp.id}`)} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 border border-indigo-400/20 shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98]"><Play size={18} fill="currentColor"/> Gerir Campanha</button>
+                  <button on:click={() => openCampModal(camp)} class="p-3 text-slate-400 hover:text-white bg-slate-800/50 rounded-xl border border-slate-800 hover:border-slate-700 transition-all" title="Editar"><Edit size={18}/></button>
+                   <button on:click={() => deleteCampaign(camp.id)} class="p-3 text-slate-400 hover:text-red-400 bg-slate-800/50 rounded-xl border border-slate-800 hover:border-red-900/30 transition-all" title="Excluir"><Trash2 size={18}/></button>
                </div>
             </div>
          {/each}

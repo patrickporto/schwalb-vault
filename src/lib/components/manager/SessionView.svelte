@@ -1,33 +1,32 @@
 <script>
     import { liveCharacters, liveEnemies } from '$lib/stores/live';
     import { characterActions, isHistoryOpen } from '$lib/stores/characterStore';
-    import { campaignsMap } from '$lib/db';
+    import { campaignsMap, charactersMap } from '$lib/db';
     import { Users, Ghost, GripVertical, Plus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History } from 'lucide-svelte';
     import CombatCard from './CombatCard.svelte';
     import { flip } from 'svelte/animate';
     
     export let campaign;
 
-    // Local state for adding players
     let isAddCharOpen = false;
-
     const defaultCombat = { active: false, round: 1 };
+
+    // Reactively extract data from prop
+    $: roster = campaign?.sessionRoster || [];
+    $: combat = campaign?.combat || defaultCombat;
+    $: activeEnemies = campaign?.activeEnemies || [];
     
-    // Derived from campaign prop
-    $: roster = campaign.sessionRoster || [];
-    $: combat = campaign.combat || defaultCombat;
-    $: activeEnemies = campaign.activeEnemies || [];
     // Players present in the roster
     $: players = roster.map(pid => $liveCharacters.find(c => c.id === pid)).filter(Boolean);
     
     // Available characters (not in roster)
     $: availableCharacters = $liveCharacters.filter(c => !roster.includes(c.id));
 
-    // Helpers to update Campaign in DB
+    // Helpers to update Campaign in DB - Using Map directly to avoid stale prop issues
     function updateCampaign(updates) {
-        // We create a new object to ensure Svelte reactivity if shallow checks occur, 
-        // though Yjs map set triggers the live store which triggers the prop update.
-        const updated = { ...campaign, ...updates };
+        if (!campaign?.id) return;
+        const current = campaignsMap.get(campaign.id) || campaign;
+        const updated = { ...current, ...updates };
         campaignsMap.set(campaign.id, updated);
     }
 
@@ -36,45 +35,34 @@
         updateCampaign({ sessionRoster: newRoster });
     }
 
-    function addToCombat(enemyTemplate, count = 1) {
-        const newEnemies = [];
-        for(let i=0; i<count; i++) {
-            newEnemies.push({
-                ...enemyTemplate,
-                instanceId: `e_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                damage: 0, 
-                currentHealth: enemyTemplate.health,
-                afflictions: [],
-                acted: false,
-                initiative: false
-            });
-        }
-        updateCampaign({ activeEnemies: [...activeEnemies, ...newEnemies] });
-        // Auto-scroll to bottom or highlight?
+    function addToCombat(enemyTemplate) {
+        const current = campaignsMap.get(campaign.id) || campaign;
+        const currentEnemies = current.activeEnemies || [];
+        
+        const newEnemy = {
+            ...enemyTemplate,
+            instanceId: `e_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            damage: 0, 
+            currentHealth: enemyTemplate.health,
+            afflictions: [],
+            acted: false,
+            initiative: false
+        };
+        
+        updateCampaign({ activeEnemies: [...currentEnemies, newEnemy] });
     }
 
-
     function startCombat() {
-        // Reset players initiative/acted? We can't easily modify player objects here as they are in charactersMap.
-        // We might need a local "combat status" for players stored in the campaign?
-        // Or just let the users toggle it.
-        // React code: setCharacters(prev => prev.map(c => ({ ...c, acted: false, initiative: false })));
-        // This modifies the CHARACTER.
-        // I should probably also clear player statuses in charactersMap?
-        // For now, I'll update combat state.
         updateCampaign({ combat: { active: true, round: 1 } });
     }
 
     function nextRound() {
-        // Logic for end of round effects
-        // ...
-        const nextRoundNum = combat.round + 1;
-        const newEnemies = activeEnemies.map(e => ({ ...e, acted: false }));
-        // Also should reset players 'acted'.
-        // For players, we need to update charactersMap.
-        // Logic below.
+        const current = campaignsMap.get(campaign.id) || campaign;
+        const nextRoundNum = (current.combat?.round || 1) + 1;
+        const newEnemies = (current.activeEnemies || []).map(e => ({ ...e, acted: false }));
+        
         updateCampaign({ 
-            combat: { ...combat, round: nextRoundNum },
+            combat: { ...current.combat, round: nextRoundNum },
             activeEnemies: newEnemies
         });
     }
@@ -88,13 +76,17 @@
     }
 
     function removeFromCombat(instanceId) {
-        updateCampaign({ activeEnemies: activeEnemies.filter(e => e.instanceId !== instanceId) });
+        const current = campaignsMap.get(campaign.id) || campaign;
+        updateCampaign({ 
+            activeEnemies: (current.activeEnemies || []).filter(e => e.instanceId !== instanceId) 
+        });
     }
 
     function updateEnemy(instanceId, updates) {
-         updateCampaign({ 
-             activeEnemies: activeEnemies.map(e => e.instanceId === instanceId ? { ...e, ...updates } : e) 
-         });
+        const current = campaignsMap.get(campaign.id) || campaign;
+        updateCampaign({ 
+            activeEnemies: (current.activeEnemies || []).map(e => e.instanceId === instanceId ? { ...e, ...updates } : e) 
+        });
     }
 
     // Dice
@@ -111,31 +103,14 @@
             source: 'GM',
             name: `${count}d${sides}`,
             description: count > 1 ? `Resultados: [${results.join(', ')}]` : null,
-            total, // HistorySidebar expects 'total'
+            total,
             formula: `${count}d${sides}`,
             crit: sides === 20 && results.includes(20)
         });
+        isHistoryOpen.set(true); 
     }
 
-    // Sorting
-    $: combatants = [
-        ...roster.map(pid => {
-            const c = $liveCharacters.find(x => x.id === pid);
-            return c ? { ...c, type: 'player' } : null;
-        }).filter(Boolean),
-        ...activeEnemies.map(e => ({ ...e, type: 'enemy' }))
-    ].sort((a, b) => {
-        // Sort by initiative (true first), then others? 
-        // React code: playersWithInit -> allEnemies -> playersNoInit
-        if (a.type !== b.type) {
-             // complicated sort, let's just stick to simple for now or implement React logic
-             // React logic relies on finding them in specific order.
-             return 0; 
-        }
-        return 0;
-    });
-    
-    // Better sort to match React
+    // Explicit derivation of sorted combatants
     $: sortedCombatants = (() => {
         const playersWithInit = roster.map(pid => $liveCharacters.find(c => c.id === pid)).filter(c => c && c.initiative).map(c => ({...c, type: 'player'}));
         const enemies = activeEnemies.map(e => ({...e, type: 'enemy'}));

@@ -2,7 +2,7 @@
     import { page } from '$app/stores';
     import { campaignsMap, waitForSync } from '$lib/db';
     import { liveCampaigns } from '$lib/stores/live';
-    import { ChevronLeft } from 'lucide-svelte';
+    import { ChevronLeft, History } from 'lucide-svelte';
     import { goto } from '$app/navigation';
     import SessionView from '$lib/components/manager/SessionView.svelte';
     import BestiaryView from '$lib/components/manager/BestiaryView.svelte';
@@ -25,11 +25,20 @@
             <div class="animate-in slide-in-from-right-4">
                 <button on:click={() => goto('/')} class="inline-flex items-center text-slate-400 hover:text-white mb-4 transition-colors font-bold text-sm"><ChevronLeft size={16}/> Voltar</button>
 
-                <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 border-b border-slate-800 pb-4 gap-4">
                     <h1 class="text-2xl font-bold text-white">{campaign.name}</h1>
-                    <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-800">
-                        <button on:click={() => activeSubTab = 'session'} class="px-4 py-1.5 rounded text-sm font-bold transition-all {activeSubTab === 'session' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}">Sessão</button>
-                        <button on:click={() => activeSubTab = 'bestiary'} class="px-4 py-1.5 rounded text-sm font-bold transition-all {activeSubTab === 'bestiary' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}">Bestiário</button>
+                    <div class="flex items-center gap-2">
+                        <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-800">
+                            <button on:click={() => activeSubTab = 'session'} class="px-4 py-1.5 rounded text-sm font-bold transition-all {activeSubTab === 'session' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}">Sessão</button>
+                            <button on:click={() => activeSubTab = 'bestiary'} class="px-4 py-1.5 rounded text-sm font-bold transition-all {activeSubTab === 'bestiary' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}">Bestiário</button>
+                        </div>
+                        <button 
+                            on:click={() => isHistoryOpen.update(v => !v)}
+                            class="p-2 bg-slate-900 border border-slate-800 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                            title="Histórico"
+                        >
+                            <History size={20} />
+                        </button>
                     </div>
                 </div>
 
