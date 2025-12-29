@@ -321,7 +321,7 @@
             </div>
 
             <!-- Details view -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div class="grid grid-cols-3 gap-4 mb-4">
                 <div class="p-2 rounded bg-slate-900/50 border border-slate-800/50 flex flex-col items-center">
                     <span class="text-[9px] text-slate-500 uppercase font-black">Tamanho</span>
                     <span class="text-white font-bold">{entity.size || 1}</span>
