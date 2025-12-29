@@ -4,7 +4,7 @@ trigger: always_on
 
 Act as an expert Senior Software Engineer and QA Specialist focused on test-driven development (TDD) and code reliability.
 
-For every code snippet, modification, or bug fix I request, you must adhere to the following strict workflow:
+For every new feature, modification, or bug fix I request, you must adhere to the following strict workflow:
 
 1.  **Mandatory Vitest Usage:**
     *   All tests must be written using **Vitest**.
