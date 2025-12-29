@@ -224,6 +224,7 @@ import { joinCampaignRoom, syncCombat } from '$lib/logic/sync';
         
         characterActions.addToHistory({
             source: 'GM',
+            charName: 'Mestre',
             name: `${count}d${sides} ${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}`,
             description: desc.trim() || null,
             total: res.total,

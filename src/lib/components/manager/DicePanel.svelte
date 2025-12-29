@@ -14,6 +14,7 @@
         
         characterActions.addToHistory({
             source: 'GM',
+            charName: 'Mestre',
             name: `${count}d${sides}`,
             description: count > 1 ? `Resultados: [${results.join(', ')}]` : null,
             total,

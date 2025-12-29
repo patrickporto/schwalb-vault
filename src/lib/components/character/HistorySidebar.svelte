@@ -27,10 +27,15 @@
   {/if}
   {#each $rollHistory as roll (roll.id)}
     <div class="bg-slate-800 rounded-lg border border-slate-700 p-3 shadow-sm animate-in slide-in-from-right-4">
-       <div class="flex justify-between items-start mb-1">
-          <span class="text-[10px] text-slate-400 uppercase font-bold">{roll.source}</span>
-          <span class="text-[10px] text-slate-500">{new Date(roll.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
-       </div>
+        <div class="flex justify-between items-start mb-1">
+           <div class="flex flex-col">
+              <span class="text-[10px] text-slate-400 uppercase font-black tracking-tight">{roll.source}</span>
+              {#if roll.charName && roll.charName !== roll.source}
+                  <span class="text-[10px] text-indigo-400 font-bold -mt-0.5">{roll.charName}</span>
+              {/if}
+           </div>
+           <span class="text-[10px] text-slate-500 font-mono">{new Date(roll.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>
+        </div>
        <div class="font-bold text-white mb-1">{roll.name}</div>
        {#if roll.description}<div class="text-xs text-slate-400 italic mb-2 whitespace-pre-wrap">{roll.description}</div>{/if}
        {#if roll.effectsApplied?.length > 0}
