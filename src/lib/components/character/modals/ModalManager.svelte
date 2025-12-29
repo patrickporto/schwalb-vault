@@ -142,6 +142,8 @@
         if (e.target === e.currentTarget) closeModal();
     }
 
+    import Modal from '$lib/components/common/Modal.svelte';
+
     function addModifier() {
         formEffectData.modifiers = [...(formEffectData.modifiers || []), { target: 'str', type: MOD_TYPES.ADD, value: 1 }];
     }
@@ -151,41 +153,24 @@
     }
 </script>
 
-{#if $modalState.isOpen}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div 
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" 
-        onclick={handleBackdropClick}
-        role="presentation"
-    >
-      <div 
-        class="bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div class="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center shrink-0">
-          <h3 class="font-bold text-lg text-white flex items-center gap-2">
-            {#if $modalState.type === 'item'}Editor de Item
-            {:else if $modalState.type === 'spell'}Editar Magia
-            {:else if $modalState.type === 'talent'}Editar Talento
-            {:else if $modalState.type === 'effect'}Gerenciar Efeito
-            {:else if $modalState.type === 'pre_roll'}Confirmar Rolagem
-            {:else if $modalState.type === 'confirm_spell'}Confirmar Conjuração
-            {:else if $modalState.type === 'confirm_talent'}Confirmar Ativação
-            {:else if $modalState.type === 'cast_spell'}Grimório
-            {:else if $modalState.type === 'select_talent'}Seus Talentos
-            {:else if $modalState.type === 'weapon_menu'}Opções de Ataque
-            {:else if $modalState.type === 'character_info'}Informações do Personagem
-            {:else if $modalState.type === 'health'}Vigor & Dano
-            {:else if $modalState.type === 'attribute'}Atributo
-            {:else if $modalState.type === 'stat'}{formData.name}
-            {:else if $modalState.type === 'affliction'}Gerenciar Aflições
-            {:else}Informação
-            {/if}
-          </h3>
-          <button onclick={closeModal} class="text-slate-400 hover:text-white transition-colors" aria-label="Fechar"><X size={20} /></button>
-        </div>
+<Modal isOpen={$modalState.isOpen} onClose={closeModal} maxWidth="max-w-lg" title={
+    $modalState.type === 'item' ? 'Editor de Item' :
+    $modalState.type === 'spell' ? 'Editar Magia' :
+    $modalState.type === 'talent' ? 'Editar Talento' :
+    $modalState.type === 'effect' ? 'Gerenciar Efeito' :
+    $modalState.type === 'pre_roll' ? 'Confirmar Rolagem' :
+    $modalState.type === 'confirm_spell' ? 'Confirmar Conjuração' :
+    $modalState.type === 'confirm_talent' ? 'Confirmar Ativação' :
+    $modalState.type === 'cast_spell' ? 'Grimório' :
+    $modalState.type === 'select_talent' ? 'Seus Talentos' :
+    $modalState.type === 'weapon_menu' ? 'Opções de Ataque' :
+    $modalState.type === 'character_info' ? 'Informações do Personagem' :
+    $modalState.type === 'health' ? 'Vigor & Dano' :
+    $modalState.type === 'attribute' ? 'Atributo' :
+    $modalState.type === 'stat' ? formData.name :
+    $modalState.type === 'affliction' ? 'Gerenciar Aflições' :
+    'Informação'
+}>
         <div class="p-6 overflow-y-auto custom-scrollbar">
             {#if $modalState.type === 'item'}
                 <div class="space-y-3">
@@ -604,6 +589,4 @@
 
             {/if}
         </div>
-      </div>
-    </div>
-{/if}
+</Modal>

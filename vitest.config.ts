@@ -1,16 +1,22 @@
-import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser-playwright'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+
+import { defineConfig } from 'vitest/config';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import path from 'path';
 
 export default defineConfig({
-    plugins: [svelte()],
-    test: {
-        browser: {
-            enabled: true,
-            provider: playwright(),
-            instances: [
-                { browser: 'chromium' },
-            ],
+    plugins: [
+        svelte({ hot: !process.env.VITEST })
+    ],
+    resolve: {
+        alias: {
+            '$lib': path.resolve(__dirname, './src/lib')
         },
+        conditions: ['browser']
     },
-})
+    test: {
+        environment: 'happy-dom',
+        globals: true,
+        exclude: ['node_modules', '.svelte-kit'],
+        setupFiles: ['./src/test/setup.ts']
+    }
+});
