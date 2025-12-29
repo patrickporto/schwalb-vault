@@ -11,10 +11,10 @@ export default {
     devtoolsJson(),
     SvelteKitPWA({
       registerType: 'autoUpdate',
-      injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       devOptions: {
-        enabled: true
+        enabled: true,
+        type: 'module'
       },
       manifest: {
         name: 'Weird Wizard Vault',
@@ -44,39 +44,67 @@ export default {
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallback: '/',
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+          // Precache all static assets
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot}'],
+          // Fallback for SPA navigation
+          navigateFallback: '/',
+          navigateFallbackDenylist: [/^\/api/],
+          // Runtime caching strategies
+          runtimeCaching: [
+            {
+                // Cache IndexedDB-backed pages (app shell)
+                urlPattern: /^https?:\/\/localhost(:\d+)?\//,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'app-shell-cache',
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                  },
+                  networkTimeoutSeconds: 3
+                }
               },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'gstatic-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+              {
+              // Google Fonts stylesheets
+                  urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+                  handler: 'StaleWhileRevalidate',
+                  options: {
+                      cacheName: 'google-fonts-stylesheets',
+                      expiration: {
+                        maxEntries: 10,
+                    maxAgeSeconds: 60 * 60 * 24 * 365
+                  }
+                }
               },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
+              {
+                  // Google Fonts webfont files
+                  urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+                  handler: 'CacheFirst',
+                  options: {
+                      cacheName: 'google-fonts-webfonts',
+                      expiration: {
+                        maxEntries: 30,
+                        maxAgeSeconds: 60 * 60 * 24 * 365
+                      },
+                      cacheableResponse: {
+                        statuses: [0, 200]
+                      }
+                    }
+              },
+              {
+                // Images
+                urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'images-cache',
+                  expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                  }
+                }
             }
-          }
-        ]
-      }
+          ]
+        }
     })
   ],
 };
