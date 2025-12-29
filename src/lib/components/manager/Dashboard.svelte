@@ -15,6 +15,8 @@
     import { initializeGoogleAuth, googleSession, syncFromCloud, syncToCloud } from '$lib/logic/googleDrive';
     import GoogleSignIn from '$lib/components/common/GoogleSignIn.svelte';
     import { onMount } from 'svelte';
+    import { slide, fly } from 'svelte/transition';
+    import { quintOut } from 'svelte/easing';
     import { CloudUpload, Cloud } from 'lucide-svelte';
 
     onMount(() => {
@@ -22,6 +24,14 @@
     });
 
     let activeTab = $state('characters');
+    let previousTab = $state('characters');
+    
+    // Track tab changes for directional transitions
+    $effect(() => {
+        if (activeTab !== previousTab) {
+            previousTab = activeTab;
+        }
+    });
     
     // Auto-Sync Effects
     $effect(() => {
@@ -221,42 +231,83 @@
 
 </script>
 
-<div class="animate-in fade-in p-4 md:p-8 max-w-7xl mx-auto pb-20">
-    <header class="mb-8 flex flex-col gap-6 border-b border-slate-800 pb-6">
-       <!-- Top Bar: Logo & Login -->
-       <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div class="text-center sm:text-left">
-             <h1 class="text-3xl font-bold text-white flex items-center justify-center sm:justify-start gap-2 text-gradient">
-               <Skull class="text-indigo-500" /> Weird Wizard Vault
-             </h1>
-             <p class="text-slate-400 mt-1 text-sm">Gestor de Personagens e Campanhas</p>
-          </div>
-          
-          <GoogleSignIn className="w-full sm:w-auto justify-center" />
+<div class="animate-in fade-in px-4 md:px-8 max-w-7xl mx-auto pb-32 md:pb-20">
+    <!-- Header -->
+    <header class="mb-8 flex justify-between items-center border-b border-slate-800/50 pt-4 md:pt-8 pb-4 sticky top-0 bg-slate-950/80 backdrop-blur-md z-40 -mx-4 px-4 md:-mx-8 md:px-8 transition-all">
+       <!-- Logo Area -->
+       <div class="flex items-center">
+         <h1 class="text-xl md:text-3xl font-bold text-white flex items-center gap-2 text-gradient m-0 leading-none">
+           <Skull class="text-indigo-500" size={28} /> 
+           <span class="hidden md:inline">Schwalb Vault</span>
+           <span class="md:hidden">Schwalb Vault</span>
+         </h1>
+
        </div>
 
-       <!-- Navigation Tabs -->
-       <div class="flex justify-center sm:justify-start">
-         <div class="flex w-full sm:w-auto bg-slate-900 p-1 rounded-2xl border border-slate-800 glass shadow-xl">
-           <button 
-               onclick={() => activeTab = 'characters'} 
-               class="flex-1 sm:flex-none justify-center px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'characters' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
-           >
-               <Users size={18}/> Personagens
-           </button>
-           <button 
-               onclick={() => activeTab = 'campaigns'} 
-               class="flex-1 sm:flex-none justify-center px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 {activeTab === 'campaigns' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
-           >
-               <Scroll size={18}/> Campanhas
-           </button>
-         </div>
+       <!-- Desktop Navigation (Centered) -->
+       <div class="hidden md:flex absolute left-1/2 -translate-x-1/2 bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 glass shadow-xl backdrop-blur-md">
+           <div class="relative flex">
+               <!-- Sliding indicator background -->
+               <div 
+                   class="absolute inset-y-0 w-1/2 bg-indigo-600 rounded-xl transition-transform duration-300 ease-out shadow-lg shadow-indigo-500/20"
+                   style="transform: translateX({activeTab === 'campaigns' ? '100%' : '0%'})"
+               ></div>
+               
+               <button 
+                   onclick={() => activeTab = 'characters'} 
+                   class="relative z-10 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 {activeTab === 'characters' ? 'text-white' : 'text-slate-400 hover:text-white'}"
+               >
+                   <Users size={18}/> Personagens
+               </button>
+               <button 
+                   onclick={() => activeTab = 'campaigns'} 
+                   class="relative z-10 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 {activeTab === 'campaigns' ? 'text-white' : 'text-slate-400 hover:text-white'}"
+               >
+                   <Scroll size={18}/> Campanhas
+               </button>
+           </div>
+       </div>
+
+       <!-- User Area -->
+       <div class="flex items-center justify-end min-w-[40px]">
+         <GoogleSignIn />
        </div>
     </header>
 
-   <div class="min-h-[500px]">
+    <!-- Mobile Bottom Navigation -->
+    <div class="md:hidden fixed bottom-6 left-4 right-4 bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-2xl p-1.5 z-50">
+        <div class="relative flex justify-between">
+            <!-- Sliding indicator background -->
+            <div 
+                class="absolute inset-y-0 w-1/2 bg-indigo-600/20 rounded-xl transition-transform duration-300 ease-out"
+                style="transform: translateX({activeTab === 'campaigns' ? '100%' : '0%'})"
+            ></div>
+            
+            <button 
+                onclick={() => activeTab = 'characters'} 
+                class="relative flex-1 py-3 rounded-xl text-xs font-bold transition-all duration-300 flex flex-col items-center justify-center gap-1 z-10 {activeTab === 'characters' ? 'text-indigo-400' : 'text-slate-500'}"
+            >
+                <Users size={20} strokeWidth={activeTab === 'characters' ? 2.5 : 2} class="transition-all duration-300"/>
+                <span class="transition-all duration-300">Personagens</span>
+            </button>
+            
+            <button 
+                onclick={() => activeTab = 'campaigns'} 
+                class="relative flex-1 py-3 rounded-xl text-xs font-bold transition-all duration-300 flex flex-col items-center justify-center gap-1 z-10 {activeTab === 'campaigns' ? 'text-indigo-400' : 'text-slate-500'}"
+            >
+                <Scroll size={20} strokeWidth={activeTab === 'campaigns' ? 2.5 : 2} class="transition-all duration-300"/>
+                <span class="transition-all duration-300">Campanhas</span>
+            </button>
+        </div>
+    </div>
+
+   <div class="min-h-[500px] relative">
        {#if activeTab === 'characters'}
-         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+         <div 
+            in:fly={{ x: -100, duration: 300, easing: quintOut }}
+            out:fly={{ x: -100, duration: 300, easing: quintOut }}
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 absolute inset-0"
+         >
             {#each $liveCharacters as char (char.id)}
                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 hover:border-indigo-500/40 transition-all relative group flex flex-col justify-between shadow-lg hover:shadow-indigo-500/10 border-t-white/5">
                   <div class="flex justify-between items-start mb-4">
@@ -315,8 +366,12 @@
             </button>
          </div>
 
-       {:else if activeTab === 'campaigns'}
-         <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+       {:else}
+         <div 
+            in:fly={{ x: 100, duration: 300, easing: quintOut }}
+            out:fly={{ x: 100, duration: 300, easing: quintOut }}
+            class="space-y-8 absolute inset-0"
+         >
              <!-- Minhas Campanhas -->
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                  {#each $liveCampaigns as camp (camp.id)}

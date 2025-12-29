@@ -9,13 +9,13 @@ const API_KEY = ''; // Optional if using OAuth2 only for personal data, but usua
 import { charactersMap, campaignsMap } from '$lib/db';
 import { liveCharacters, liveCampaigns } from '$lib/stores/live';
 
-// Scopes for App Data Folder
-const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+// Scopes: App Data for backup, User Info for avatar/name
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
 
 export const googleSession = writable<{
     signedIn: boolean;
     accessToken: string | null;
-    userProfile: any | null;
+    userProfile: { name: string; picture: string } | null;
     isInited: boolean;
 }>({
     signedIn: false,
@@ -29,6 +29,31 @@ let gapiInited = false;
 let gisInited = false;
 
 const STORAGE_KEY = 'wwv_google_session';
+
+// Function to fetch user profile
+async function fetchUserProfile(token: string) {
+    try {
+        const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            googleSession.update(s => ({
+                ...s,
+                userProfile: {
+                    name: data.name,
+                    picture: data.picture
+                }
+            }));
+            saveSession(); // Save updated profile to storage
+        }
+    } catch (e) {
+        console.error('Failed to fetch user profile:', e);
+    }
+}
 
 // Function to load session from localStorage
 function loadStoredSession() {
@@ -44,6 +69,11 @@ function loadStoredSession() {
                     isInited: true
                 });
                 console.log('Restored session from localStorage');
+
+                // Refresh profile data in background if we have a token
+                // (Optional: check token expiry could be done here)
+                fetchUserProfile(data.accessToken);
+
                 return true;
             }
         }
@@ -76,7 +106,7 @@ export async function initializeGoogleAuth() {
     // Try to restore session from localStorage first
     const restoredSession = loadStoredSession();
     if (restoredSession) {
-        // Session restored, but we still need to init the tokenClient for sign-out
+        // Session restored, but we still need to init the tokenClient for sign-out or re-auth
         try {
             await waitForScripts();
             tokenClient = google.accounts.oauth2.initTokenClient({
@@ -120,7 +150,9 @@ function handleAuthCallback(resp: any) {
     }
     console.log('Google Auth Success', resp);
     googleSession.update(s => ({ ...s, signedIn: true, accessToken: resp.access_token }));
-    saveSession();
+
+    // Fetch profile immediately after successful auth
+    fetchUserProfile(resp.access_token);
 }
 
 function waitForScripts() {
