@@ -48,8 +48,8 @@
             const char = $liveCharacters.find(c => c.id === charId);
             confirmState = {
                 isOpen: true,
-                title: 'Excluir Personagem',
-                message: `Tem certeza que deseja excluir ${char?.name || 'este personagem'} da sessão atual?`,
+                title: 'Retirar Personagem',
+                message: `Tem certeza que deseja retirar ${char?.name || 'este personagem'} da sessão atual?`,
                 onConfirm: () => {
                     const newRoster = roster.filter(id => id !== charId);
                     updateCampaign({ sessionRoster: newRoster });
@@ -144,10 +144,19 @@
     }
 
     function removeFromCombat(instanceId: string) {
-        const current = campaignsMap.get(campaign.id) || campaign;
-        updateCampaign({ 
-            activeEnemies: (current.activeEnemies || []).filter(e => e.instanceId !== instanceId) 
-        });
+        const enemy = activeEnemies.find(e => e.instanceId === instanceId);
+        confirmState = {
+            isOpen: true,
+            title: 'Remover do Combate',
+            message: `Tem certeza que deseja remover ${enemy?.name || 'este inimigo'} do combate?`,
+            onConfirm: () => {
+                const current = campaignsMap.get(campaign.id) || campaign;
+                updateCampaign({ 
+                    activeEnemies: (current.activeEnemies || []).filter(e => e.instanceId !== instanceId) 
+                });
+                confirmState.isOpen = false;
+            }
+        };
     }
 
     function updateEnemy(instanceId: string, updates: any) {
