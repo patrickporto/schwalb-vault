@@ -17,6 +17,7 @@
     "gh-pages": "^6.3.0",
     "svelte": "^5.45.2",
     "vite": "^7.2.4",
+    "vite-plugin-devtools-json": "^1.0.0",
     "vitest-browser-svelte": "^2.0.1"
   },
   "dependencies": {
