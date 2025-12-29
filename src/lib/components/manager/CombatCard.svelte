@@ -128,11 +128,41 @@
                 {/if}
             </div>
             
-            <div class="relative w-full h-5 bg-slate-950 rounded-lg mt-1 overflow-hidden border border-slate-800 group">
-                <div class="absolute top-0 left-0 h-full transition-all duration-300 {isIncapacitated ? 'bg-red-600' : isInjured ? 'bg-orange-600' : 'bg-red-900/60'}" style="width: {damagePercent}%"></div>
+            <!-- Improved Health Bar -->
+            <div class="relative w-full h-6 bg-slate-950 rounded-lg mt-1.5 overflow-hidden border border-slate-800 group shadow-inner">
+                <!-- Background -->
+                <div class="absolute inset-0 {damage === 0 ? 'bg-emerald-900/20' : 'bg-slate-900/50'}"></div>
                 
-                <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md tracking-wider" aria-hidden="true">
-                    {isIncapacitated ? 'INCAPACITADO' : isInjured ? 'FERIDO' : `${damage} Dano`}
+                <!-- Damage fill bar with dynamic gradient -->
+                {#if damagePercent > 0}
+                <div 
+                    class="absolute top-0 left-0 h-full transition-all duration-500 ease-out z-10 {isIncapacitated ? 'bg-gradient-to-r from-red-600 via-red-500 to-rose-500 animate-pulse' : damagePercent >= 80 ? 'bg-gradient-to-r from-red-600 to-rose-500' : isInjured ? 'bg-gradient-to-r from-amber-600 to-orange-500' : 'bg-gradient-to-r from-orange-500 to-amber-400'}" 
+                    style="width: {damagePercent}%"
+                >
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
+                </div>
+                {/if}
+                
+                <!-- Healthy glow when no damage -->
+                {#if damage === 0}
+                <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-emerald-400/30 to-emerald-500/20 z-10">
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+                </div>
+                {/if}
+                
+                <!-- Label overlay -->
+                <div class="absolute inset-0 flex items-center justify-center z-20">
+                    <span class="text-[11px] font-black uppercase tracking-wider drop-shadow-md {isIncapacitated ? 'text-white' : isInjured ? 'text-white' : damage === 0 ? 'text-emerald-300' : 'text-white/90'}">
+                        {#if isIncapacitated}
+                            INCAPACITADO
+                        {:else if isInjured}
+                            FERIDO
+                        {:else if damage === 0}
+                            SAUDÁVEL
+                        {:else}
+                            {damage} DANO
+                        {/if}
+                    </span>
                 </div>
             </div>
 

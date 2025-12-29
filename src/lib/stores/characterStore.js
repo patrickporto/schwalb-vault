@@ -108,24 +108,30 @@ export const derivedStats = derived([character, activeEffects], ([$char, $effect
     return stats;
 });
 
-export const effectiveMaxHealth = derived([normalHealth, activeEffects], ([$nh, $effects]) => {
-    return calculateDerivedStat('health', $nh, $effects);
+// effectiveMaxHealth: currentHealth + active effect modifiers
+// normalHealth is just a reference, currentHealth is the actual cap that can be reduced
+export const effectiveMaxHealth = derived([currentHealth, activeEffects], ([$ch, $effects]) => {
+    return calculateDerivedStat('health', $ch, $effects);
 });
 
+// tempHealth: bonus health from effects (any health above normalHealth)
 export const tempHealth = derived([effectiveMaxHealth, normalHealth], ([$emh, $nh]) => {
     return Math.max(0, $emh - $nh);
 });
 
-export const damagePercentage = derived([damage, effectiveMaxHealth], ([$dmg, $emh]) => {
-    return $emh > 0 ? Math.min(100, ($dmg / $emh) * 100) : 100;
+// damagePercentage: damage relative to currentHealth (vida atual), not effectiveMaxHealth
+export const damagePercentage = derived([damage, currentHealth], ([$dmg, $ch]) => {
+    return $ch > 0 ? Math.min(100, ($dmg / $ch) * 100) : 100;
 });
 
-export const isIncapacitated = derived([damage, effectiveMaxHealth], ([$dmg, $emh]) => {
-    return $dmg >= $emh;
+// isIncapacitated: damage >= currentHealth
+export const isIncapacitated = derived([damage, currentHealth], ([$dmg, $ch]) => {
+    return $dmg >= $ch;
 });
 
-export const isInjured = derived([damage, effectiveMaxHealth, isIncapacitated], ([$dmg, $emh, $incap]) => {
-    return $dmg >= ($emh / 2) && !$incap;
+// isInjured: damage >= 50% of currentHealth but not incapacitated
+export const isInjured = derived([damage, currentHealth, isIncapacitated], ([$dmg, $ch, $incap]) => {
+    return $dmg >= ($ch / 2) && !$incap;
 });
 
 export const effectiveSpeed = derived([character, derivedStats, activeEffects], ([$char, $stats, $effects]) => {
