@@ -64,12 +64,19 @@ import { joinCampaignRoom, syncCombat, syncCampaign } from '$lib/logic/sync';
     let campaignMembers = $derived(campaign?.members || []);
     
     // Players present in the campaign - includes those in the session roster and anyone who joined via invite
+    // IMPORTANT: Merge local data with campaignMembers to preserve lastUpdate for online status
     let players = $derived((() => {
         const allMemberIds = Array.from(new Set([...roster, ...campaignMembers.map(m => m.id)]));
         return allMemberIds.map(pid => {
             const local = $liveCharacters.find(c => c.id === pid);
+            const member = campaignMembers.find(m => m.id === pid);
+            
+            // Merge: local data takes precedence for character info, but include lastUpdate from member
+            if (local && member) {
+                return { ...local, lastUpdate: member.lastUpdate };
+            }
             if (local) return local;
-            return campaignMembers.find(m => m.id === pid);
+            return member;
         }).filter(Boolean);
     })());
     
