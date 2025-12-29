@@ -1,20 +1,32 @@
-<script>
+<script lang="ts">
     import { page } from '$app/stores';
-    import { campaignsMap, waitForSync } from '$lib/db';
+    import { campaignsMap } from '$lib/db';
     import { liveCampaigns } from '$lib/stores/live';
     import SessionView from '$lib/components/manager/SessionView.svelte';
     import BestiaryView from '$lib/components/manager/BestiaryView.svelte';
     import CampaignHeader from '$lib/components/manager/CampaignHeader.svelte';
     import HistorySidebar from '$lib/components/character/HistorySidebar.svelte';
     import { isHistoryOpen } from '$lib/stores/characterStore';
-    
-    let id;
-    let campaign = null;
-    let activeSubTab = 'session'; 
+    import CampaignModal from '$lib/components/manager/CampaignModal.svelte';
+    import { syncCampaign } from '$lib/logic/sync';
 
-    $: id = $page.params.id;
-    $: campaign = $liveCampaigns.find(c => c.id === id);
-    $: loaded = !!campaign;
+    let activeSubTab = $state('session'); 
+    let isModalOpen = $state(false);
+
+    let id = $derived($page.params.id);
+    let campaign = $derived($liveCampaigns.find(c => c.id === id));
+    let loaded = $derived(!!campaign);
+
+    function handleSave(formData: any) {
+        if (!id || !campaign) return;
+        const updated = { ...campaign, ...formData };
+        campaignsMap.set(id, updated);
+        
+        // Sync to players
+        syncCampaign(id, { name: updated.name, gmName: updated.gmName });
+        
+        isModalOpen = false;
+    }
 </script>
 
 
@@ -22,8 +34,17 @@
     {#if loaded && campaign}
         <CampaignHeader 
             campaignName={campaign.name} 
+            gmName={campaign.gmName}
             {activeSubTab} 
             onTabChange={(tab) => activeSubTab = tab} 
+            onOpenSettings={() => isModalOpen = true}
+        />
+
+        <CampaignModal 
+            isOpen={isModalOpen} 
+            initialData={JSON.stringify(campaign)} 
+            onClose={() => isModalOpen = false} 
+            onSave={handleSave} 
         />
 
         <main class="max-w-7xl mx-auto p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
@@ -42,7 +63,7 @@
             </div>
             <h2 class="text-xl font-bold mb-2">Campanha não encontrada</h2>
             <p class="text-slate-400 mb-6">Esta campanha pode ter sido removida ou o link está incorreto.</p>
-            <button on:click={() => window.history.back()} class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-lg font-bold transition-all">
+            <button onclick={() => window.history.back()} class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-lg font-bold transition-all">
                 Voltar
             </button>
         </div>

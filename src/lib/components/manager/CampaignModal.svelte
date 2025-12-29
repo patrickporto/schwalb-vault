@@ -13,7 +13,7 @@
         onSave 
     }: Props = $props();
 
-    let form = $state({ name: '', description: '', gm: '', isPrivate: false });
+    let form = $state({ name: '', description: '', gmName: '', isPrivate: false });
     
     $effect(() => {
         if (isOpen && initialData) {
@@ -21,12 +21,12 @@
                 const parsed = JSON.parse(initialData);
                 form.name = parsed.name || '';
                 form.description = parsed.description || '';
-                form.gm = parsed.gm || '';
+                form.gmName = parsed.gmName || '';
                 form.isPrivate = parsed.isPrivate || false;
             } catch(e) {
                 form.name = '';
                 form.description = '';
-                form.gm = '';
+                form.gmName = '';
                 form.isPrivate = false;
             }
         }
@@ -59,7 +59,7 @@
                 </div>
                 <div>
                      <label for="campaign-gm" class="text-xs text-slate-500 uppercase font-black block mb-1 tracking-widest">Mestre (GM)</label>
-                     <input id="campaign-gm" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-indigo-500 transition-colors" placeholder="Seu nome ou apelido" bind:value={form.gm} />
+                     <input id="campaign-gm" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-indigo-500 transition-colors" placeholder="Seu nome ou apelido" bind:value={form.gmName} />
                 </div>
                 <div>
                      <label for="campaign-desc" class="text-xs text-slate-500 uppercase font-black block mb-1 tracking-widest">Descrição</label>

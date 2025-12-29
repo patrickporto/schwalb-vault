@@ -72,7 +72,7 @@
     let isCampModalOpen = $state(false);
     let editingCampId = $state<string | null>(null);
     let campFormStr = $state("{}");
-    const defaultCampForm = { name: '', description: '', gm: '', isPrivate: false };
+    const defaultCampForm = { name: '', description: '', gmName: '', isPrivate: false };
 
     function openCampModal(camp: any = null) {
         editingCampId = camp ? camp.id : null;
@@ -89,7 +89,7 @@
             id,
             name: formData.name,
             description: formData.description,
-            gm: formData.gm,
+            gmName: formData.gmName,
             isPrivate: formData.isPrivate,
             players: current.players || []
         };
@@ -212,8 +212,9 @@
                       {:else}
                           <span class="text-[10px] bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900/50 uppercase tracking-wider">Pública</span>
                       {/if}
-                  </h3>
-                  <p class="text-sm text-slate-400 mb-4 line-clamp-2 leading-relaxed">{camp.description || 'Sem descrição.'}</p>
+                   </h3>
+                   <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-widest mb-2">{camp.gmName || 'Mestre'}</p>
+                   <p class="text-sm text-slate-400 mb-4 line-clamp-2 leading-relaxed">{camp.description || 'Sem descrição.'}</p>
                </div>
                <div class="flex gap-3 mt-4">
                  <button 

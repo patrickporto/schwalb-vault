@@ -1,19 +1,23 @@
 <script lang="ts">
-  import { ChevronLeft, LayoutDashboard, History, Sword, Library } from 'lucide-svelte';
+  import { ChevronLeft, LayoutDashboard, History, Sword, Library, Settings } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import { isHistoryOpen } from '$lib/stores/characterStore';
   import { rollHistory } from '$lib/stores/characterStore';
 
   interface Props {
     campaignName?: string;
+    gmName?: string;
     activeSubTab?: string;
     onTabChange?: (tab: string) => void;
+    onOpenSettings?: () => void;
   }
 
   let { 
-    campaignName = "", 
+    campaignName = "",
+    gmName = "Mestre",
     activeSubTab = "session", 
-    onTabChange = () => {} 
+    onTabChange = () => {},
+    onOpenSettings = () => {}
   }: Props = $props();
 </script>
 
@@ -33,11 +37,11 @@
                 <LayoutDashboard size={18} class="hidden sm:block opacity-50"/>
              </button>
 
-             <div class="flex flex-col">
+              <div class="flex flex-col">
                 <h1 class="text-sm sm:text-base font-bold text-white leading-tight truncate max-w-[120px] sm:max-w-none">
                     {campaignName}
                 </h1>
-                <span class="text-[10px] text-indigo-400 font-mono font-bold uppercase tracking-wider">Mestre</span>
+                <span class="text-[10px] text-indigo-400 font-mono font-bold uppercase tracking-wider">{gmName}</span>
              </div>
           </div>
 
@@ -63,6 +67,15 @@
 
           <!-- Lado Direito: Ações -->
           <div class="flex items-center gap-1 sm:gap-2">
+             <button 
+                onclick={onOpenSettings} 
+                class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all" 
+                aria-label="Configurações da Campanha"
+                title="Configurações"
+             >
+                 <Settings size={18}/>
+             </button>
+
              <button 
                 onclick={() => isHistoryOpen.update(v => !v)} 
                 class="p-2 bg-indigo-600/10 text-indigo-400 border border-indigo-400/20 rounded-lg hover:bg-indigo-600 hover:text-white transition-all relative" 
