@@ -27,25 +27,46 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div 
-            onclick={() => openModal('weapon_menu', item)} 
-            class="flex flex-col sm:flex-row justify-between p-4 bg-slate-950 rounded-lg border border-slate-800 hover:border-indigo-900 cursor-pointer transition-colors gap-4 active:scale-[0.99]"
+            onclick={() => (item.traits || '').toLowerCase().includes('reload') && item.isLoaded === false ? characterActions.reloadWeapon(item) : openModal('weapon_menu', item)} 
+            class="flex flex-col sm:flex-row justify-between p-4 bg-slate-950 rounded-lg border border-slate-800 hover:border-indigo-900 cursor-pointer transition-colors gap-4 active:scale-[0.99] relative overflow-hidden"
             role="button"
             tabindex="0"
-            aria-label="Opções para {item.name}"
         >
-            <div class="flex items-start gap-3">
+            {#if (item.traits || '').toLowerCase().includes('reload') && item.isLoaded === false}
+                <div class="absolute inset-0 bg-red-900/20 z-0 animate-pulse"></div>
+            {/if}
+
+            <div class="flex items-start gap-3 relative z-10">
                 <div class="bg-slate-800 p-2 rounded text-slate-400 mt-1"><Sword size={20}/></div>
-                <div>
-                    <p class="font-bold text-white flex items-center gap-2">
+                <div class="flex-1">
+                    <h3 class="font-bold text-white flex items-center gap-2 flex-wrap">
                         {item.name} 
                         {#if item.equippedState}
                             <span class="text-[10px] bg-indigo-900 text-indigo-200 px-1 rounded uppercase">{item.equippedState}</span>
                         {/if}
-                    </p>
-                    <p class="text-xs text-slate-500">{item.traits || '-'} • {item.range || '-'}</p>
+                        {#if (item.traits || '').toLowerCase().includes('reload') && item.isLoaded === false}
+                             <span class="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full uppercase font-black animate-bounce">{$t('character.actions.reload')}</span>
+                        {/if}
+                    </h3>
+                    
+                    <!-- Traits as tags -->
+                    {#if item.traits}
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            {#each item.traits.split(',').map(t => t.trim()).filter(t => t) as trait}
+                                <span class="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700 uppercase font-bold">
+                                    {$t(`character.traits.${trait}`)}
+                                </span>
+                            {/each}
+                            <span class="text-[9px] text-slate-600">•</span>
+                            <span class="text-[9px] text-slate-500 uppercase">{item.range || 'Melee'}</span>
+                        </div>
+                    {:else}
+                        <p class="text-xs text-slate-500 mt-1">{item.range || 'Melee'}</p>
+                    {/if}
                 </div>
             </div>
-            <div class="flex flex-col items-end gap-2">
+            
+            <div class="flex flex-col items-end gap-2 relative z-10">
                 <div class="flex items-center gap-4 bg-slate-900 p-2 rounded-lg border border-slate-800">
                     <div class="text-center px-2">
                         <span class="block text-[10px] font-bold text-slate-500 uppercase">{$t('character.actions.damage')}</span>
@@ -56,7 +77,6 @@
                     <button 
                         onclick={(e) => handleUseConsumable(e, item)} 
                         class="text-xs bg-red-900/50 text-red-200 px-3 py-1 rounded border border-red-800 hover:bg-red-900 flex items-center gap-1"
-                        aria-label="Usar {item.name}"
                     >
                         <Bomb size={12}/> {$t('character.actions.throw')} ({item.quantity})
                     </button>

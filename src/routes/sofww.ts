@@ -68,3 +68,24 @@ export const AFFLICTIONS_DATA = {
 export const GRIPS = { OFF: 'Off', ONE: 'One', TWO: 'Two' };
 export const AVAILABILITY = ['Common', 'Uncommon', 'Rare', 'Exotic'];
 export const QUALITY = ['Standard', 'Inferior', 'Superior'];
+
+export const WEAPON_TRAITS = [
+    'NIMBLE',
+    'FIREARM',
+    'THROWN',
+    'BRUTAL',
+    'BLUDGEONING',
+    'SLASHING',
+    'DISARMING',
+    'RANGE',
+    'SPECIAL',
+    'MISFIRE',
+    'LARGE',
+    'SLOW',
+    'LIGHT',
+    'LONG',
+    'AMMUNITION',
+    'PIERCING',
+    'RELOAD',
+    'VERSATILE'
+];

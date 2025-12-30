@@ -1,6 +1,6 @@
 
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import ItemEditor from './ItemEditor.svelte';
 import { modalState } from '../../../../stores/characterStore.js';
@@ -12,7 +12,21 @@ register('en', () => Promise.resolve({
         modals: {
             item_editor: 'Item Editor',
             name: 'Name',
-            name_required: 'Name is required'
+            name_required: 'Name is required',
+            type: 'Type',
+            qty: 'Qty',
+            damage: 'Damage',
+            traits: 'Properties',
+            hands: 'Hands',
+            range: 'Range',
+            grip: 'Grip',
+            fixed_def: 'Fixed Def',
+            mod_def: 'Mod Def',
+            description: 'Description',
+            delete: 'Delete'
+        },
+        actions: {
+            reload: 'RELOAD'
         }
     },
     common: {
@@ -26,6 +40,11 @@ init({
     fallbackLocale: 'en',
     initialLocale: 'en',
 });
+
+// Mock uuidv7
+vi.mock('uuidv7', () => ({
+    uuidv7: () => '123-456'
+}));
 
 describe('ItemEditor Modal Component', () => {
     beforeEach(async () => {
@@ -44,8 +63,7 @@ describe('ItemEditor Modal Component', () => {
         });
 
         // We expect the modal to appear. 
-        // Note: Using findByLabelText or similar based on the template
-        const nameInput = await screen.findByPlaceholderText(/name/i);
+        const nameInput = await screen.findByPlaceholderText('Name');
         expect(nameInput).toBeTruthy();
         expect((nameInput as HTMLInputElement).value).toBe('Sun Rod');
     });
@@ -59,7 +77,10 @@ describe('ItemEditor Modal Component', () => {
             data: { name: 'Fireball' }
         });
 
-        const nameInput = screen.queryByPlaceholderText(/nome/i);
+        // Current component implementation hides itself if type mismatch, 
+        // effectively rendering nothing or an empty modal depending on Modal wrapper.
+        // But since we use common/Modal.svelte which uses {#if isOpen}, it shouldn't render "Name" field.
+        const nameInput = screen.queryByPlaceholderText('Name');
         expect(nameInput).toBeNull();
     });
 });

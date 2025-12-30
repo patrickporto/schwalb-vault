@@ -1,18 +1,15 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { character, modalState, totalDefense, effectiveSpeed } from '$lib/stores/characterStore';
-    import { Shield, Zap, Sword, Minus, Plus, Activity } from 'lucide-svelte';
+    import { Shield, Zap, Sword, Activity } from 'lucide-svelte';
+    import DiceCounter from '$lib/components/common/DiceCounter.svelte';
 
     function openModal(type: string, data: any) {
         modalState.update(m => ({ ...m, type, isOpen: true, data }));
     }
 
-    function decreaseBonusDamage() {
-        character.update(c => ({...c, bonusDamage: Math.max(0, (c.bonusDamage || 0) - 1)}));
-    }
-
-    function increaseBonusDamage() {
-        character.update(c => ({...c, bonusDamage: (c.bonusDamage || 0) + 1}));
+    function updateBonusDamage(newValue: number) {
+        character.update(c => ({...c, bonusDamage: newValue}));
     }
 </script>
 
@@ -50,28 +47,12 @@
 
     <!-- Bonus Damage Controller -->
     <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg shadow-black/20">
-        <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+        <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2 mb-3">
             <Sword size={14} class="text-indigo-500"/> {$t('character.vitals.bonus_damage')}
         </span>
-        <div class="flex items-center justify-between bg-black/40 rounded-xl p-1.5 border border-white/5">
-            <button 
-                onclick={decreaseBonusDamage} 
-                class="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-all active:scale-90" 
-                aria-label="Diminuir Dano Bônus"
-            >
-                <Minus size={18}/>
-            </button>
-            <div class="flex flex-col items-center">
-                <span class="text-2xl font-black text-white leading-none tracking-tighter">{$character.bonusDamage || 0}d6</span>
-                <span class="text-[9px] text-slate-600 font-bold uppercase mt-1">{$t('character.vitals.extra_dice')}</span>
-            </div>
-            <button 
-                onclick={increaseBonusDamage} 
-                class="w-10 h-10 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all active:scale-90 shadow-lg shadow-indigo-500/20" 
-                aria-label="Aumentar Dano Bônus"
-            >
-                <Plus size={18}/>
-            </button>
-        </div>
+        <DiceCounter 
+            value={$character.bonusDamage || 0}
+            onUpdate={updateBonusDamage}
+        />
     </div>
 </div>

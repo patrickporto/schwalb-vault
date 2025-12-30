@@ -62,10 +62,15 @@
                         <span class="text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-1 rounded-lg font-bold uppercase tracking-widest shadow-sm">
                             {data.grip}
                         </span>
+                        <span class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded-lg font-bold uppercase">
+                            {data.range || 'Melee'}
+                        </span>
                         {#if data.traits}
-                            <span class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded-lg font-bold uppercase tracking-widest">
-                                {data.traits}
-                            </span>
+                            {#each data.traits.split(',').map(t => t.trim()).filter(t => t) as trait}
+                                <span class="text-[10px] bg-slate-800 text-slate-300 border border-slate-700 px-2 py-1 rounded-lg font-bold uppercase">
+                                    {$t(`character.traits.${trait}`)}
+                                </span>
+                            {/each}
                         {/if}
                     </div>
                     

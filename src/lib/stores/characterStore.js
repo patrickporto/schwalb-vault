@@ -298,22 +298,54 @@ export const characterActions = {
     },
 
     finalizeRoll: (data, modifier, activeEffectsNames = []) => {
-        // Logic moved from +page.svelte
-        // Note: Needs to access get(character) for bonus damage etc.
         const char = get(character);
         const derivedStatsVal = get(derivedStats); // map of key -> val
-        // Re-implementing logic...
+
         const isAttack = data.type === 'weapon_attack';
         const isLuck = data.type === 'luck';
         const isDamage = data.type === 'weapon_damage';
-        const sourceName = data.source.name || 'Ação';
+        const item = data.source;
+        const sourceName = item.name || 'Ação';
+        const hasTrait = (it, trait) => it.traits && it.traits.toLowerCase().includes(trait.toLowerCase());
 
         if (!isDamage) {
             const d20 = Math.floor(Math.random() * 20) + 1;
             let attrMod = 0;
+            let attrUsed = 'Sorte'; // Default label
+
             if (data.type === 'attribute') {
                 const baseVal = derivedStatsVal[data.source.key] || data.source.value;
                 attrMod = baseVal - 10;
+                attrUsed = data.source.name;
+            } else if (isAttack) {
+                // Default Weapon Attack Attribute: Strength
+                let key = 'str';
+                let attrLabel = 'Força';
+
+                // Ranges: Melee vs Ranged
+                // Rule: Ranged attacks use Agility. Melee uses Strength.
+                const isRangedAttack = item.range === 'Ranged';
+
+                if (isRangedAttack) {
+                    key = 'agi';
+                    attrLabel = 'Agilidade';
+
+                    // THROWN: Uses Strength unless Nimble
+                    if (hasTrait(item, 'Thrown')) {
+                        key = 'str';
+                        attrLabel = 'Força';
+                    }
+                }
+
+                // NIMBLE: Overrides all, allows Agility
+                if (hasTrait(item, 'Nimble')) {
+                    key = 'agi';
+                    attrLabel = 'Agilidade';
+                }
+
+                const baseVal = derivedStatsVal[key] || 10;
+                attrMod = baseVal - 10;
+                attrUsed = attrLabel;
             }
 
             let boonBaneTotal = 0;
@@ -335,11 +367,10 @@ export const characterActions = {
             }
 
             const total = d20 + attrMod + boonBaneTotal;
-            let description = isAttack ? `Ataque(${modifier} boons / banes)` : isLuck ? `Teste de Sorte` : `Teste de ${sourceName} `;
-            const hasTrait = (item, trait) => item.traits && item.traits.toLowerCase().includes(trait.toLowerCase());
+            let description = isAttack ? `Ataque (${attrUsed})` : isLuck ? `Teste de Sorte` : `Teste de ${sourceName}`;
+            if (modifier !== 0) description += ` com ${modifier} boons/banes`;
 
             if (isAttack && d20 === 20) {
-                const item = data.source;
                 let critEffects = [];
                 if (hasTrait(item, 'Bludgeoning')) critEffects.push("Vuln");
                 if (hasTrait(item, 'Piercing')) critEffects.push("Weakened");
@@ -351,7 +382,7 @@ export const characterActions = {
                 source: isAttack ? 'Ataque' : isLuck ? 'Sorte' : 'Atributo',
                 name: sourceName,
                 description: description,
-                formula: `d20(${d20})${attrMod !== 0 ? (attrMod > 0 ? '+' : '') + attrMod : ''}${boonBaneStr} `,
+                formula: `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr} `,
                 total: total,
                 crit: d20 === 20,
                 effectsApplied: activeEffectsNames
@@ -362,36 +393,58 @@ export const characterActions = {
                 ...c,
                 effects: c.effects.map(e => (e.isActive && e.duration === 'NEXT_ROLL') ? { ...e, isActive: false } : e)
             }));
+
+            // Handle RELOAD trait usage (set isLoaded = false)
+            if (isAttack && hasTrait(item, 'Reload')) {
+                character.update(c => ({
+                    ...c,
+                    equipment: c.equipment.map(i => i.id === item.id ? { ...i, isLoaded: false } : i)
+                }));
+            }
+
         } else {
             // Damage Logic
-            const item = data.source;
-            const hasTrait = (i, t) => i.traits && i.traits.toLowerCase().includes(t.toLowerCase());
-            let baseDice = (item.damageDice || 0);
-            if (hasTrait(item, 'Versatile') && item.equippedState === 'two') baseDice += 1;
-            let bonusDmg = (char.bonusDamage || 0);
-            if (hasTrait(item, 'Light') && bonusDmg > 0) bonusDmg -= 1;
+            let baseDice = parseInt(item.damageDice) || 0;
 
-            // Add global damage bonus from effects
-            const dmgBonus = get(damageBonus); // We need to separate char.bonusDamage from effect bonus if we want to mimic exact logic, but here assume dmgBonus includes all ADD modifiers to 'damage'
-            // Wait, the original `getDamageBonus` only summed effect modifiers. `character.bonusDamage` is a separate prop.
-            // The derived `damageBonus` store I made earlier sums `character.bonusDamage` + effects.
-            // So if I use that, I double count if I also add char.bonusDamage here?
-            // Let's re-read derived `damageBonus`. It is: $char.bonusDamage + effects.
-            // So `totalDice` calculation below needs just `get(damageBonus)`??
-            // Original: baseDice + bonusDmg (which is char.bonus + effects) + modifier.
+            // VERSATILE: +1d6 if two-handed (Check both static grip and equipped state)
+            const isTwoHanded = (item.grip && item.grip.toLowerCase() === 'two') ||
+                (item.equippedState && item.equippedState.toLowerCase() === 'two');
 
-            // Recalculating strict to separate sources to be safe:
+            if (hasTrait(item, 'Versatile') && isTwoHanded) {
+                baseDice += 1;
+            }
+
+            let charBonus = (char.bonusDamage || 0);
+
+            // LIGHT: Reduce bonus damage die by 1
+            if (hasTrait(item, 'Light') && charBonus > 1) {
+                charBonus -= 1;
+            }
+
+            // Effect Bonus
             const effectBonus = get(activeEffects).flatMap(e => Array.isArray(e.modifiers) ? e.modifiers : [])
                 .filter(m => m.target === 'damage' && m.type === MOD_TYPES.ADD).reduce((acc, m) => acc + m.value, 0);
 
-            bonusDmg += effectBonus;
+            const totalBonus = charBonus + effectBonus;
+            const totalDice = Math.max(0, baseDice + totalBonus + modifier);
 
-            const totalDice = Math.max(0, baseDice + bonusDmg + modifier);
             let results = [];
             let sum = 0;
+            let originalRollsInfo = [];
+
             for (let i = 0; i < totalDice; i++) {
                 let r = Math.floor(Math.random() * 6) + 1;
-                if (r === 1 && hasTrait(item, 'Brutal')) r = Math.floor(Math.random() * 6) + 1;
+
+                // BRUTAL: Reroll 1s
+
+                if (r === 1 && hasTrait(item, 'Brutal')) {
+                    const newR = Math.floor(Math.random() * 6) + 1;
+                    originalRollsInfo.push(`1->${newR}`);
+                    r = newR;
+                } else {
+                    originalRollsInfo.push(`${r}`);
+                }
+
                 results.push(r);
                 sum += r;
             }
@@ -399,8 +452,8 @@ export const characterActions = {
             characterActions.addToHistory({
                 source: `Dano`,
                 name: item.name,
-                description: `Dano: ${totalDice} d6`,
-                formula: `${totalDice} d6[${results.join(',')}]`,
+                description: `Dano: ${totalDice}d6 ${hasTrait(item, 'Brutal') ? '(Brutal)' : ''}`,
+                formula: `${totalDice}d6 [${results.join(', ')}] ${originalRollsInfo.some(s => s.includes('->')) ? `(Rolagens: ${originalRollsInfo.join(', ')})` : ''}`,
                 total: sum,
                 effectsApplied: activeEffectsNames
             });
@@ -410,6 +463,14 @@ export const characterActions = {
 
         modalState.set({ type: null, isOpen: false, data: null });
         isHistoryOpen.set(true);
+    },
+
+    reloadWeapon: (item) => {
+        character.update(c => ({
+            ...c,
+            equipment: c.equipment.map(i => i.id === item.id ? { ...i, isLoaded: true } : i)
+        }));
+        characterActions.addToHistory({ source: 'Ação', name: 'Recarregar', description: `Recarregou ${item.name}` });
     },
 
     // Spells / Talents Management

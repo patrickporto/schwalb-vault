@@ -128,7 +128,8 @@
             "use_talent_desc": "Activate a special ability or talent.",
             "empty_title": "Ready for Combat?",
             "empty_desc": "Your quick actions list is empty. Equip your hero to see weapons, spells, and active talents here.",
-            "inventory": "Inventory"
+            "inventory": "Inventory",
+            "reload": "RELOAD"
         },
         "spells": {
             "grimoire": "Arcane Grimoire",
@@ -211,7 +212,8 @@
             "type": "Type",
             "qty": "Qty",
             "damage": "Damage",
-            "traits": "Traits",
+            "traits": "Properties",
+            "hands": "Hands",
             "grip": "Grip",
             "range": "Range",
             "fixed_def": "Fixed Def",
@@ -253,7 +255,13 @@
             "grimoire_empty": "Grimoire is empty.",
             "effects_summary": "Effects Summary",
             "no_affliction_selected": "No affliction selected.",
-            "back": "Back"
+            "back": "Back",
+            "add_property": "Add Property",
+            "selected_properties": "Selected",
+            "search_property": "Search property...",
+            "no_property_found": "No property found",
+            "close": "Close",
+            "remove": "Remove"
         }
     },
     "invite": {
