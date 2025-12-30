@@ -420,7 +420,7 @@
     </header>
 
     <!-- Mobile Bottom Navigation -->
-    <div class="md:hidden fixed bottom-6 left-4 right-4 bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-2xl p-1.5 z-50">
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 shadow-2xl rounded-t-2xl z-50 p-2 pb-safe">
         <div class="relative flex justify-between">
             <!-- Sliding indicator background -->
             <div

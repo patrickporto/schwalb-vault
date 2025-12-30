@@ -1,11 +1,11 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
-    import { 
-        activeTab, modalState, rollHistory, character, defaultCharacter, 
+    import {
+        activeTab, modalState, rollHistory, character, defaultCharacter,
         isHistoryOpen, normalHealth, currentHealth, damage, totalDefense,
         effectiveMaxHealth, characterActions
     } from '$lib/stores/characterStore';
-    
+
     // Yjs / DB
     import { page } from '$app/stores';
     import { charactersMap, waitForSync } from '$lib/db';
@@ -35,7 +35,7 @@
     import AfflictionManager from '$lib/components/character/modals/parts/AfflictionManager.svelte';
     import RestConfirmationContent from '$lib/components/character/modals/parts/RestConfirmationContent.svelte';
     import DiceRollModal from '$lib/components/common/DiceRollModal.svelte';
-    
+
     import AttributesSection from '$lib/components/character/AttributesSection.svelte';
     import VitalsSection from '$lib/components/character/VitalsSection.svelte';
     import CurrencySection from '$lib/components/character/CurrencySection.svelte';
@@ -43,7 +43,7 @@
     import AfflictionsSection from '$lib/components/character/AfflictionsSection.svelte';
     import CampaignStatus from '$lib/components/character/CampaignStatus.svelte';
     import TabNavigation from '$lib/components/character/TabNavigation.svelte';
-    
+
     import ActionsTab from '$lib/components/character/ActionsTab.svelte';
     import SpellsTab from '$lib/components/character/SpellsTab.svelte';
     import EffectsTab from '$lib/components/character/EffectsTab.svelte';
@@ -56,7 +56,7 @@
     let loaded = $state(false);
     let notFound = $state(false);
     let currentId = $state<string | null>(null);
-    
+
     // Auto-save and Auto-sync effect
     $effect(() => {
         if (!loaded || notFound || !currentId) return;
@@ -89,7 +89,8 @@
                 acted: charData.acted,
                 afflictions: charData.afflictions || [],
                 campaignApproval: charData.campaignApproval,
-                imageUrl: charData.imageUrl
+                imageUrl: charData.imageUrl,
+                notes: charData.notes
             });
         }
     });
@@ -117,7 +118,8 @@
                 acted: current.acted,
                 afflictions: current.afflictions || [],
                 campaignApproval: current.campaignApproval,
-                imageUrl: current.imageUrl
+                imageUrl: current.imageUrl,
+                notes: current.notes
             });
         }, 30000); // 30 seconds heartbeat
 
@@ -136,7 +138,7 @@
         loaded = false;
         notFound = false;
         currentId = id;
-        
+
         await waitForSync();
 
         // Load or 404
@@ -147,7 +149,7 @@
             if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
             if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
             if (data.damage !== undefined) damage.set(data.damage);
-            
+
             // Auto-join campaign room with character ID for bidirectional sync
             const charData = get(character);
             if (charData.campaignId) {
@@ -156,8 +158,8 @@
         } else {
             notFound = true;
         }
-        
-        
+
+
         if (browser) {
             const isMobile = window.innerWidth < 768;
             if (isMobile) {
@@ -177,7 +179,7 @@
 </script>
 
 <div class="min-h-screen bg-slate-950 text-slate-100 font-sans pb-28 md:pb-20 relative overflow-x-hidden">
-  
+
   {#if loaded}
       {#if notFound}
         <div class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -187,7 +189,7 @@
                 </div>
                 <h1 class="text-2xl font-black text-white mb-2 uppercase tracking-tight">{$t('character.not_found.title')}</h1>
                 <p class="text-slate-400 mb-8">{$t('character.not_found.message')}</p>
-                <button 
+                <button
                     onclick={() => goto(resolve('/'))}
                     class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
                 >
@@ -197,7 +199,7 @@
         </div>
       {:else}
           <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
-          
+
           <!-- Self-standing Modals -->
           <ItemEditor />
           <SpellEditor />
@@ -214,7 +216,7 @@
           <AfflictionManager />
           <RestConfirmationContent />
 
-          <DiceRollModal 
+          <DiceRollModal
               isOpen={$modalState.isOpen && $modalState.type === 'pre_roll'}
               title={$t('character.dice_roll.confirm_roll')}
               label={$modalState.data?.type === 'weapon_damage' ? $t('character.dice_roll.extra_dice') : $t('character.dice_roll.boons_banes')}
@@ -222,8 +224,8 @@
               onClose={() => modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }))}
               onRoll={(mod) => {
                   characterActions.finalizeRoll(
-                      $modalState.data, 
-                      mod, 
+                      $modalState.data,
+                      mod,
                       $character.effects.filter(e => e.isActive).map(e => e.name)
                   );
                   modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }));
@@ -231,9 +233,9 @@
           />
 
           <CharacterHeader />
-          
+
           <main class="max-w-6xl mx-auto md:px-4 mt-6 lg:mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-             
+
              <!-- SIDEBAR ESQUERDA (desktop only) -->
              <aside class="hidden lg:block lg:col-span-3 space-y-4">
                 <AttributesSection />
@@ -280,7 +282,7 @@
                       {#if $activeTab === 'talentos'}
                          <TalentsTab />
                       {/if}
-                      
+
                       {#if $activeTab === 'equipamento'}
                          <InventoryTab />
                       {/if}
@@ -292,7 +294,7 @@
                 </div>
              </section>
           </main>
-      
+
            <div class="hidden">
              <CampaignStatus banner />
           </div>

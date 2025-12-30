@@ -493,10 +493,10 @@ export async function syncFromCloud() {
                 }
 
                 const localChar = charactersMap.get(charId);
-                if (!localChar) {
-                    console.log('[DEBUG] ADDING character from cloud (missing locally):', { id: charId, name: cloudChar.name });
-                    charactersMap.set(charId, cloudChar);
-                }
+                // OVERWRITE: If syncing from cloud, we assume cloud has the authoritative backup
+                // In a future version, we could check for newer modification dates
+                console.log('[DEBUG] Syncing character from cloud:', { id: charId, name: cloudChar.name, status: localChar ? 'OVERWRITING' : 'ADDING' });
+                charactersMap.set(charId, cloudChar);
             }
         }
 
@@ -522,11 +522,8 @@ export async function syncFromCloud() {
                     continue;
                 }
 
-                const localCamp = campaignsMap.get(campId);
-                if (!localCamp) {
-                    console.log('[DEBUG] ADDING campaign from cloud (missing locally):', { id: campId, name: cloudCamp.name });
-                    campaignsMap.set(campId, cloudCamp);
-                }
+                console.log('[DEBUG] Syncing campaign from cloud:', { id: campId, name: cloudCamp.name, status: campaignsMap.has(campId) ? 'OVERWRITING' : 'ADDING' });
+                campaignsMap.set(campId, cloudCamp);
             }
         }
 

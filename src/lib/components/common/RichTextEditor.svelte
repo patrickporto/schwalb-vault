@@ -24,25 +24,16 @@
                     }
                 }),
                 BubbleMenuExtension.configure({
-                    element: bubbleMenuElement,
+                    element: bubbleMenuElement
                 }),
                 FloatingMenuExtension.configure({
-                    element: floatingMenuElement,
+                    element: floatingMenuElement
                 })
             ],
             content: value,
             editorProps: {
                 attributes: {
-                    class: 'prose prose-invert max-w-none focus:outline-none min-h-[50vh] p-4 text-slate-300 leading-relaxed'
-                          + ' prose-headings:text-indigo-400 prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-6'
-                          + ' prose-h1:text-3xl prose-h2:text-2xl'
-                          + ' prose-p:mb-4'
-                          + ' prose-ul:list-disc prose-ul:ml-6 prose-ul:text-slate-400 prose-li:marker:text-indigo-500'
-                          + ' prose-ol:list-decimal prose-ol:ml-6 prose-ol:text-slate-400 prose-ol:marker:text-indigo-500'
-                          + ' prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-400'
-                          + ' prose-code:bg-slate-800 prose-code:rounded prose-code:px-1 prose-code:text-indigo-300 prose-code:before:content-none prose-code:after:content-none'
-                          + ' prose-pre:bg-slate-900 prose-pre:p-4 prose-pre:rounded-lg'
-                          + ' prose-strong:text-white prose-strong:font-bold'
+                    class: 'focus:outline-none min-h-[60vh] p-4 pb-32 text-slate-300 leading-relaxed text-base md:text-sm'
                 }
             },
             onUpdate: ({ editor }) => {
@@ -66,84 +57,81 @@
 
 </script>
 
-<div class="relative bg-slate-950 border border-slate-800 rounded-lg group focus-within:border-indigo-500/50 transition-colors">
+<div class="relative bg-slate-950/50 border border-slate-800 rounded-xl group focus-within:border-indigo-500/50 transition-all">
 
     <!-- Bubble Menu (Selected Text) -->
-    <div bind:this={bubbleMenuElement} class="flex bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden mb-2">
+    <div bind:this={bubbleMenuElement} class="flex items-center bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden p-1 gap-0.5 z-[100]">
         {#if editor}
             <button
                 onclick={() => editor?.chain().focus().toggleBold().run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('bold') ? 'text-indigo-400 bg-slate-800' : 'text-slate-400'}"
-                title="Bold"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('bold') ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
             >
-                <Bold size={16} />
+                <Bold size={18} />
             </button>
             <button
                 onclick={() => editor?.chain().focus().toggleItalic().run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('italic') ? 'text-indigo-400 bg-slate-800' : 'text-slate-400'}"
-                title="Italic"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('italic') ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
             >
-                <Italic size={16} />
+                <Italic size={18} />
             </button>
             <button
                 onclick={() => editor?.chain().focus().toggleStrike().run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('strike') ? 'text-indigo-400 bg-slate-800' : 'text-slate-400'}"
-                title="Strikethrough"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('strike') ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
             >
-                <Strikethrough size={16} />
+                <Strikethrough size={18} />
             </button>
+            <div class="w-px h-4 bg-slate-700 mx-1"></div>
             <button
                 onclick={() => editor?.chain().focus().toggleCode().run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('code') ? 'text-indigo-400 bg-slate-800' : 'text-slate-400'}"
-                title="Code"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('code') ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
             >
-                <Code size={16} />
+                <Code size={18} />
             </button>
         {/if}
     </div>
 
     <!-- Floating Menu (Empty Line) -->
-    <div bind:this={floatingMenuElement} class="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden ml-[-30px]">
+    <div bind:this={floatingMenuElement} class="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden p-1 z-[100]">
         {#if editor}
             <button
                 onclick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('heading', { level: 1 }) ? 'text-indigo-400' : 'text-slate-400'}"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('heading', { level: 1 }) ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
                 title="Heading 1"
             >
-                <Heading1 size={16} />
+                <Heading1 size={18} />
             </button>
             <button
                 onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('heading', { level: 2 }) ? 'text-indigo-400' : 'text-slate-400'}"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('heading', { level: 2 }) ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
                 title="Heading 2"
             >
-                <Heading2 size={16} />
+                <Heading2 size={18} />
             </button>
             <button
                 onclick={() => editor?.chain().focus().toggleBulletList().run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('bulletList') ? 'text-indigo-400' : 'text-slate-400'}"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('bulletList') ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
                 title="Bullet List"
             >
-                <List size={16} />
+                <List size={18} />
             </button>
             <button
                 onclick={() => editor?.chain().focus().toggleOrderedList().run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('orderedList') ? 'text-indigo-400' : 'text-slate-400'}"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('orderedList') ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
                 title="Ordered List"
             >
-                <ListOrdered size={16} />
+                <ListOrdered size={18} />
             </button>
             <button
                 onclick={() => editor?.chain().focus().toggleBlockquote().run()}
-                class="p-2 hover:bg-slate-800 transition-colors {editor.isActive('blockquote') ? 'text-indigo-400' : 'text-slate-400'}"
+                class="p-2.5 md:p-2 hover:bg-slate-800 transition-colors rounded-lg {editor.isActive('blockquote') ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400'}"
                 title="Quote"
             >
-                <Quote size={16} />
+                <Quote size={18} />
             </button>
         {/if}
     </div>
 
-    <div bind:this={element} class="custom-scrollbar max-h-[60vh] overflow-y-auto"></div>
+    <div bind:this={element} class="custom-scrollbar max-h-[70vh] overflow-y-auto w-full"></div>
 </div>
 
 <style>
