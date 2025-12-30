@@ -33,6 +33,8 @@
             "synced": "Synced",
             "last_sync": "Last sync",
             "label": "Synchronization",
+            "connected": "Connected",
+            "peers": "Peers: {count}",
             "offline": "Offline"
         }
     },
