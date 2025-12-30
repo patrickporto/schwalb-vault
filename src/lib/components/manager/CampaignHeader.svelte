@@ -25,7 +25,7 @@
 </script>
 
 <header class="bg-slate-900/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 shadow-2xl">
-    <div class="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-3">
        <div class="flex items-center justify-between gap-2 sm:gap-4">
 
           <!-- Lado Esquerdo: Voltar e Título -->
@@ -41,10 +41,10 @@
              </button>
 
               <div class="flex flex-col">
-                <h1 class="text-sm sm:text-base font-bold text-white leading-tight truncate max-w-[120px] sm:max-w-none">
+                <h1 class="text-base sm:text-lg font-black text-white leading-tight truncate max-w-[140px] sm:max-w-none">
                     {campaignName}
                 </h1>
-                <span class="text-[10px] text-indigo-400 font-mono font-bold uppercase tracking-wider">{gmName}</span>
+                <span class="text-xs text-indigo-400 font-mono font-black uppercase tracking-wider">{gmName}</span>
              </div>
           </div>
 
@@ -92,21 +92,21 @@
 
              <button
                 onclick={onOpenSettings}
-                class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                class="p-2 sm:p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
                 aria-label="Configurações da Campanha"
                 title="Configurações"
              >
-                 <Settings size={18}/>
+                 <Settings size={20}/>
              </button>
 
              <button
                 onclick={() => isHistoryOpen.update(v => !v)}
-                class="p-2 bg-indigo-600/10 text-indigo-400 border border-indigo-400/20 rounded-lg hover:bg-indigo-600 hover:text-white transition-all relative"
+                class="p-2 sm:p-2.5 bg-indigo-600/10 text-indigo-400 border border-indigo-400/20 rounded-lg hover:bg-indigo-600 hover:text-white transition-all relative"
                 aria-label="Toggle Histórico"
                 title="Histórico"
                 aria-pressed={$isHistoryOpen}
              >
-                 <History size={18}/>
+                 <History size={20}/>
                  {#if $rollHistory && $rollHistory.length > 0}
                     <span class="absolute -top-1 -right-1 flex h-3 w-3">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
