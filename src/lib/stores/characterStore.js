@@ -1,5 +1,6 @@
 
 import { writable, derived, get } from 'svelte/store';
+import { uuidv7 } from 'uuidv7';
 import {
     ITEM_TYPES,
     MOD_TYPES,
@@ -216,7 +217,20 @@ export const characterActions = {
 
     addToHistory: (rollData, shouldSync = true) => {
         const char = get(character);
-        const entry = { id: Date.now(), timestamp: new Date(), charName: char.name, ...rollData };
+        const history = get(rollHistory);
+
+        // If the roll already has an ID, check if it's already in the history (prevent duplicates from sync)
+        if (rollData.id && history.find(r => r.id === rollData.id)) {
+            return;
+        }
+
+        const entry = {
+            id: rollData.id || uuidv7(),
+            timestamp: rollData.timestamp || new Date(),
+            charName: char.name,
+            ...rollData
+        };
+
         rollHistory.update(h => [entry, ...h]);
         isHistoryOpen.set(true);
 
@@ -453,7 +467,7 @@ export const characterActions = {
 
         const newEffect = {
             ...effect,
-            id: Date.now(),
+            id: uuidv7(),
             isActive: true,
             name: effectName,
             description: effectDesc

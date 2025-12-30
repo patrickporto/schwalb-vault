@@ -19,7 +19,22 @@
     // Components
     import CharacterHeader from '$lib/components/character/CharacterHeader.svelte';
     import HistorySidebar from '$lib/components/character/HistorySidebar.svelte';
-    import ModalManager from '$lib/components/character/modals/ModalManager.svelte';
+    // Modals
+    import ItemEditor from '$lib/components/character/modals/parts/ItemEditor.svelte';
+    import SpellEditor from '$lib/components/character/modals/parts/SpellEditor.svelte';
+    import TalentEditor from '$lib/components/character/modals/parts/TalentEditor.svelte';
+    import EffectEditor from '$lib/components/character/modals/parts/EffectEditor.svelte';
+    import AttributeEditor from '$lib/components/character/modals/parts/AttributeEditor.svelte';
+    import StatEditor from '$lib/components/character/modals/parts/StatEditor.svelte';
+    import HealthDamageEditor from '$lib/components/character/modals/parts/HealthDamageEditor.svelte';
+    import CharacterInfoEditor from '$lib/components/character/modals/parts/CharacterInfoEditor.svelte';
+    import ConfirmationModalContent from '$lib/components/character/modals/parts/ConfirmationModalContent.svelte';
+    import GrimoireSelection from '$lib/components/character/modals/parts/GrimoireSelection.svelte';
+    import TalentSelection from '$lib/components/character/modals/parts/TalentSelection.svelte';
+    import AttackOptionsContent from '$lib/components/character/modals/parts/AttackOptionsContent.svelte';
+    import AfflictionManager from '$lib/components/character/modals/parts/AfflictionManager.svelte';
+    import RestConfirmationContent from '$lib/components/character/modals/parts/RestConfirmationContent.svelte';
+    import DiceRollModal from '$lib/components/common/DiceRollModal.svelte';
     
     import AttributesSection from '$lib/components/character/AttributesSection.svelte';
     import VitalsSection from '$lib/components/character/VitalsSection.svelte';
@@ -183,7 +198,37 @@
       {:else}
           <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
           
-          <ModalManager />
+          <!-- Self-standing Modals -->
+          <ItemEditor />
+          <SpellEditor />
+          <TalentEditor />
+          <EffectEditor />
+          <AttributeEditor />
+          <StatEditor />
+          <HealthDamageEditor />
+          <CharacterInfoEditor />
+          <ConfirmationModalContent />
+          <GrimoireSelection />
+          <TalentSelection />
+          <AttackOptionsContent />
+          <AfflictionManager />
+          <RestConfirmationContent />
+
+          <DiceRollModal 
+              isOpen={$modalState.isOpen && $modalState.type === 'pre_roll'}
+              title={$t('character.dice_roll.confirm_roll')}
+              label={$modalState.data?.type === 'weapon_damage' ? $t('character.dice_roll.extra_dice') : $t('character.dice_roll.boons_banes')}
+              rollLabel={$t('character.dice_roll.roll')}
+              onClose={() => modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }))}
+              onRoll={(mod) => {
+                  characterActions.finalizeRoll(
+                      $modalState.data, 
+                      mod, 
+                      $character.effects.filter(e => e.isActive).map(e => e.name)
+                  );
+                  modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }));
+              }}
+          />
 
           <CharacterHeader />
           

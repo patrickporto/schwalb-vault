@@ -19,7 +19,12 @@
 
     let confirmState = $state({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
-    // ... enemy functions ...
+    interface Props {
+        campId: string;
+    }
+
+    let { campId }: Props = $props();
+
     function createDefaultEnemy() {
         return { 
             name: '', difficulty: 1, defense: 10, health: 10, damage: 0, size: 1, speed: 10, 
@@ -90,10 +95,9 @@
     }
 
     function runEncounter(enc: any) {
-        const campId = $page.params.id;
-        if (!campId || !campaignsMap.has(campId)) return;
-        
         const latestCamp = campaignsMap.get(campId);
+        if (!latestCamp) return;
+        
         const activeEnemies = latestCamp.activeEnemies || [];
         
         let newEnemies: any[] = [];
@@ -103,7 +107,7 @@
                 for(let i=0; i<item.count; i++) {
                     newEnemies.push({
                         ...template,
-                        instanceId: `e_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                        instanceId: uuidv7(),
                         damage: 0, 
                         currentHealth: template.health,
                         afflictions: [],

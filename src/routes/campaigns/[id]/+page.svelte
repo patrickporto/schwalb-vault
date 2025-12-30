@@ -52,7 +52,7 @@
             {#if activeSubTab === 'session'}
                 <SessionView {campaign} />
             {:else if activeSubTab === 'bestiary'}
-                <BestiaryView />
+                <BestiaryView campId={id} />
             {/if}
         </main>
     {:else if loaded && !campaign}

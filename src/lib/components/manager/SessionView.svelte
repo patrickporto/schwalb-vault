@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { uuidv7 } from 'uuidv7';
     import { t } from 'svelte-i18n';
     import { liveCharacters, liveEnemies, liveEncounters } from '$lib/stores/live';
     import { characterActions, isHistoryOpen } from '$lib/stores/characterStore';
@@ -183,7 +184,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         
         const newEnemy = {
             ...enemyTemplate,
-            instanceId: `e_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            instanceId: uuidv7(),
             damage: 0, 
             currentHealth: enemyTemplate.health,
             afflictions: [],
@@ -205,7 +206,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                 for(let i=0; i<item.count; i++) {
                     newEnemies.push({
                         ...template,
-                        instanceId: `e_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                        instanceId: uuidv7(),
                         damage: 0, 
                         currentHealth: template.health,
                         afflictions: [],
