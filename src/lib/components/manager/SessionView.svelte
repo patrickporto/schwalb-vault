@@ -1,6 +1,7 @@
 <script lang="ts">
     import { uuidv7 } from 'uuidv7';
-    import { t } from 'svelte-i18n';
+    import { t, locale } from 'svelte-i18n';
+    import { get } from 'svelte/store';
     import { liveCharacters, liveEnemies, liveEncounters } from '$lib/stores/live';
     import { character, characterActions, isHistoryOpen } from '$lib/stores/characterStore';
     import { campaignsMap } from '$lib/db';
@@ -37,18 +38,20 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         if (campaign?.id) {
             joinCampaignRoom(campaign.id, true);
             // Set campaignId and GM name so rolls in this view are synced correctly
+            const masterLabel = get(t)('common.labels.master');
             character.update(c => ({ 
                 ...c, 
                 campaignId: campaign.id,
-                name: campaign.gmName || 'Mestre'
+                name: campaign.gmName || masterLabel
             }));
 
             // Heartbeat for players to know GM is online
             const interval = setInterval(() => {
                 const current = campaignsMap.get(campaign.id) || campaign;
+                const masterLabelHeartbeat = get(t)('common.labels.master');
                 syncCampaign(campaign.id, { 
                     name: current.name, 
-                    gmName: current.gmName || 'Mestre' 
+                    gmName: current.gmName || masterLabelHeartbeat 
                 });
             }, 30000); // 30 seconds
             
@@ -312,7 +315,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         if (count > 1) desc += `Dados: [${res.results.join(', ')}] `;
         if (res.bonusRolls?.length > 0) desc += `Bonus Rolls: [${res.bonusRolls.join(', ')}] -> ${Math.abs(res.modifierTotal)}`;
         
-        const gmName = campaign?.gmName || 'Mestre';
+        const gmName = campaign?.gmName || get(t)('common.labels.master');
         
         characterActions.addToHistory({
             source: 'GM',
