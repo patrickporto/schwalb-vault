@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { t } from 'svelte-i18n';
+    import { t, locale } from 'svelte-i18n';
     import { get } from 'svelte/store';
     import { liveCharacters, liveCampaigns } from '$lib/stores/live';
     import { uuidv7 } from 'uuidv7';
@@ -22,7 +22,19 @@
 
     onMount(() => {
         initializeGoogleAuth();
+        const storedLocale = localStorage.getItem('user_locale');
+        if (storedLocale) {
+            locale.set(storedLocale);
+        }
     });
+
+    let showLangMenu = $state(false);
+
+    function setLanguage(lang: string) {
+        locale.set(lang);
+        localStorage.setItem('user_locale', lang);
+        showLangMenu = false;
+    }
 
     let activeTab = $state('characters');
     let previousTab = $state('characters');
@@ -269,10 +281,43 @@
            </div>
        </div>
 
-       <!-- User Area -->
-       <div class="flex items-center justify-end min-w-[40px]">
-         <GoogleSignIn />
-       </div>
+        <!-- User Area -->
+        <div class="flex items-center justify-end min-w-[40px] gap-3">
+          <div class="relative">
+            <button 
+                class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800"
+                onclick={() => showLangMenu = !showLangMenu}
+                title={$t('common.labels.language') || 'Language'}
+            >
+                <Globe size={20} />
+                <span class="text-xs font-bold uppercase hidden md:inline">{$locale === 'pt' ? 'PT' : 'EN'}</span>
+            </button>
+
+            {#if showLangMenu}
+                <div 
+                    class="absolute top-full right-0 mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-xl p-1.5 min-w-[120px] z-50 flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-200"
+                >
+                    <button 
+                        onclick={() => setLanguage('pt')} 
+                        class="flex items-center gap-2 px-3 py-2 text-sm font-bold rounded-lg {$locale === 'pt' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
+                    >
+                        🇧🇷 PT-BR
+                    </button>
+                    <button 
+                        onclick={() => setLanguage('en')} 
+                        class="flex items-center gap-2 px-3 py-2 text-sm font-bold rounded-lg {$locale === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}"
+                    >
+                        🇺🇸 EN-US
+                    </button>
+                </div>
+                
+                <!-- Backdrop to close -->
+                <button class="fixed inset-0 z-40 cursor-default" onclick={() => showLangMenu = false} aria-label="Close menu"></button>
+            {/if}
+          </div>
+          
+          <GoogleSignIn />
+        </div>
     </header>
 
     <!-- Mobile Bottom Navigation -->

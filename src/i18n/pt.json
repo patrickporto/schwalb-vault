@@ -11,12 +11,14 @@
             "back": "Voltar",
             "edit": "Editar",
             "settings": "Configurações",
-            "copied": "Copiado!"
+            "copied": "Copiado!",
+            "cancel_cap": "CANCELAR"
         },
         "labels": {
             "level": "Nível",
             "master": "Mestre",
-            "session": "Sessão"
+            "session": "Sessão",
+            "language": "Idioma"
         }
     },
     "dashboard": {

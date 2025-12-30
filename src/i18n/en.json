@@ -11,12 +11,14 @@
             "back": "Back",
             "edit": "Edit",
             "settings": "Settings",
-            "copied": "Copied!"
+            "copied": "Copied!",
+            "cancel_cap": "CANCEL"
         },
         "labels": {
             "level": "Level",
             "master": "Game Master",
-            "session": "Session"
+            "session": "Session",
+            "language": "Language"
         }
     },
     "dashboard": {
