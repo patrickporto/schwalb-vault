@@ -124,6 +124,5 @@
        </button>
     {/each}
 </div>
-<div class="h-4 bg-slate-950 hidden md:block"></div>
 
 

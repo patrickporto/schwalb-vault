@@ -191,6 +191,7 @@
             "roll_3d6": "Rolar 3d6"
         },
         "modals": {
+            "rolling": "Rolando",
             "item_editor": "Editor de Item",
             "spell_editor": "Editar Magia",
             "talent_editor": "Editar Talento",

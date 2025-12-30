@@ -191,6 +191,7 @@
             "roll_3d6": "Roll 3d6"
         },
         "modals": {
+            "rolling": "Rolling",
             "item_editor": "Item Editor",
             "spell_editor": "Edit Spell",
             "talent_editor": "Edit Talent",
