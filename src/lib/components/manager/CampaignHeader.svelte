@@ -49,7 +49,7 @@
           </div>
 
           <!-- Centro: Navegação de Sub-tabs -->
-          <div class="flex bg-slate-950/50 p-1 rounded-xl border border-white/5">
+          <div class="hidden md:flex bg-slate-950/50 p-1 rounded-xl border border-white/5">
              <button
                 onclick={() => onTabChange('session')}
                 class="flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs font-black transition-all {activeSubTab === 'session' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}"

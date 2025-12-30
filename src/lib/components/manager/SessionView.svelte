@@ -21,16 +21,16 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
     let isAddCharOpen = $state(false);
     let showCopyTooltip = $state(false);
     let showQrCode = $state(false);
-    
+
     const defaultCombat = { active: false, round: 1 };
-    
+
     // Quick Add Tab
     let activeQuickTab = $state<'enemies' | 'encounters'>('enemies');
 
     // End of Round Modal
     let isEoRModalOpen = $state(false);
     let endOfRoundEffects = $state<any[]>([]);
-    
+
     // Confirm Modal
     let confirmState = $state({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
@@ -39,8 +39,8 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
             joinCampaignRoom(campaign.id, true);
             // Set campaignId and GM name so rolls in this view are synced correctly
             const masterLabel = get(t)('common.labels.master');
-            character.update(c => ({ 
-                ...c, 
+            character.update(c => ({
+                ...c,
                 campaignId: campaign.id,
                 name: campaign.gmName || masterLabel
             }));
@@ -49,12 +49,12 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
             const interval = setInterval(() => {
                 const current = campaignsMap.get(campaign.id) || campaign;
                 const masterLabelHeartbeat = get(t)('common.labels.master');
-                syncCampaign(campaign.id, { 
-                    name: current.name, 
-                    gmName: current.gmName || masterLabelHeartbeat 
+                syncCampaign(campaign.id, {
+                    name: current.name,
+                    gmName: current.gmName || masterLabelHeartbeat
                 });
             }, 30000); // 30 seconds
-            
+
             return () => {
                 clearInterval(interval);
                 leaveCampaignRoom();
@@ -78,7 +78,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
     let combat = $derived(campaign?.combat || defaultCombat);
     let activeEnemies = $derived(campaign?.activeEnemies || []);
     let campaignMembers = $derived(campaign?.members || []);
-    
+
     // Players present in the campaign - includes those in the session roster and anyone who joined via invite
     // IMPORTANT: Member data (synced via WebRTC) takes priority for real-time fields like health/damage
     // Players present in the campaign - includes those in the session roster and anyone who joined via invite
@@ -88,13 +88,13 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         return allMemberIds.map(pid => {
             const local = $liveCharacters.find(c => c.id === pid);
             const member = campaignMembers.find(m => m.id === pid);
-            
+
             // Merge: local provides base info, member data overrides with synced real-time values
             if (local && member) {
-                return { 
-                    ...local, 
+                return {
+                    ...local,
                     ...member,
-                    lastUpdate: member.lastUpdate 
+                    lastUpdate: member.lastUpdate
                 };
             }
             if (local) return local;
@@ -104,7 +104,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
 
     let players = $derived(allPlayers.filter(p => !p.campaignApproval || p.campaignApproval === 'approved'));
     let pendingPlayers = $derived(allPlayers.filter(p => p.campaignApproval === 'pending'));
-    
+
     // Available characters to manually add (local characters not already in roster/members)
     let availableCharacters = $derived($liveCharacters.filter(c => !roster.includes(c.id) && !campaignMembers.some(m => m.id === c.id)));
 
@@ -145,7 +145,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
     function rejectPendingPlayer(charId: string) {
         // Send a clear command to the player so they don't stay "pending" forever
         syncCharacter({ id: charId, campaignApproval: 'rejected', campaignId: null });
-        
+
         // Remove from our GM member list
         const current = campaignsMap.get(campaign.id) || campaign;
         const newMembers = (current.members || []).filter((m: any) => m.id !== charId);
@@ -160,30 +160,30 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
             message: $t('session.players.remove_message', { values: { name: char?.name || 'este personagem' } }),
             onConfirm: () => {
                 const current = campaignsMap.get(campaign.id) || campaign;
-                
+
                 // Signal removal to the player so it clears from their sheet
                 syncCharacter({ id: charId, campaignId: null });
 
                 // Remove from session roster
                 const newRoster = (current.sessionRoster || []).filter((id: string) => id !== charId);
-                
+
                 // Remove from members
                 const newMembers = (current.members || []).filter((m: any) => m.id !== charId);
-                
+
                 // Remove from active combat
                 const newEnemies = (current.activeEnemies || []).filter((e: any) => e.type !== 'player' || e.id !== charId);
 
                 // Update campaign
-                updateCampaign({ 
-                    sessionRoster: newRoster, 
+                updateCampaign({
+                    sessionRoster: newRoster,
                     members: newMembers,
                     activeEnemies: newEnemies
                 });
-                
+
                 // Also update the character locally to remove campaignId if it's one of ours
-                // NOTE: We can't easily force-update remote characters to plain "no campaign" without them syncing, 
+                // NOTE: We can't easily force-update remote characters to plain "no campaign" without them syncing,
                 // but removing them from the member list effectively kicks them out of sync updates.
-                
+
                 confirmState.isOpen = false;
             }
         };
@@ -192,24 +192,24 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
     function addToCombat(enemyTemplate: any) {
         const current = campaignsMap.get(campaign.id) || campaign;
         const currentEnemies = current.activeEnemies || [];
-        
+
         const newEnemy = {
             ...enemyTemplate,
             instanceId: uuidv7(),
-            damage: 0, 
+            damage: 0,
             currentHealth: enemyTemplate.health,
             afflictions: [],
             acted: false,
             initiative: false
         };
-        
+
         updateCampaign({ activeEnemies: [...currentEnemies, newEnemy] });
     }
 
     function addToCombatEncounter(enc: any) {
         const current = campaignsMap.get(campaign.id) || campaign;
         const currentEnemies = current.activeEnemies || [];
-        
+
         let newEnemies: any[] = [];
         enc.enemies.forEach((item: any) => {
              const template = $liveEnemies.find(e => e.id === item.enemyId);
@@ -218,7 +218,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                     newEnemies.push({
                         ...template,
                         instanceId: uuidv7(),
-                        damage: 0, 
+                        damage: 0,
                         currentHealth: template.health,
                         afflictions: [],
                         acted: false,
@@ -227,7 +227,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                 }
              }
         });
-        
+
         updateCampaign({ activeEnemies: [...currentEnemies, ...newEnemies] });
     }
 
@@ -250,13 +250,13 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
 
         proceedRound();
     }
-    
+
     function proceedRound() {
         const current = campaignsMap.get(campaign.id) || campaign;
         const nextRoundNum = (current.combat?.round || 1) + 1;
         const newEnemies = (current.activeEnemies || []).map(e => ({ ...e, acted: false }));
-        
-        updateCampaign({ 
+
+        updateCampaign({
             combat: { ...current.combat, round: nextRoundNum },
             activeEnemies: newEnemies
         });
@@ -275,15 +275,15 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
 
     function removeFromCombat(instanceId: string) {
         const current = campaignsMap.get(campaign.id) || campaign;
-        updateCampaign({ 
-            activeEnemies: (current.activeEnemies || []).filter((e: any) => e.instanceId !== instanceId) 
+        updateCampaign({
+            activeEnemies: (current.activeEnemies || []).filter((e: any) => e.instanceId !== instanceId)
         });
     }
 
     function updateEnemy(instanceId: string, updates: any) {
         const current = campaignsMap.get(campaign.id) || campaign;
-        updateCampaign({ 
-            activeEnemies: (current.activeEnemies || []).map(e => e.instanceId === instanceId ? { ...e, ...updates } : e) 
+        updateCampaign({
+            activeEnemies: (current.activeEnemies || []).map(e => e.instanceId === instanceId ? { ...e, ...updates } : e)
         });
     }
 
@@ -295,39 +295,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         }
     }
 
-    // Quick Roll State
-    let quickRollState = $state({ isOpen: false, sides: 20, count: 1, modifier: 0 });
-    
-    function startQuickRoll(sides: number, count = 1) {
-        quickRollState = { isOpen: true, sides, count, modifier: 0 };
-    }
-
-    function confirmQuickRoll(mod: number) {
-        rollDice(quickRollState.sides, quickRollState.count, mod);
-        quickRollState.isOpen = false;
-    }
-
-    // Dice
-    function rollDice(sides: number, count = 1, modifier = 0) {
-        const res = calculateDiceRoll(sides, count, modifier);
-        
-        let desc = "";
-        if (count > 1) desc += `Dados: [${res.results.join(', ')}] `;
-        if (res.bonusRolls?.length > 0) desc += `Bonus Rolls: [${res.bonusRolls.join(', ')}] -> ${Math.abs(res.modifierTotal)}`;
-        
-        const gmName = campaign?.gmName || get(t)('common.labels.master');
-        
-        characterActions.addToHistory({
-            source: 'GM',
-            charName: gmName,
-            name: `${count}d${sides} ${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}`,
-            description: desc.trim() || null,
-            total: res.total,
-            formula: res.formula,
-            crit: res.crit
-        });
-        isHistoryOpen.set(true); 
-    }
+    // Removed redundant quick roll and dice roll logic handled at campaign page level.
 
     let currentTime = $state(Date.now());
     onMount(() => {
@@ -343,9 +311,9 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         const playersWithInit = activePlayers.filter(c => c && c.initiative).map(c => ({...c, type: 'player'}));
         const enemies = activeEnemies.map(e => ({...e, type: 'enemy'}));
         const playersNoInit = activePlayers.filter(c => c && !c.initiative).map(c => ({...c, type: 'player'}));
-        
+
         const all = [...playersWithInit, ...enemies, ...playersNoInit];
-        
+
         const seen = new Set();
         return all.filter(entity => {
             if (!entity) return false;
@@ -365,7 +333,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         const current = campaignsMap.get(campaign.id) || campaign;
         const members = current.members || [];
         const mIdx = members.findIndex(m => m.id === charId);
-        
+
         let newMembers = members;
         if (mIdx !== -1) {
             newMembers = [...members];
@@ -391,14 +359,14 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-4">
             <div class="flex justify-between items-center bg-slate-950/50 p-2 rounded-lg border border-slate-800">
                  <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <Users size={14} class="text-indigo-500"/> 
-                    {$t('session.players.title')} 
+                    <Users size={14} class="text-indigo-500"/>
+                    {$t('session.players.title')}
                     {#if players.length > 0}
                         <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-full">{players.length}</span>
                     {/if}
                  </h3>
-                 <button 
-                    onclick={() => isAddCharOpen = !isAddCharOpen} 
+                 <button
+                    onclick={() => isAddCharOpen = !isAddCharOpen}
                     class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1.5 rounded-md font-bold transition-all border border-slate-700 active:scale-95"
                 >
                      {isAddCharOpen ? $t('session.players.close') : $t('session.players.add')}
@@ -418,16 +386,16 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                                 <div class="text-[9px] text-amber-500/60 font-medium mt-1 uppercase tracking-tighter">{$t('session.players.new_request')}</div>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <button 
-                                    onclick={() => approvePlayer(char.id)} 
-                                    class="p-2 rounded-lg bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white transition-all shadow-lg active:scale-90" 
+                                <button
+                                    onclick={() => approvePlayer(char.id)}
+                                    class="p-2 rounded-lg bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white transition-all shadow-lg active:scale-90"
                                     title="Aprovar"
                                 >
                                     <Check size={14}/>
                                 </button>
-                                <button 
-                                    onclick={() => rejectPendingPlayer(char.id)} 
-                                    class="p-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-90" 
+                                <button
+                                    onclick={() => rejectPendingPlayer(char.id)}
+                                    class="p-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-90"
                                     title="Recusar"
                                 >
                                     <Trash2 size={14}/>
@@ -438,7 +406,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                     <div class="h-px bg-slate-800/50 mx-2 my-2"></div>
                 </div>
             {/if}
-            
+
             <div class="space-y-2 flex-1 overflow-y-auto max-h-[300px] custom-scrollbar pr-1">
             <!-- Removed inline list -->
 
@@ -458,9 +426,9 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                                  </div>
                             </div>
                             <div class="flex items-center gap-1">
-                                <button 
-                                    onclick={() => toggleSessionPresence(char.id)} 
-                                    class="p-1.5 rounded-lg transition-all {inRoster ? 'text-amber-400 hover:bg-amber-400/10' : 'text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10'}" 
+                                <button
+                                    onclick={() => toggleSessionPresence(char.id)}
+                                    class="p-1.5 rounded-lg transition-all {inRoster ? 'text-amber-400 hover:bg-amber-400/10' : 'text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10'}"
                                     title={inRoster ? $t('session.players.remove_from_session') : $t('session.players.add_to_session')}
                                 >
                                     {#if inRoster}
@@ -482,7 +450,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
              <!-- Invitation Footer -->
              <div class="pt-4 border-t border-slate-800 space-y-3">
                   {#if !campaign?.isPublished}
-                    <button 
+                    <button
                         onclick={() => updateCampaign({ isPublished: true })}
                         class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
@@ -494,19 +462,19 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                         <div class="flex items-center gap-2">
                              <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1"><Wifi size={10} class="animate-pulse"/> {$t('session.publish.public_session')}</span>
                         </div>
-                        <button 
-                             onclick={() => showQrCode = !showQrCode} 
+                        <button
+                             onclick={() => showQrCode = !showQrCode}
                              class="text-slate-500 hover:text-white transition-colors p-1"
                              title={$t('session.publish.qr_code')}
                          >
                              <QrCode size={14} />
                          </button>
                     </div>
-                  
+
                     {#if showQrCode}
                         <div class="flex justify-center p-3 bg-white rounded-xl mb-2 animate-in zoom-in-95 duration-200 shadow-xl mx-auto w-32 h-32">
-                            <img 
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(inviteUrl)}`} 
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(inviteUrl)}`}
                                 alt={$t('session.publish.qr_alt')}
                                 class="w-24 h-24"
                             />
@@ -517,14 +485,14 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                         <div class="flex gap-1">
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
-                            <div 
-                                onclick={copyInviteLink} 
+                            <div
+                                onclick={copyInviteLink}
                                 class="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-[10px] text-slate-400 font-mono truncate cursor-pointer hover:border-slate-700 transition-colors flex items-center"
                             >
                                 {inviteUrl}
                             </div>
-                            <button 
-                                onclick={copyInviteLink} 
+                            <button
+                                onclick={copyInviteLink}
                                 class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg transition-all active:scale-95 shadow-lg shadow-indigo-900/20 relative"
                                 aria-label={$t('session.publish.copy_link')}
                             >
@@ -537,7 +505,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                             </button>
                         </div>
                     </div>
-                    <button 
+                    <button
                         onclick={() => updateCampaign({ isPublished: false })}
                         class="w-full text-[9px] text-slate-600 hover:text-red-400 font-bold uppercase tracking-widest transition-colors mt-1"
                     >
@@ -606,7 +574,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                 {/if}
              </div>
         </div>
-        
+
         <div class="space-y-3 pb-20">
             {#each sortedCombatants as entity (entity.type === 'player' ? entity.id : entity.instanceId)}
                 <div animate:flip={{duration: 300}}>
@@ -654,7 +622,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
                  </div>
              {/each}
         </div>
-        
+
         <div class="flex gap-3">
              <button onclick={() => isEoRModalOpen = false} class="flex-1 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white font-bold text-sm">{$t('common.buttons.cancel')}</button>
              <button onclick={proceedRound} class="flex-1 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm">{$t('session.end_of_round.advance')}</button>
@@ -663,23 +631,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
 </div>
 {/if}
 
-<!-- Bottom Bar (Quick Rolls) -->
-<div class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-2xl p-2 flex items-center gap-2 shadow-2xl z-40 animate-in slide-in-from-bottom-4">
-    <div class="px-3 border-r border-slate-700 flex items-center gap-2 text-slate-400 font-bold text-xs uppercase"><Dices size={16}/> {$t('session.quick.title')}</div>
-    <button onclick={() => startQuickRoll(20)} class="bg-slate-800 hover:bg-indigo-600 text-white font-bold w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:-translate-y-1 shadow-lg">d20</button>
-    <button onclick={() => startQuickRoll(6)} class="bg-slate-800 hover:bg-indigo-600 text-white font-bold w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:-translate-y-1 shadow-lg">d6</button>
-    <button onclick={() => startQuickRoll(6, 2)} class="bg-slate-800 hover:bg-indigo-600 text-white font-bold w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:-translate-y-1 shadow-lg text-xs">2d6</button>
-    <button onclick={() => startQuickRoll(6, 3)} class="bg-slate-800 hover:bg-indigo-600 text-white font-bold w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:-translate-y-1 shadow-lg text-xs">3d6</button>
-</div>
-
-<DiceRollModal 
-    isOpen={quickRollState.isOpen}
-    title={`${$t('session.quick.roll_title')} (${quickRollState.count}d${quickRollState.sides})`}
-    label={quickRollState.sides === 20 ? $t('session.quick.boons_banes') : $t('session.quick.fixed_modifier')}
-    onClose={() => quickRollState.isOpen = false}
-    onRoll={confirmQuickRoll}
-    initialModifier={0}
-/>
+<!-- Removed redundant bottom menu and dice roll modal -->
 
 {#if isAddCharOpen}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -725,7 +677,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
 
 <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
 
-<ConfirmationModal 
+<ConfirmationModal
     isOpen={confirmState.isOpen}
     title={confirmState.title}
     message={confirmState.message}
