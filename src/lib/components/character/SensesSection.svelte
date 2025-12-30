@@ -2,8 +2,7 @@
     import { t } from 'svelte-i18n';
     import { character, characterActions } from '$lib/stores/characterStore';
     import { Eye, X, Plus, Info } from 'lucide-svelte';
-    import tippy from 'tippy.js';
-    import 'tippy.js/dist/tippy.css';
+    import Tooltip from '$lib/components/common/Tooltip.svelte';
 
     const { addSense, removeSense } = characterActions;
 
@@ -28,23 +27,7 @@
         senseValue = "";
     }
 
-    function tooltip(node: HTMLElement, { content }: { content: string }) {
-        const instance = tippy(node, {
-            content,
-            placement: 'top',
-            arrow: true,
-            theme: 'light-border'
-        });
 
-        return {
-            update({ content }: { content: string }) {
-                instance.setContent(content);
-            },
-            destroy() {
-                instance.destroy();
-            }
-        };
-    }
 
     function getSenseLabel(senseString: string): string {
         const [key, val] = senseString.split(':');
@@ -76,21 +59,19 @@
     <!-- Tags List -->
     <div class="flex flex-wrap gap-2 mb-4">
         {#each $character.senses || [] as sense, idx}
-            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-            <div
+            <Tooltip
+                text={getSenseDescription(sense)}
                 class="bg-slate-950 border border-emerald-900/30 text-emerald-100 px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-2 group transition-all hover:border-emerald-500/50 cursor-help"
-                use:tooltip={{ content: getSenseDescription(sense) }}
-                tabindex="0"
             >
                 {getSenseLabel(sense)}
                 <button
-                    onclick={() => removeSense(idx)}
+                    onclick={(e) => { e.stopPropagation(); removeSense(idx); }}
                     class="text-emerald-500/50 hover:text-red-400 p-1 rounded-full hover:bg-red-400/10 transition-all"
                     aria-label="Remove"
                 >
                     <X size={14}/>
                 </button>
-            </div>
+            </Tooltip>
         {/each}
         {#if (!$character.senses || $character.senses.length === 0)}
             <span class="text-sm text-slate-500 italic py-2 px-1">Nenhum sentido especial.</span>

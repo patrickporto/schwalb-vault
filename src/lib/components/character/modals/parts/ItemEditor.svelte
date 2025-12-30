@@ -5,20 +5,21 @@
     import { characterActions, modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
     import DiceCounter from '$lib/components/common/DiceCounter.svelte';
+    import Tooltip from '$lib/components/common/Tooltip.svelte';
 
     import { uuidv7 } from 'uuidv7';
 
     let isOpen = $derived($modalState.isOpen && $modalState.type === 'item');
     let data = $derived($modalState.data);
-    
-    let formData = $state({ 
+
+    let formData = $state({
         id: undefined as string | undefined,
-        name: '', 
-        type: ITEM_TYPES.OTHER, 
-        quantity: 1, 
-        price: 0, 
-        description: '', 
-        availability: 'Common', 
+        name: '',
+        type: ITEM_TYPES.OTHER,
+        quantity: 1,
+        price: 0,
+        description: '',
+        availability: 'Common',
         quality: 'Standard',
         damageDice: '',
         traits: '',
@@ -31,12 +32,12 @@
     let selectedTraits = $state<string[]>([]);
     let availableTraits = WEAPON_TRAITS;
     let showTraitModal = $state(false);
+
     let traitSearch = $state('');
-    let showTooltip = $state<string | null>(null);
 
     let filteredTraits = $derived(
-        availableTraits.filter(trait => 
-            !selectedTraits.includes(trait) && 
+        availableTraits.filter(trait =>
+            !selectedTraits.includes(trait) &&
             $t(`character.traits.${trait}`).toLowerCase().includes(traitSearch.toLowerCase())
         )
     );
@@ -66,17 +67,16 @@
 
     function onClose() {
         modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }));
-        showTooltip = null;
     }
 
     function saveItem() {
         if (!formData.name?.trim()) return alert($t('character.modals.name_required'));
-        
+
         const finalTraits = selectedTraits.join(', ');
-        const newItem = { 
-            ...formData, 
+        const newItem = {
+            ...formData,
             traits: finalTraits,
-            id: formData.id || uuidv7() 
+            id: formData.id || uuidv7()
         };
 
         if (data) characterActions.updateItem(newItem);
@@ -89,26 +89,26 @@
     <div class="space-y-4 p-1">
         <div>
             <label for="item-name" class="text-xs font-bold text-slate-400 uppercase block mb-1">
-                {$t('character.modals.name')} 
+                {$t('character.modals.name')}
             </label>
-            <input 
+            <input
                 id="item-name"
-                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" 
-                placeholder={$t('character.modals.name')} 
-                bind:value={formData.name} 
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold"
+                placeholder={$t('character.modals.name')}
+                bind:value={formData.name}
             />
             {#if !formData.name}<p class="text-[10px] text-red-500 mt-1">{$t('character.modals.name_required')}</p>{/if}
         </div>
 
         <div>
             <label for="item-description" class="block text-xs font-bold text-slate-400 uppercase mb-1">
-                {$t('character.modals.description')} 
+                {$t('character.modals.description')}
             </label>
-            <textarea 
+            <textarea
                 id="item-description"
-                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
-                rows={3} 
-                placeholder={$t('character.modals.description')} 
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                rows={3}
+                placeholder={$t('character.modals.description')}
                 bind:value={formData.description}
             ></textarea>
         </div>
@@ -129,7 +129,7 @@
         {#if formData.type === ITEM_TYPES.WEAPON}
             <div class="bg-indigo-900/10 border border-indigo-900/30 rounded-xl p-4 space-y-4">
                 <!-- Damage Controller -->
-                <DiceCounter 
+                <DiceCounter
                     value={parseInt(formData.damageDice) || 0}
                     label="{$t('character.modals.damage')} (d6)"
                     onUpdate={(val) => formData.damageDice = val.toString()}
@@ -153,37 +153,30 @@
 
                 <div>
                      <span class="text-[10px] text-indigo-300 uppercase font-bold mb-2 block">{$t('character.modals.traits')}</span>
-                     
+
                      <div class="flex flex-wrap gap-2 mb-2 min-h-[2rem]">
                          {#each selectedTraits as trait}
                             <div class="relative">
                                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                                 <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                <div 
-                                    onclick={() => showTooltip = showTooltip === trait ? null : trait}
+                                <Tooltip
+                                    text={$t(`character.traits.${trait}_DESC`)}
                                     class="bg-slate-950 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 group transition-all hover:border-indigo-500/50 cursor-pointer"
                                 >
                                     {$t(`character.traits.${trait}`)}
-                                    <button 
+                                    <button
                                         onclick={(e) => { e.stopPropagation(); toggleTrait(trait); }}
                                         class="text-slate-500 hover:text-red-400 p-1 rounded-full hover:bg-red-400/10 transition-all"
                                         title={$t('character.modals.remove')}
                                     >
                                         <X size={14} />
                                     </button>
-                                </div>
-                                
-                                {#if showTooltip === trait}
-                                    <div class="absolute z-50 top-full left-0 mt-1 w-64 p-2 bg-slate-800 border border-indigo-500 rounded-lg shadow-xl text-[10px] text-slate-300 leading-relaxed">
-                                        {$t(`character.traits.${trait}_DESC`)}
-                                        <div class="absolute -top-1 left-4 w-2 h-2 bg-slate-800 border-l border-t border-indigo-500 rotate-45"></div>
-                                    </div>
-                                {/if}
+                                </Tooltip>
                             </div>
                          {/each}
                      </div>
 
-                     <button 
+                     <button
                         onclick={() => showTraitModal = true}
                         class="w-full py-2 bg-slate-900 hover:bg-indigo-600 border border-slate-700 hover:border-indigo-500 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition-all flex items-center justify-center gap-2"
                      >
@@ -234,7 +227,7 @@
         <div class="bg-slate-950 rounded-t-3xl md:rounded-2xl border border-slate-800 w-full md:max-w-md max-h-[80vh] overflow-hidden flex flex-col">
             <div class="p-4 border-b border-slate-800">
                 <h3 class="text-lg font-bold text-white mb-3">{$t('character.modals.add_property')}</h3>
-                
+
                 <!-- Selected Traits Display -->
                 {#if selectedTraits.length > 0}
                     <div class="mb-3 p-3 bg-slate-900 rounded-lg border border-indigo-900/30">
@@ -243,7 +236,7 @@
                             {#each selectedTraits as trait}
                                 <div class="flex items-center gap-1 bg-indigo-600 text-white px-2 py-1 rounded-full text-[10px] font-bold">
                                     {$t(`character.traits.${trait}`)}
-                                    <button 
+                                    <button
                                         onclick={() => toggleTrait(trait)}
                                         class="hover:bg-red-600 rounded-full p-0.5 transition-colors"
                                         title={$t('character.modals.remove')}
@@ -258,7 +251,7 @@
 
                 <div class="relative">
                     <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                    <input 
+                    <input
                         type="text"
                         placeholder={$t('character.modals.search_property')}
                         bind:value={traitSearch}
@@ -266,10 +259,10 @@
                     />
                 </div>
             </div>
-            
+
             <div class="flex-1 overflow-y-auto custom-scrollbar p-2">
                 {#each filteredTraits as trait}
-                    <button 
+                    <button
                         onclick={() => addTraitFromModal(trait)}
                         class="w-full text-left p-3 rounded-lg hover:bg-slate-900 border border-transparent hover:border-indigo-500 transition-all mb-1"
                     >
@@ -277,16 +270,16 @@
                         <div class="text-xs text-slate-400 leading-relaxed">{$t(`character.traits.${trait}_DESC`)}</div>
                     </button>
                 {/each}
-                
+
                 {#if filteredTraits.length === 0}
                     <div class="text-center text-slate-500 py-8">
                         {$t('character.modals.no_property_found')}
                     </div>
                 {/if}
             </div>
-            
+
             <div class="p-4 border-t border-slate-800">
-                <button 
+                <button
                     onclick={() => { showTraitModal = false; traitSearch = ''; }}
                     class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-colors"
                 >

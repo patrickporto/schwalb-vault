@@ -5,6 +5,7 @@
     import { slide } from 'svelte/transition';
     import Avatar from '../common/Avatar.svelte';
     import AfflictionModal from '../common/AfflictionModal.svelte';
+    import Tooltip from '$lib/components/common/Tooltip.svelte';
 
     interface Props {
         entity: any;
@@ -351,9 +352,12 @@
                                  {@const [key, val] = sense.split(':')}
                                  {@const label = $t(`character.senses.list.${key}`) + (val ? ` ${val}` : '')}
                                  {@const desc = $t(`character.senses.descriptions.${key}`)}
-                                 <div class="text-xs bg-emerald-950/30 text-emerald-200 px-3 py-1.5 rounded border border-emerald-900/50 font-bold flex items-center gap-2" title={desc}>
-                                    <Eye size={12} class="text-emerald-500"/> {label}
-                                 </div>
+                                 <Tooltip
+                                    text={desc}
+                                    class="text-xs bg-emerald-950/30 text-emerald-200 px-3 py-1.5 rounded border border-emerald-900/50 font-bold flex items-center gap-2 cursor-help whitespace-nowrap"
+                                 >
+                                    <Eye size={12} class="text-emerald-500 flex-shrink-0"/> {label}
+                                 </Tooltip>
                              {/each}
                          </div>
                     </div>
