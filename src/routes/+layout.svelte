@@ -8,9 +8,17 @@
   import { pwaInfo } from 'virtual:pwa-info';
   import { beforeNavigate } from '$app/navigation';
   import { browser } from '$app/environment';
+  import * as Sentry from "@sentry/svelte";
+
+
+  Sentry.init({
+    dsn: "https://4b8a05e066880f2bd60f406918bd2b27@o4510625307295744.ingest.de.sentry.io/4510625327677520",
+    sendDefaultPii: true,
+    environment: import.meta.env.MODE,
+  });
 
   let { children } = $props();
-  
+
   // Default to forward navigation (slide from right)
   let transitionX = $state(100);
   let isMobile = $state(false);
@@ -22,7 +30,7 @@
     const checkMobile = () => isMobile = window.innerWidth < 768;
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     (async () => {
         if (pwaInfo) {
             const { registerSW } = await import('virtual:pwa-register');
@@ -45,11 +53,11 @@
 
   beforeNavigate(({ to, from, type }) => {
     if (!browser || !to || !from) return;
-    
+
     // Determine direction based on URL depth
     const toDepth = to.url.pathname.split('/').filter(Boolean).length;
     const fromDepth = from.url.pathname.split('/').filter(Boolean).length;
-    
+
     // Back = going to home OR shallower path OR popstate (browser back button)
     isNavigatingBack = type === 'popstate' || toDepth < fromDepth || to.url.pathname === '/';
     transitionX = isNavigatingBack ? -100 : 100;

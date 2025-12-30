@@ -31,6 +31,7 @@
     "vitest-browser-svelte": "^2.0.1"
   },
   "dependencies": {
+    "@sentry/svelte": "^10.32.1",
     "@tailwindcss/vite": "^4.1.18",
     "@types/spark-md5": "^3.0.5",
     "bip39": "^3.1.0",
