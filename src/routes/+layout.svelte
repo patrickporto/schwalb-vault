@@ -1,7 +1,6 @@
 <script lang="ts">
   import "../app.css";
   import "../i18n";
-  import { waitLocale } from 'svelte-i18n';
   import { fly } from 'svelte/transition';
   import { page } from '$app/stores';
   import OfflineBanner from '$lib/components/common/OfflineBanner.svelte';
@@ -56,9 +55,6 @@
     transitionX = isNavigatingBack ? -100 : 100;
   });
 
-  export async function preload() {
-    return waitLocale();
-  }
 </script>
 
 <svelte:head>
