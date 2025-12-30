@@ -48,8 +48,10 @@ test.describe('Multi-System Support', () => {
     await page.goto('/');
 
     // Verify Character Card has System Tag
-    await expect(page.getByText('Shadow of the Weird Wizard')).toBeVisible();
     await expect(page.getByRole('heading', { name: charName })).toBeVisible();
+    // Verify system tag appears on the character card - use specific locator for the badge
+    const charCard = page.locator('div', { has: page.getByRole('heading', { name: charName }) });
+    await expect(charCard.locator('div.inline-flex.items-center', { hasText: 'Shadow of the Weird Wizard' })).toBeVisible();
   });
 
   test('should create a campaign with default system', async ({ page }) => {
@@ -75,8 +77,9 @@ test.describe('Multi-System Support', () => {
 
     // Basic verification that card appears
     await expect(page.getByText(campaignName)).toBeVisible();
-    // Verify System Tag on Card
-    await expect(page.getByText('Shadow of the Weird Wizard')).toBeVisible();
+    // Verify System Tag on Card - use a more specific locator to target the badge, not the modal button
+    const campaignCard = page.locator('div', { has: page.getByRole('heading', { name: campaignName }) });
+    await expect(campaignCard.locator('div.inline-flex.items-center', { hasText: 'Shadow of the Weird Wizard' })).toBeVisible();
   });
 
   test('invite flow should show match', async ({ page }) => {
