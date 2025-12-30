@@ -492,7 +492,9 @@ export const characterActions = {
     deleteTalent: (id) => character.update(c => ({ ...c, talents: c.talents.filter(t => t.id !== id) })),
 
     commitTalentUse: (talent) => {
-        if (talent.maxUses) {
+        if (talent.activityType === 'Duration' && talent.duration === 'LUCK_ENDS') {
+            character.update(c => ({ ...c, talents: c.talents.map(t => t.id === talent.id ? { ...t, uses: 0 } : t) }));
+        } else if (talent.maxUses) {
             character.update(c => ({ ...c, talents: c.talents.map(t => t.id === talent.id ? { ...t, uses: t.uses - 1 } : t) }));
         }
         characterActions.addToHistory({ source: 'Talento', name: talent.name, description: talent.description });
@@ -500,6 +502,27 @@ export const characterActions = {
     },
     recoverTalent: (id) => {
         character.update(c => ({ ...c, talents: c.talents.map(t => t.id === id && t.uses < t.maxUses ? { ...t, uses: t.uses + 1 } : t) }));
+    },
+    rollLuckTalent: (talentId) => {
+        const d20 = Math.floor(Math.random() * 20) + 1;
+        const success = d20 >= 10;
+        const char = get(character);
+        const talent = char.talents.find(t => t.id === talentId);
+
+        characterActions.addToHistory({
+            source: 'Sorte',
+            name: `Teste de Sorte - ${talent?.name || 'Talento'}`,
+            formula: `d20(${d20})`,
+            total: d20,
+            description: `Rolou ${d20}. ${success ? 'Sucesso! Talento recuperado.' : 'Falha. O talento continua indisponível.'}`
+        });
+
+        if (success) {
+            character.update(c => ({
+                ...c,
+                talents: c.talents.map(t => t.id === talentId ? { ...t, uses: 1 } : t)
+            }));
+        }
     },
 
     // Effects

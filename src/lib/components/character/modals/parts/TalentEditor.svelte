@@ -1,9 +1,9 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
-    import { Trash2 } from 'lucide-svelte';
+    import { Trash2, Clock, Zap, Infinity } from 'lucide-svelte';
     import { characterActions, modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
-
+    import { TALENT_SOURCES, DURATION_TYPES } from '../../../../../routes/sofww';
     import { uuidv7 } from 'uuidv7';
 
     let isOpen = $derived($modalState.isOpen && $modalState.type === 'talent');
@@ -13,17 +13,39 @@
         id: undefined as string | undefined,
         name: '',
         description: '',
+        source: TALENT_SOURCES.ANCESTRY,
+        activityType: 'Passive', // Passive, Uses, Duration
         uses: 0,
         maxUses: 0,
-        isPassive: false,
+        duration: 'ROUNDS',
+        durationValue: 1,
+        isPassive: true, // Legacy support/derived
         effect: null as any
     });
 
     $effect(() => {
         if (isOpen && data) {
-            formData = { ...data };
+            formData = { 
+                ...data,
+                source: data.source || TALENT_SOURCES.ANCESTRY,
+                activityType: data.activityType || (data.isPassive ? 'Passive' : 'Uses'),
+                duration: data.duration || 'ROUNDS',
+                durationValue: data.durationValue || 1
+            };
         } else if (isOpen && !data) {
-            formData = { id: undefined, name: '', description: '', uses: 0, maxUses: 0, isPassive: false, effect: null };
+            formData = { 
+                id: undefined, 
+                name: '', 
+                description: '', 
+                source: TALENT_SOURCES.ANCESTRY,
+                activityType: 'Passive',
+                uses: 0, 
+                maxUses: 0, 
+                duration: 'ROUNDS',
+                durationValue: 1,
+                isPassive: true, 
+                effect: null 
+            };
         }
     });
 
@@ -33,13 +55,24 @@
 
     function saveTalent() {
         if (!formData.name?.trim()) return alert($t('character.modals.name_required'));
-        const newTalent = { ...formData, id: formData.id || uuidv7() };
-        if (formData.isPassive) {
+        
+        const newTalent = { 
+            ...formData, 
+            id: formData.id || uuidv7(),
+            isPassive: formData.activityType === 'Passive' // Maintain legacy flag
+        };
+
+        if (formData.activityType === 'Passive') {
             newTalent.maxUses = 0;
             newTalent.uses = 0;
-        } else if (!data && formData.maxUses > 0) {
+        } else if (formData.activityType === 'Uses' && !data) {
             newTalent.uses = formData.maxUses;
+        } else if (formData.activityType === 'Duration' && formData.duration === 'LUCK_ENDS' && !data) {
+            newTalent.maxUses = 1;
+            newTalent.uses = 1;
         }
+        // Note: 'Duration' type might not use 'uses' property in the same way, or could rely on duration logic. 
+        // For simplicity, we keep maxUses=0 for Duration type unless specified otherwise.
         
         if (data) characterActions.updateTalent(newTalent);
         else characterActions.addTalent(newTalent);
@@ -56,24 +89,65 @@
 </script>
 
 <Modal {isOpen} title={$t('character.modals.talent_editor')} {onClose}>
-    <div class="space-y-3 p-1">
+    <div class="space-y-4 p-1">
         <div>
-            <label class="text-xs font-bold text-slate-400 uppercase">
+            <label for="talentName" class="text-xs font-bold text-slate-400 uppercase block mb-1">
                 {$t('character.modals.name')} 
-                <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold mb-1" placeholder={$t('character.modals.name')} bind:value={formData.name} />
             </label>
-            {#if !formData.name}<p class="text-[10px] text-red-500">{$t('character.modals.name_required')}</p>{/if}
+            <input 
+                id="talentName"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" 
+                placeholder={$t('character.modals.name')} 
+                bind:value={formData.name} 
+            />
+            {#if !formData.name}<p class="text-[10px] text-red-500 mt-1">{$t('character.modals.name_required')}</p>{/if}
         </div>
-        <div class="flex items-center gap-2 bg-slate-900 p-2 rounded border border-slate-700">
-             <input type="checkbox" id="isPassive" bind:checked={formData.isPassive} class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500" />
-             <label for="isPassive" class="text-xs text-slate-400 uppercase font-bold flex-1 cursor-pointer">{$t('character.modals.passive_unlimited')}</label>
-             {#if !formData.isPassive}
-                <div class="flex items-center gap-2 border-l border-slate-700 pl-2">
-                    <label for="maxUses" class="text-xs text-slate-400 uppercase">{$t('character.modals.max_uses')}</label>
-                    <input id="maxUses" type="number" class="w-16 bg-slate-800 border border-slate-600 rounded p-1 text-white text-center" bind:value={formData.maxUses} />
-                </div>
-             {/if}
+
+        <div class="grid grid-cols-2 gap-3">
+             <div>
+                <label for="talentSource" class="text-xs font-bold text-slate-400 uppercase block mb-1">{$t('character.talents.source')}</label>
+                <select id="talentSource" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-xs" bind:value={formData.source}>
+                    {#each Object.values(TALENT_SOURCES) as source}
+                        <option value={source}>{$t(`character.talents.sources.${source}`)}</option>
+                    {/each}
+                </select>
+             </div>
+             <div>
+                <label for="talentType" class="text-xs font-bold text-slate-400 uppercase block mb-1">{$t('character.talents.type')}</label>
+                <select id="talentType" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-xs" bind:value={formData.activityType}>
+                    <option value="Passive">{$t('character.talents.types.Passive')}</option>
+                    <option value="Uses">{$t('character.talents.types.Uses')}</option>
+                    <option value="Duration">{$t('character.talents.types.Duration')}</option>
+                </select>
+             </div>
         </div>
+
+        {#if formData.activityType === 'Uses'}
+            <div class="bg-indigo-900/10 border border-indigo-900/30 rounded-xl p-4">
+                <label for="maxUses" class="block">
+                    <span class="text-[10px] text-indigo-300 uppercase font-bold mb-1 block">{$t('character.modals.max_uses')}</span>
+                    <input id="maxUses" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" bind:value={formData.maxUses} />
+                </label>
+            </div>
+        {:else if formData.activityType === 'Duration'}
+             <div class="bg-indigo-900/10 border border-indigo-900/30 rounded-xl p-4 space-y-3">
+                 <label for="durationType" class="block">
+                     <span class="text-[10px] text-indigo-300 uppercase font-bold mb-1 block">Tipo de Duração</span>
+                     <select id="durationType" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-xs" bind:value={formData.duration}>
+                         <option value="LUCK_ENDS">Sorte Encerra</option>
+                         <option value="MINUTES">Minutos</option>
+                         <option value="HOURS">Horas</option>
+                     </select>
+                 </label>
+                 {#if formData.duration === 'MINUTES' || formData.duration === 'HOURS'}
+                     <label for="durationValue" class="block">
+                         <span class="text-[10px] text-indigo-300 uppercase font-bold mb-1 block">Duração ({formData.duration === 'MINUTES' ? 'Min' : 'Horas'})</span>
+                         <input id="durationValue" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" bind:value={formData.durationValue} />
+                     </label>
+                 {/if}
+             </div>
+        {/if}
+
         <div class="bg-slate-900 p-2 rounded border border-slate-700 flex justify-between items-center">
              <span class="text-xs text-slate-400 font-bold uppercase">{$t('character.modals.associated_effect')}</span>
              <button 
@@ -83,13 +157,23 @@
                  {formData.effect ? $t('character.modals.configured') : $t('character.modals.none')}
              </button>
         </div>
-        <label class="block text-xs font-bold text-slate-400 uppercase">
-            {$t('character.modals.description')} 
-            <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" rows={4} placeholder={$t('character.modals.description')} bind:value={formData.description}></textarea>
-        </label>
-        <div class="flex gap-2">
-            {#if data}<button onclick={() => { characterActions.deleteTalent(data.id); onClose(); }} class="bg-red-900/50 hover:bg-red-900 text-red-200 p-2 rounded" title={$t('character.modals.delete')}><Trash2 size={18}/></button>{/if}
-            <button onclick={saveTalent} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">{$t('common.buttons.save')}</button>
+
+        <div>
+            <label for="talentDesc" class="block text-xs font-bold text-slate-400 uppercase mb-1">
+                {$t('character.modals.description')} 
+            </label>
+            <textarea 
+                id="talentDesc"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
+                rows={4} 
+                placeholder={$t('character.modals.description')} 
+                bind:value={formData.description}
+            ></textarea>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+            {#if data}<button onclick={() => { characterActions.deleteTalent(data.id); onClose(); }} class="bg-red-900/50 hover:bg-red-900 text-red-200 p-3 rounded-lg transition-colors" title={$t('character.modals.delete')}><Trash2 size={20}/></button>{/if}
+            <button onclick={saveTalent} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-indigo-900/20 active:scale-[0.98] transition-all">{$t('common.buttons.save')}</button>
         </div>
     </div>
 </Modal>

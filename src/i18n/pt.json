@@ -145,17 +145,30 @@
             "master": "Magias de Mestre"
         },
         "talents": {
-            "title": "Talentos & Habilidades",
-            "subtitle": "Suas capacidades especiais e passivas.",
+            "title": "Talentos",
+            "subtitle": "Habilidades Especiais e Passivas",
             "new": "Novo Talento",
-            "add": "Adicionar Novo Talento",
-            "type": "Tipo",
-            "uses": "Usos",
-            "passive": "Passivo",
+            "add": "Adicionar Talento",
+            "empty": "Nenhum talento registrado",
+            "empty_desc": "Adicione talentos para personalizar seu personagem.",
+            "add_first": "Adicionar Primeiro Talento",
             "recover": "Recuperar Uso",
             "use": "Usar Talento",
-            "empty": "Você ainda não possui talentos cadastrados.",
-            "add_first": "Adicionar Primeiro Talento"
+            "uses": "Usos",
+            "type": "Tipo",
+            "passive": "Passivo",
+            "source": "Origem",
+            "sources": {
+                "Ancestry": "Ancestralidade",
+                "Novice": "Path Novice",
+                "Expert": "Path Expert",
+                "Master": "Path Master"
+            },
+            "types": {
+                "Passive": "Passivo",
+                "Uses": "Com Usos",
+                "Duration": "Duração"
+            }
         },
         "inventory": {
             "title": "Inventário",

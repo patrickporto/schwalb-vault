@@ -88,10 +88,11 @@
 <Modal {isOpen} title={$t('character.modals.item_editor')} {onClose}>
     <div class="space-y-4 p-1">
         <div>
-            <label class="text-xs font-bold text-slate-400 uppercase block mb-1">
+            <label for="item-name" class="text-xs font-bold text-slate-400 uppercase block mb-1">
                 {$t('character.modals.name')} 
             </label>
             <input 
+                id="item-name"
                 class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" 
                 placeholder={$t('character.modals.name')} 
                 bind:value={formData.name} 
@@ -99,15 +100,18 @@
             {#if !formData.name}<p class="text-[10px] text-red-500 mt-1">{$t('character.modals.name_required')}</p>{/if}
         </div>
 
-        <label class="block text-xs font-bold text-slate-400 uppercase">
-            {$t('character.modals.description')} 
+        <div>
+            <label for="item-description" class="block text-xs font-bold text-slate-400 uppercase mb-1">
+                {$t('character.modals.description')} 
+            </label>
             <textarea 
-                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none mt-1" 
+                id="item-description"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none" 
                 rows={3} 
                 placeholder={$t('character.modals.description')} 
                 bind:value={formData.description}
             ></textarea>
-        </label>
+        </div>
 
         <div class="grid grid-cols-2 gap-3">
             <label class="block">
@@ -190,14 +194,28 @@
         {/if}
 
         {#if formData.type === ITEM_TYPES.ARMOR}
-             <div class="grid grid-cols-2 gap-3">
+             <div class="bg-indigo-900/10 border border-indigo-900/30 rounded-xl p-4 space-y-4">
+                 <div class="grid grid-cols-2 gap-3">
+                     <label class="block">
+                         <span class="text-[10px] text-indigo-300 uppercase font-bold mb-1 block">{$t('character.modals.fixed_def')}</span>
+                        <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" placeholder="Ex: 12" bind:value={formData.defenseFixed} />
+                     </label>
+                     <label class="block">
+                         <span class="text-[10px] text-indigo-300 uppercase font-bold mb-1 block">{$t('character.modals.mod_def')}</span>
+                        <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" placeholder="Ex: +1" bind:value={formData.defenseMod} />
+                     </label>
+                 </div>
+                 <p class="text-[9px] text-indigo-400/60 italic leading-tight">
+                    * Armaduras usam o maior valor entre a Defesa Fixa ou sua Defesa Natural + Modificador.
+                 </p>
+             </div>
+        {/if}
+
+        {#if formData.type === ITEM_TYPES.SHIELD}
+             <div class="bg-indigo-900/10 border border-indigo-900/30 rounded-xl p-4">
                  <label class="block">
-                     <span class="text-[10px] text-slate-500 uppercase font-bold">{$t('character.modals.fixed_def')}</span>
-                    <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Fixed Def" bind:value={formData.defenseFixed} />
-                 </label>
-                 <label class="block">
-                     <span class="text-[10px] text-slate-500 uppercase font-bold">{$t('character.modals.mod_def')}</span>
-                    <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs" placeholder="Mod Def" bind:value={formData.defenseMod} />
+                     <span class="text-[10px] text-indigo-300 uppercase font-bold mb-1 block">{$t('character.modals.mod_def')}</span>
+                     <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white font-bold" placeholder="Ex: 1, 2" bind:value={formData.defenseMod} />
                  </label>
              </div>
         {/if}

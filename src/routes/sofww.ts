@@ -89,3 +89,10 @@ export const WEAPON_TRAITS = [
     'RELOAD',
     'VERSATILE'
 ];
+
+export const TALENT_SOURCES = {
+    ANCESTRY: 'Ancestry',
+    NOVICE: 'Novice',
+    EXPERT: 'Expert',
+    MASTER: 'Master'
+};
