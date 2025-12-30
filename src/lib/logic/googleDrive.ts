@@ -15,11 +15,13 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.google
 export const googleSession = writable<{
     signedIn: boolean;
     accessToken: string | null;
+    tokenExpiry: number | null; // Timestamp when token expires
     userProfile: { name: string; picture: string } | null;
     isInited: boolean;
 }>({
     signedIn: false,
     accessToken: null,
+    tokenExpiry: null,
     userProfile: null,
     isInited: false
 });
@@ -30,6 +32,34 @@ let gisInited = false;
 
 const STORAGE_KEY = 'wwv_google_session';
 
+// Function to check if token is expired (with 5 min buffer)
+function isTokenExpired(): boolean {
+    const session = get(googleSession);
+    if (!session.tokenExpiry) return true;
+    // Consider expired 5 minutes before actual expiry to avoid edge cases
+    return Date.now() > (session.tokenExpiry - 5 * 60 * 1000);
+}
+
+// Function to clear session on auth failure
+export function clearSession() {
+    localStorage.removeItem(STORAGE_KEY);
+    googleSession.update(s => ({
+        ...s,
+        signedIn: false,
+        accessToken: null,
+        tokenExpiry: null,
+        userProfile: null
+    }));
+    console.log('Session cleared due to expired or invalid token');
+}
+
+// Function to handle 401 errors and trigger re-auth
+async function handleUnauthorized() {
+    clearSession();
+    // Show user-friendly message
+    console.warn('OAuth token expired or invalid. Please sign in again.');
+}
+
 // Function to fetch user profile
 async function fetchUserProfile(token: string) {
     try {
@@ -38,6 +68,12 @@ async function fetchUserProfile(token: string) {
                 'Authorization': `Bearer ${token}`
             }
         });
+
+        if (response.status === 401) {
+            // Token is invalid/expired
+            await handleUnauthorized();
+            return;
+        }
 
         if (response.ok) {
             const data = await response.json();
@@ -62,16 +98,23 @@ function loadStoredSession() {
         if (stored) {
             const data = JSON.parse(stored);
             if (data.accessToken) {
+                // Check if token is expired before restoring
+                if (data.tokenExpiry && Date.now() > data.tokenExpiry) {
+                    console.log('Stored token is expired, clearing session');
+                    localStorage.removeItem(STORAGE_KEY);
+                    return false;
+                }
+
                 googleSession.set({
                     signedIn: true,
                     accessToken: data.accessToken,
+                    tokenExpiry: data.tokenExpiry || null,
                     userProfile: data.userProfile || null,
                     isInited: true
                 });
                 console.log('Restored session from localStorage');
 
-                // Refresh profile data in background if we have a token
-                // (Optional: check token expiry could be done here)
+                // Verify token is still valid by fetching profile
                 fetchUserProfile(data.accessToken);
 
                 return true;
@@ -89,6 +132,7 @@ function saveSession() {
     if (session.signedIn && session.accessToken) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
             accessToken: session.accessToken,
+            tokenExpiry: session.tokenExpiry,
             userProfile: session.userProfile
         }));
     } else {
@@ -149,7 +193,20 @@ function handleAuthCallback(resp: any) {
         return;
     }
     console.log('Google Auth Success', resp);
-    googleSession.update(s => ({ ...s, signedIn: true, accessToken: resp.access_token }));
+
+    // Calculate token expiry time (expires_in is in seconds, typically 3600 = 1 hour)
+    const expiresIn = resp.expires_in || 3600; // Default to 1 hour if not provided
+    const tokenExpiry = Date.now() + (expiresIn * 1000);
+
+    googleSession.update(s => ({
+        ...s,
+        signedIn: true,
+        accessToken: resp.access_token,
+        tokenExpiry
+    }));
+
+    // Save session with expiry
+    saveSession();
 
     // Fetch profile immediately after successful auth
     fetchUserProfile(resp.access_token);
@@ -210,7 +267,13 @@ export function signOut() {
 
     // Clear localStorage first
     localStorage.removeItem(STORAGE_KEY);
-    googleSession.update(s => ({ ...s, signedIn: false, accessToken: null, userProfile: null }));
+    googleSession.update(s => ({
+        ...s,
+        signedIn: false,
+        accessToken: null,
+        tokenExpiry: null,
+        userProfile: null
+    }));
 
     if (token && typeof google !== 'undefined' && google.accounts) {
         google.accounts.oauth2.revoke(token, () => {
@@ -221,8 +284,15 @@ export function signOut() {
 
 // Drive Operations
 export async function listBackups() {
-    const token = get(googleSession).accessToken;
+    const session = get(googleSession);
+    const token = session.accessToken;
     if (!token) throw new Error('Not signed in');
+
+    // Check if token is expired before making request
+    if (session.tokenExpiry && Date.now() > session.tokenExpiry) {
+        await handleUnauthorized();
+        throw new Error('Token expired, please sign in again');
+    }
 
     const q = "name = 'weird-wizard-backup.json' and 'appDataFolder' in parents and trashed = false";
     const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id, name, modifiedTime, size)`;
@@ -232,6 +302,11 @@ export async function listBackups() {
             'Authorization': `Bearer ${token}`
         }
     });
+
+    if (response.status === 401) {
+        await handleUnauthorized();
+        throw new Error('Token expired, please sign in again');
+    }
 
     if (!response.ok) {
         throw new Error('Failed to list backups: ' + response.statusText);
@@ -315,6 +390,11 @@ export async function downloadBackup(fileId: string) {
             'Authorization': `Bearer ${token}`
         }
     });
+
+    if (response.status === 401) {
+        await handleUnauthorized();
+        throw new Error('Token expired, please sign in again');
+    }
 
     if (!response.ok) {
         throw new Error('Download failed: ' + response.statusText);
