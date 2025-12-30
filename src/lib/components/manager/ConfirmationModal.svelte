@@ -20,9 +20,7 @@
     }: Props = $props();
 
     function handleBackdropClick(e: MouseEvent) {
-        if (e.target === e.currentTarget) {
-            onCancel();
-        }
+        // Do nothing to prevent closing when clicking backdrop
     }
 </script>
 

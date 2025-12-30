@@ -82,9 +82,7 @@
     }
 
     function handleBackdropClick(e: MouseEvent) {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
+        // Do nothing to prevent closing when clicking backdrop
     }
 </script>
 

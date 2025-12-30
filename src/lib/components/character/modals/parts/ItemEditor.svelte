@@ -210,10 +210,10 @@
 </Modal>
 
 {#if showTraitModal}
-    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-end md:items-center justify-center p-4" onclick={() => { showTraitModal = false; traitSearch = ''; }}>
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-end md:items-center justify-center p-4">
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="bg-slate-950 rounded-t-3xl md:rounded-2xl border border-slate-800 w-full md:max-w-md max-h-[80vh] overflow-hidden flex flex-col" onclick={(e) => e.stopPropagation()}>
+        <div class="bg-slate-950 rounded-t-3xl md:rounded-2xl border border-slate-800 w-full md:max-w-md max-h-[80vh] overflow-hidden flex flex-col">
             <div class="p-4 border-b border-slate-800">
                 <h3 class="text-lg font-bold text-white mb-3">{$t('character.modals.add_property')}</h3>
                 
