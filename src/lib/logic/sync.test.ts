@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import { joinLobby, resetSyncStateForTesting, publicCampaigns } from './sync';
+import { joinLobby, resetSyncStateForTesting, publicCampaigns, syncRoll, syncCharacter } from './sync';
 import { get } from 'svelte/store';
 
 /**
@@ -81,7 +81,7 @@ describe('sync.ts - WebRTC Connection Management', () => {
 
     it('should not leak peer connections when joinLobby is called multiple times', () => {
         // This test verifies the regression fix for the peer connection leak
-        
+
         // Mock the joinRoom function to track calls
         const mockLeave = vi.fn();
         const mockRoom = {
@@ -129,7 +129,7 @@ describe('sync.ts - WebRTC Connection Management', () => {
     it('should handle cleanup errors gracefully when leaving lobby', () => {
         // This test ensures that if lobby.leave() throws an error,
         // it doesn't prevent the new lobby from being created
-        
+
         // First call to establish a lobby
         joinLobby();
 
@@ -137,6 +137,12 @@ describe('sync.ts - WebRTC Connection Management', () => {
         // (we can't easily force an error, but we verify no exception is thrown)
         expect(() => {
             joinLobby();
+        }).not.toThrow();
+    });
+
+    it('should not throw if syncRoll is called when no room is active', () => {
+        expect(() => {
+            syncRoll({ test: 'data' });
         }).not.toThrow();
     });
 });
@@ -168,7 +174,7 @@ describe('sync.ts - Public Campaigns Store', () => {
 
         publicCampaigns.set([testCampaign]);
         const campaigns = get(publicCampaigns);
-        
+
         expect(campaigns).toHaveLength(1);
         expect(campaigns[0]).toMatchObject({
             id: 'test-campaign-1',
@@ -193,9 +199,9 @@ describe('sync.ts - Public Campaigns Store', () => {
         };
 
         publicCampaigns.set([campaign1]);
-        
+
         publicCampaigns.update(list => [...list, campaign2]);
-        
+
         const campaigns = get(publicCampaigns);
         expect(campaigns).toHaveLength(2);
         expect(campaigns.map(c => c.id)).toEqual(['camp-1', 'camp-2']);

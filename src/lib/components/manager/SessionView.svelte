@@ -2,7 +2,7 @@
     import { uuidv7 } from 'uuidv7';
     import { t } from 'svelte-i18n';
     import { liveCharacters, liveEnemies, liveEncounters } from '$lib/stores/live';
-    import { characterActions, isHistoryOpen } from '$lib/stores/characterStore';
+    import { character, characterActions, isHistoryOpen } from '$lib/stores/characterStore';
     import { campaignsMap } from '$lib/db';
     import { resolve } from '$app/paths';
     import { Users, UserPlus, Ghost, GripVertical, Plus, Minus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History, Layers, Play, Copy, QrCode, Check, Globe, Wifi, Trash2, Search, Library, PlusCircle, LayoutDashboard } from 'lucide-svelte';
@@ -36,6 +36,8 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
     onMount(() => {
         if (campaign?.id) {
             joinCampaignRoom(campaign.id, true);
+            // Set campaignId so GM rolls in this view are synced to players
+            character.update(c => ({ ...c, campaignId: campaign.id }));
 
             // Heartbeat for players to know GM is online
             const interval = setInterval(() => {
@@ -49,6 +51,8 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
             return () => {
                 clearInterval(interval);
                 leaveCampaignRoom();
+                // Clear campaignId when leaving session view
+                character.update(c => ({ ...c, campaignId: null }));
             };
         }
     });

@@ -333,6 +333,10 @@ export function leaveCampaignRoom() {
         room = null;
     }
     currentRoomId = null;
+    broadcastCombat = null;
+    broadcastHistory = null;
+    broadcastCharacterUpdate = null;
+    broadcastCampaign = null;
     syncState.set({
         isConnected: false,
         isGM: false,
