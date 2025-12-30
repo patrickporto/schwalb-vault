@@ -207,7 +207,11 @@
             "title": "Histórico",
             "none": "Nenhuma rolagem.",
             "clear": "Limpar",
-            "close": "Fechar"
+            "close": "Fechar",
+            "rolls_count": "Rolagens",
+            "formula": "Fórmula",
+            "total": "Total",
+            "fixed": "Fixo"
         },
         "dice_roll": {
             "confirm_roll": "Confirmar Rolagem",

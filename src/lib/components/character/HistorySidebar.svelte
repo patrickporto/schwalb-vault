@@ -25,7 +25,7 @@
     </div>
     <div>
         <h3 class="font-black text-white uppercase tracking-widest text-sm">{$t('character.history.title')}</h3>
-        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{$rollHistory.length} {$t('character.history.rolls_found', { default: 'Rolagens' })}</p>
+        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{$rollHistory.length} {$t('character.history.rolls_count')}</p>
     </div>
   </div>
   <button onclick={onClose} class="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-all active:scale-90">
@@ -85,12 +85,12 @@
                 {/if}
 
                 <div class="flex flex-col">
-                    <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-0.5">Fórmula</span>
-                    <div class="text-xs font-mono text-indigo-300 font-bold">{roll.formula || 'Fixed'}</div>
+                    <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-0.5">{$t('character.history.formula')}</span>
+                    <div class="text-xs font-mono text-indigo-300 font-bold">{roll.formula || $t('character.history.fixed')}</div>
                 </div>
 
                 <div class="flex flex-col items-end">
-                    <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-0.5">Total</span>
+                    <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-0.5">{$t('character.history.total')}</span>
                     <div class="text-3xl font-black font-mono leading-none flex items-baseline gap-1 {roll.crit ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]' : 'text-white'}">
                         {roll.total}
                         {#if roll.crit}
