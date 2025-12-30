@@ -1,8 +1,8 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
-    import { isHistoryOpen } from '$lib/stores/characterStore';
+    import { get } from 'svelte/store';
+    import { isHistoryOpen, character, characterActions } from '$lib/stores/characterStore';
     import { Dices } from 'lucide-svelte';
-    import { characterActions } from '$lib/stores/characterStore';
 
     function rollDice(sides: number, count = 1) {
         const results: number[] = [];
@@ -13,9 +13,10 @@
             total += r;
         }
         
+        const char = get(character);
         characterActions.addToHistory({
             source: 'GM',
-            charName: 'Mestre',
+            charName: char.name,
             name: `${count}d${sides}`,
             description: count > 1 ? `Resultados: [${results.join(', ')}]` : null,
             total,

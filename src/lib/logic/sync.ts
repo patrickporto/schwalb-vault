@@ -35,44 +35,86 @@ let broadcastCombat: any = null;
 let broadcastHistory: any = null;
 let broadcastCharacterUpdate: any = null;
 let broadcastCampaign: any = null;
+let lobbyCleanupInterval: any = null;
+let campaignHeartbeatInterval: any = null;
+
+// Track connection attempts for rate limiting
+let lastLobbyJoinAttempt = 0;
+let lastCampaignJoinAttempt = 0;
+const MIN_JOIN_INTERVAL_MS = 2000; // Minimum 2 seconds between join attempts
 
 // Global Discovery
 const lobbyConfig = { appId: 'weird-wizard-vault-lobby' };
 export const publicCampaigns = writable<any[]>([]);
 
+/**
+ * Safely leave a room/lobby, handling any errors gracefully
+ */
+function safeLeave(roomOrLobby: any, name: string): boolean {
+    if (!roomOrLobby) return true;
+    try {
+        roomOrLobby.leave();
+        return true;
+    } catch (e) {
+        console.warn(`Failed to leave ${name}:`, e);
+        return false;
+    }
+}
+
+/**
+ * Check if we can attempt a new connection (rate limiting)
+ */
+function canAttemptJoin(lastAttempt: number): boolean {
+    const now = Date.now();
+    return (now - lastAttempt) >= MIN_JOIN_INTERVAL_MS;
+}
+
 export function joinLobby() {
-    // If lobby already exists, leave it first to prevent peer connection leaks
-    if (lobby) {
-        try {
-            lobby.leave();
-        } catch (e) {
-            console.warn('Failed to leave existing lobby:', e);
-        }
-        lobby = null;
+    // Rate limit lobby join attempts
+    if (!canAttemptJoin(lastLobbyJoinAttempt)) {
+        console.warn('Lobby join rate limited. Skipping duplicate join attempt.');
+        return null;
+    }
+    lastLobbyJoinAttempt = Date.now();
+
+    // Clear any existing cleanup interval
+    if (lobbyCleanupInterval) {
+        clearInterval(lobbyCleanupInterval);
+        lobbyCleanupInterval = null;
     }
 
-    lobby = joinRoom(lobbyConfig, 'public-discovery');
-    const [sendDiscovery, getDiscovery] = lobby.makeAction('discovery');
+    // If lobby already exists, leave it first to prevent peer connection leaks
+    safeLeave(lobby, 'existing lobby');
+    lobby = null;
 
-    getDiscovery((data: any) => {
-        publicCampaigns.update(list => {
-            const idx = list.findIndex(c => c.id === data.id);
-            if (idx !== -1) {
-                const newList = [...list];
-                newList[idx] = { ...data, lastSeen: Date.now() };
-                return newList;
-            }
-            return [...list, { ...data, lastSeen: Date.now() }];
+    try {
+        lobby = joinRoom(lobbyConfig, 'public-discovery');
+        const [sendDiscovery, getDiscovery] = lobby.makeAction('discovery');
+
+        getDiscovery((data: any) => {
+            publicCampaigns.update(list => {
+                const idx = list.findIndex(c => c.id === data.id);
+                if (idx !== -1) {
+                    const newList = [...list];
+                    newList[idx] = { ...data, lastSeen: Date.now() };
+                    return newList;
+                }
+                return [...list, { ...data, lastSeen: Date.now() }];
+            });
         });
-    });
 
-    // Cleanup stale campaigns from lobby view
-    setInterval(() => {
-        const now = Date.now();
-        publicCampaigns.update(list => list.filter(c => (now - c.lastSeen) < 120000));
-    }, 60000);
+        // Cleanup stale campaigns from lobby view
+        lobbyCleanupInterval = setInterval(() => {
+            const now = Date.now();
+            publicCampaigns.update(list => list.filter(c => (now - c.lastSeen) < 120000));
+        }, 60000);
 
-    return sendDiscovery;
+        return sendDiscovery;
+    } catch (e) {
+        console.error('Failed to join lobby:', e);
+        lobby = null;
+        return null;
+    }
 }
 
 
@@ -98,204 +140,251 @@ if (typeof window !== 'undefined') {
 
     // Cleanup on page unload to prevent dangling peer connections
     window.addEventListener('beforeunload', () => {
-        if (lobby) {
-            try {
-                lobby.leave();
-            } catch (e) {
-                // Ignore errors during cleanup
-            }
-        }
-        if (room) {
-            try {
-                room.leave();
-            } catch (e) {
-                // Ignore errors during cleanup
-            }
+        cleanupAllConnections();
+    });
+
+    // Also handle visibility change for mobile browsers
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            // Page is being hidden, cleanup connections
+            cleanupAllConnections();
         }
     });
+}
+
+/**
+ * Cleanup all WebRTC connections
+ */
+function cleanupAllConnections() {
+    if (lobbyCleanupInterval) {
+        clearInterval(lobbyCleanupInterval);
+        lobbyCleanupInterval = null;
+    }
+    if (campaignHeartbeatInterval) {
+        clearInterval(campaignHeartbeatInterval);
+        campaignHeartbeatInterval = null;
+    }
+    safeLeave(lobby, 'lobby');
+    safeLeave(room, 'room');
+    lobby = null;
+    room = null;
 }
 
 
 let currentRoomId: string | null = null;
 
 export function joinCampaignRoom(campaignId: string, isGM: boolean = false, charId: string | null = null) {
+    const targetRoomId = `campaign-${campaignId}`;
+
     // Prevent duplicate connections to the same room
-    if (currentRoomId === `campaign-${campaignId}`) {
+    if (currentRoomId === targetRoomId && room) {
         // Just update the state if we're already in this room
         syncState.update(s => ({
             ...s,
             isGM,
             currentCharacterId: charId
         }));
-        return;
+        return room;
     }
 
-    if (room) {
-        room.leave();
-        room = null;
+    // Rate limit campaign join attempts
+    if (!canAttemptJoin(lastCampaignJoinAttempt)) {
+        console.warn('Campaign join rate limited. Skipping duplicate join attempt.');
+        return room;
     }
+    lastCampaignJoinAttempt = Date.now();
 
-    currentRoomId = `campaign-${campaignId}`;
-    room = joinRoom(roomConfig, currentRoomId);
-
-    syncState.set({
-        isConnected: true,
-        isGM,
-        currentCharacterId: charId,
-        peers: [],
-        roomId: campaignId,
-        lastGmUpdate: 0
-    });
-
-    // Actions
-    const [sendCombat, getCombat] = room.makeAction('combat');
-    const [sendHistory, getHistory] = room.makeAction('history');
-    const [sendCharUpdate, getCharUpdate] = room.makeAction('charUpdate');
-    const [sendCampaign, getCampaign] = room.makeAction('campaign');
-
-    broadcastCombat = sendCombat;
-    broadcastHistory = sendHistory;
-    broadcastCharacterUpdate = sendCharUpdate;
-    broadcastCampaign = sendCampaign;
-
-    // Listeners
-    getCombat((data: any) => {
-        if (!isGM) {
-            // Player updates their character state based on GM broadcast
-            character.update(c => ({
-                ...c,
-                currentRound: data.round,
-                combatActive: data.active
-            }));
-        }
-    });
-
-    getCampaign((data: any) => {
-        syncState.update(s => ({ ...s, lastGmUpdate: Date.now() }));
-        if (!isGM) {
-            character.update(c => ({
-                ...c,
-                campaignName: data.name,
-                gmName: data.gmName,
-                passwordHash: data.passwordHash
-            }));
-        }
-    });
-
-    // Heartbeat discovery for this campaign if GM
-    if (isGM) {
-        setInterval(() => {
-            const current = campaignsMap.get(campaignId);
-            if (current && current.isPublished) {
-                sendDiscovery({
-                    id: campaignId,
-                    name: current.name,
-                    gmName: current.gmName || 'Mestre',
-                    description: current.description
-                });
-            }
-        }, 30000);
+    // Cleanup existing room
+    if (campaignHeartbeatInterval) {
+        clearInterval(campaignHeartbeatInterval);
+        campaignHeartbeatInterval = null;
     }
+    safeLeave(room, 'existing campaign room');
+    room = null;
+    currentRoomId = null;
 
-    getHistory((data: any) => {
-        characterActions.addToHistory(data, false);
-    });
+    // Clear broadcasters
+    broadcastCombat = null;
+    broadcastHistory = null;
+    broadcastCharacterUpdate = null;
+    broadcastCampaign = null;
 
-    getCharUpdate((charData: any) => {
-        if (isGM) {
-            // GM updates the campaign's member list
-            const current = campaignsMap.get(campaignId);
-            if (current) {
-                const members = current.members || [];
-                const idx = members.findIndex((m: any) => m.id === charData.id);
+    try {
+        currentRoomId = targetRoomId;
+        room = joinRoom(roomConfig, currentRoomId);
 
-                let newMembers;
-                if (idx !== -1) {
-                    newMembers = [...members];
-                    const existing = newMembers[idx];
+        syncState.set({
+            isConnected: true,
+            isGM,
+            currentCharacterId: charId,
+            peers: [],
+            roomId: campaignId,
+            lastGmUpdate: 0
+        });
 
-                    // Don't let a 'pending' status from the player override an 'approved' status in the GM's database
-                    const mergedData = { ...charData };
-                    if (existing.campaignApproval === 'approved' && charData.campaignApproval === 'pending') {
-                        delete mergedData.campaignApproval;
-                    }
+        // Actions
+        const [sendCombat, getCombat] = room.makeAction('combat');
+        const [sendHistory, getHistory] = room.makeAction('history');
+        const [sendCharUpdate, getCharUpdate] = room.makeAction('charUpdate');
+        const [sendCampaign, getCampaign] = room.makeAction('campaign');
 
-                    newMembers[idx] = { ...existing, ...mergedData, lastUpdate: Date.now() };
-                } else {
-                    newMembers = [...members, { ...charData, lastUpdate: Date.now() }];
-                }
+        broadcastCombat = sendCombat;
+        broadcastHistory = sendHistory;
+        broadcastCharacterUpdate = sendCharUpdate;
+        broadcastCampaign = sendCampaign;
 
-                // Also update in combat if present
-                const enemies = current.activeEnemies || [];
-                const eIdx = enemies.findIndex((e: any) => e.id === charData.id && e.type === 'player');
-                let newEnemies = enemies;
-                if (eIdx !== -1) {
-                    newEnemies = [...enemies];
-                    newEnemies[eIdx] = { ...newEnemies[eIdx], ...charData };
-                }
-
-                campaignsMap.set(campaignId, {
-                    ...current,
-                    members: newMembers,
-                    activeEnemies: newEnemies
-                });
-            }
-        } else {
-            // Player receives update from GM - check if this update is for our character
-            const state = get(syncState);
-            const charStoreData = get(character);
-            const myCharId = state.currentCharacterId || charStoreData?.id;
-
-            if (myCharId && myCharId === charData.id) {
-                // If GM sent a rejection or removal (campaignId null)
-                if (charData.campaignApproval === 'rejected' || charData.campaignId === null) {
-                    character.update(c => ({
-                        ...c,
-                        campaignId: null,
-                        campaignName: null,
-                        gmName: null,
-                        campaignApproval: null
-                    }));
-                    return;
-                }
-
+        // Listeners
+        getCombat((data: any) => {
+            if (!isGM) {
+                // Player updates their character state based on GM broadcast
                 character.update(c => ({
                     ...c,
-                    name: charData.name || c.name,
-                    afflictions: charData.afflictions || c.afflictions,
-                    initiative: charData.initiative !== undefined ? charData.initiative : (c.initiative ?? false),
-                    acted: charData.acted !== undefined ? charData.acted : (c.acted ?? false),
-                    campaignApproval: charData.campaignApproval || c.campaignApproval,
-                    imageUrl: charData.imageUrl || c.imageUrl
+                    currentRound: data.round,
+                    combatActive: data.active
                 }));
-                if (charData.damage !== undefined) damage.set(charData.damage);
-                if (charData.currentHealth !== undefined) currentHealth.set(charData.currentHealth);
-                if (charData.normalHealth !== undefined) normalHealth.set(charData.normalHealth);
             }
-        }
-    });
+        });
 
-    room.onPeerJoin((peerId: string) => {
-        syncState.update(s => ({ ...s, peers: [...s.peers, peerId] }));
-        // If GM, send current state to the new peer
-        if (isGM) {
-            const current = campaignsMap.get(campaignId);
-            if (current) {
-                if (current.combat) sendCombat(current.combat);
-                sendCampaign({
-                    name: current.name,
-                    gmName: current.gmName || 'Mestre',
-                    passwordHash: current.passwordHash
-                });
+        getCampaign((data: any) => {
+            syncState.update(s => ({ ...s, lastGmUpdate: Date.now() }));
+            if (!isGM) {
+                character.update(c => ({
+                    ...c,
+                    campaignName: data.name,
+                    gmName: data.gmName,
+                    passwordHash: data.passwordHash
+                }));
             }
+        });
+
+        // Heartbeat discovery for this campaign if GM
+        if (isGM && sendDiscovery) {
+            campaignHeartbeatInterval = setInterval(() => {
+                const current = campaignsMap.get(campaignId);
+                if (current && current.isPublished) {
+                    sendDiscovery({
+                        id: campaignId,
+                        name: current.name,
+                        gmName: current.gmName || 'Mestre',
+                        description: current.description
+                    });
+                }
+            }, 30000);
         }
-    });
 
-    room.onPeerLeave((peerId: string) => {
-        syncState.update(s => ({ ...s, peers: s.peers.filter(p => p !== peerId) }));
-    });
+        getHistory((data: any) => {
+            characterActions.addToHistory(data, false);
+        });
 
-    return room;
+        getCharUpdate((charData: any) => {
+            if (isGM) {
+                // GM updates the campaign's member list
+                const current = campaignsMap.get(campaignId);
+                if (current) {
+                    const members = current.members || [];
+                    const idx = members.findIndex((m: any) => m.id === charData.id);
+
+                    let newMembers;
+                    if (idx !== -1) {
+                        newMembers = [...members];
+                        const existing = newMembers[idx];
+
+                        // Don't let a 'pending' status from the player override an 'approved' status in the GM's database
+                        const mergedData = { ...charData };
+                        if (existing.campaignApproval === 'approved' && charData.campaignApproval === 'pending') {
+                            delete mergedData.campaignApproval;
+                        }
+
+                        newMembers[idx] = { ...existing, ...mergedData, lastUpdate: Date.now() };
+                    } else {
+                        newMembers = [...members, { ...charData, lastUpdate: Date.now() }];
+                    }
+
+                    // Also update in combat if present
+                    const enemies = current.activeEnemies || [];
+                    const eIdx = enemies.findIndex((e: any) => e.id === charData.id && e.type === 'player');
+                    let newEnemies = enemies;
+                    if (eIdx !== -1) {
+                        newEnemies = [...enemies];
+                        newEnemies[eIdx] = { ...newEnemies[eIdx], ...charData };
+                    }
+
+                    campaignsMap.set(campaignId, {
+                        ...current,
+                        members: newMembers,
+                        activeEnemies: newEnemies
+                    });
+                }
+            } else {
+                // Player receives update from GM - check if this update is for our character
+                const state = get(syncState);
+                const charStoreData = get(character);
+                const myCharId = state.currentCharacterId || charStoreData?.id;
+
+                if (myCharId && myCharId === charData.id) {
+                    // If GM sent a rejection or removal (campaignId null)
+                    if (charData.campaignApproval === 'rejected' || charData.campaignId === null) {
+                        character.update(c => ({
+                            ...c,
+                            campaignId: null,
+                            campaignName: null,
+                            gmName: null,
+                            campaignApproval: null
+                        }));
+                        return;
+                    }
+
+                    character.update(c => ({
+                        ...c,
+                        name: charData.name || c.name,
+                        afflictions: charData.afflictions || c.afflictions,
+                        initiative: charData.initiative !== undefined ? charData.initiative : (c.initiative ?? false),
+                        acted: charData.acted !== undefined ? charData.acted : (c.acted ?? false),
+                        campaignApproval: charData.campaignApproval || c.campaignApproval,
+                        imageUrl: charData.imageUrl || c.imageUrl
+                    }));
+                    if (charData.damage !== undefined) damage.set(charData.damage);
+                    if (charData.currentHealth !== undefined) currentHealth.set(charData.currentHealth);
+                    if (charData.normalHealth !== undefined) normalHealth.set(charData.normalHealth);
+                }
+            }
+        });
+
+        room.onPeerJoin((peerId: string) => {
+            syncState.update(s => ({ ...s, peers: [...s.peers, peerId] }));
+            // If GM, send current state to the new peer
+            if (isGM) {
+                const current = campaignsMap.get(campaignId);
+                if (current) {
+                    if (current.combat) sendCombat(current.combat);
+                    sendCampaign({
+                        name: current.name,
+                        gmName: current.gmName || 'Mestre',
+                        passwordHash: current.passwordHash
+                    });
+                }
+            }
+        });
+
+        room.onPeerLeave((peerId: string) => {
+            syncState.update(s => ({ ...s, peers: s.peers.filter(p => p !== peerId) }));
+        });
+
+        return room;
+    } catch (e) {
+        console.error('Failed to join campaign room:', e);
+        room = null;
+        currentRoomId = null;
+        syncState.set({
+            isConnected: false,
+            isGM: false,
+            currentCharacterId: null,
+            peers: [],
+            roomId: null,
+            lastGmUpdate: 0
+        });
+        return null;
+    }
 }
 
 export function syncCombat(campaignId: string, combatData: any) {
@@ -328,10 +417,12 @@ export function syncCharacter(charData: any) {
 
 
 export function leaveCampaignRoom() {
-    if (room) {
-        room.leave();
-        room = null;
+    if (campaignHeartbeatInterval) {
+        clearInterval(campaignHeartbeatInterval);
+        campaignHeartbeatInterval = null;
     }
+    safeLeave(room, 'campaign room');
+    room = null;
     currentRoomId = null;
     broadcastCombat = null;
     broadcastHistory = null;
@@ -348,18 +439,31 @@ export function leaveCampaignRoom() {
 }
 
 export function resetSyncStateForTesting() {
-    if (lobby) {
-        try {
-            lobby.leave();
-        } catch (e) {
-            console.warn('Failed to leave lobby during test reset:', e);
-        }
+    // Clear all intervals
+    if (lobbyCleanupInterval) {
+        clearInterval(lobbyCleanupInterval);
+        lobbyCleanupInterval = null;
     }
+    if (campaignHeartbeatInterval) {
+        clearInterval(campaignHeartbeatInterval);
+        campaignHeartbeatInterval = null;
+    }
+
+    safeLeave(lobby, 'lobby');
+    safeLeave(room, 'room');
     lobby = null;
     room = null;
     currentRoomId = null;
+    broadcastCombat = null;
+    broadcastHistory = null;
+    broadcastCharacterUpdate = null;
+    broadcastCampaign = null;
+
+    // Reset rate limiting
+    lastLobbyJoinAttempt = 0;
+    lastCampaignJoinAttempt = 0;
+
     if (typeof window !== 'undefined') {
         sessionStorage.removeItem('lobby-initialized');
     }
 }
-

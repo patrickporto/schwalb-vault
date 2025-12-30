@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import { joinLobby, resetSyncStateForTesting, publicCampaigns, syncRoll, syncCharacter } from './sync';
+import { joinLobby, resetSyncStateForTesting, publicCampaigns, syncRoll, syncCharacter, joinCampaignRoom, leaveCampaignRoom, syncState } from './sync';
 import { get } from 'svelte/store';
 
 /**
@@ -9,7 +9,11 @@ import { get } from 'svelte/store';
  * would create new connections without cleaning up old ones, eventually hitting
  * the browser's RTCPeerConnection limit.
  * 
- * Fix: joinLobby() now properly closes existing connections before creating new ones.
+ * Fix: 
+ * - joinLobby() now properly closes existing connections before creating new ones
+ * - Rate limiting prevents rapid successive join attempts
+ * - Proper interval cleanup prevents memory leaks
+ * - Safe leave helper handles errors gracefully
  */
 
 // Mock browser APIs needed for WebRTC
@@ -63,6 +67,15 @@ beforeAll(() => {
             removeEventListener: vi.fn(),
         } as any;
     }
+
+    // Mock document for visibility change listener
+    if (typeof document === 'undefined') {
+        global.document = {
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            visibilityState: 'visible'
+        } as any;
+    }
 });
 
 describe('sync.ts - WebRTC Connection Management', () => {
@@ -81,13 +94,6 @@ describe('sync.ts - WebRTC Connection Management', () => {
 
     it('should not leak peer connections when joinLobby is called multiple times', () => {
         // This test verifies the regression fix for the peer connection leak
-
-        // Mock the joinRoom function to track calls
-        const mockLeave = vi.fn();
-        const mockRoom = {
-            leave: mockLeave,
-            makeAction: vi.fn(() => [vi.fn(), vi.fn()])
-        };
 
         // We can't easily mock the trystero module, but we can verify
         // that calling joinLobby multiple times doesn't throw errors
@@ -144,6 +150,70 @@ describe('sync.ts - WebRTC Connection Management', () => {
         expect(() => {
             syncRoll({ test: 'data' });
         }).not.toThrow();
+    });
+
+    it('should not throw if syncCharacter is called when no room is active', () => {
+        expect(() => {
+            syncCharacter({ id: 'test', name: 'Test Character' });
+        }).not.toThrow();
+    });
+});
+
+describe('sync.ts - Campaign Room Management', () => {
+    beforeEach(() => {
+        resetSyncStateForTesting();
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.clear();
+        }
+    });
+
+    afterEach(() => {
+        resetSyncStateForTesting();
+    });
+
+    it('should handle leaveCampaignRoom gracefully when no room exists', () => {
+        expect(() => {
+            leaveCampaignRoom();
+        }).not.toThrow();
+
+        const state = get(syncState);
+        expect(state.isConnected).toBe(false);
+        expect(state.roomId).toBeNull();
+    });
+
+    it('should reset sync state when leaving campaign room', () => {
+        // First set up some state
+        syncState.set({
+            isConnected: true,
+            isGM: true,
+            currentCharacterId: 'char-123',
+            peers: ['peer-1', 'peer-2'],
+            roomId: 'campaign-test',
+            lastGmUpdate: Date.now()
+        });
+
+        // Leave the room
+        leaveCampaignRoom();
+
+        // Verify state is reset
+        const state = get(syncState);
+        expect(state.isConnected).toBe(false);
+        expect(state.isGM).toBe(false);
+        expect(state.currentCharacterId).toBeNull();
+        expect(state.peers).toEqual([]);
+        expect(state.roomId).toBeNull();
+    });
+
+    it('should update state when already in same room', () => {
+        // Join a campaign room
+        joinCampaignRoom('test-campaign', false, 'char-1');
+
+        // Join the same room again with different parameters (same room bypass rate limit)
+        joinCampaignRoom('test-campaign', true, 'char-2');
+
+        const state = get(syncState);
+        expect(state.isGM).toBe(true);
+        expect(state.currentCharacterId).toBe('char-2');
     });
 });
 
@@ -205,5 +275,50 @@ describe('sync.ts - Public Campaigns Store', () => {
         const campaigns = get(publicCampaigns);
         expect(campaigns).toHaveLength(2);
         expect(campaigns.map(c => c.id)).toEqual(['camp-1', 'camp-2']);
+    });
+
+    it('should filter out stale campaigns', () => {
+        const freshCampaign = {
+            id: 'fresh',
+            name: 'Fresh Campaign',
+            lastSeen: Date.now()
+        };
+
+        const staleCampaign = {
+            id: 'stale',
+            name: 'Stale Campaign',
+            lastSeen: Date.now() - 150000 // Over 2 minutes ago
+        };
+
+        publicCampaigns.set([freshCampaign, staleCampaign]);
+
+        // Simulate the cleanup logic
+        const now = Date.now();
+        publicCampaigns.update(list => list.filter(c => (now - c.lastSeen) < 120000));
+
+        const campaigns = get(publicCampaigns);
+        expect(campaigns).toHaveLength(1);
+        expect(campaigns[0].id).toBe('fresh');
+    });
+});
+
+describe('sync.ts - Rate Limiting', () => {
+    beforeEach(() => {
+        resetSyncStateForTesting();
+    });
+
+    afterEach(() => {
+        resetSyncStateForTesting();
+    });
+
+    it('should rate limit rapid lobby join attempts', () => {
+        // First call should work
+        const result1 = joinLobby();
+
+        // Immediate second call should be rate limited (returns null)
+        const result2 = joinLobby();
+
+        // Result2 should be null due to rate limiting
+        expect(result2).toBeNull();
     });
 });

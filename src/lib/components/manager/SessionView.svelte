@@ -36,8 +36,12 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
     onMount(() => {
         if (campaign?.id) {
             joinCampaignRoom(campaign.id, true);
-            // Set campaignId so GM rolls in this view are synced to players
-            character.update(c => ({ ...c, campaignId: campaign.id }));
+            // Set campaignId and GM name so rolls in this view are synced correctly
+            character.update(c => ({ 
+                ...c, 
+                campaignId: campaign.id,
+                name: campaign.gmName || 'Mestre'
+            }));
 
             // Heartbeat for players to know GM is online
             const interval = setInterval(() => {
@@ -308,9 +312,11 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         if (count > 1) desc += `Dados: [${res.results.join(', ')}] `;
         if (res.bonusRolls?.length > 0) desc += `Bonus Rolls: [${res.bonusRolls.join(', ')}] -> ${Math.abs(res.modifierTotal)}`;
         
+        const gmName = campaign?.gmName || 'Mestre';
+        
         characterActions.addToHistory({
             source: 'GM',
-            charName: 'Mestre',
+            charName: gmName,
             name: `${count}d${sides} ${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}`,
             description: desc.trim() || null,
             total: res.total,
