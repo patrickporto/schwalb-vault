@@ -28,24 +28,29 @@ beforeAll(() => {
         label: 'data',
     };
 
-    // Mock RTCPeerConnection
-    global.RTCPeerConnection = vi.fn().mockImplementation(() => ({
-        close: vi.fn(),
-        createOffer: vi.fn().mockResolvedValue({ type: 'offer', sdp: 'mock-sdp' }),
-        createAnswer: vi.fn().mockResolvedValue({ type: 'answer', sdp: 'mock-sdp' }),
-        setLocalDescription: vi.fn().mockResolvedValue(undefined),
-        setRemoteDescription: vi.fn().mockResolvedValue(undefined),
-        addIceCandidate: vi.fn().mockResolvedValue(undefined),
-        createDataChannel: vi.fn().mockReturnValue(mockDataChannel),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        localDescription: null,
-        remoteDescription: null,
-        signalingState: 'stable',
-        iceConnectionState: 'new',
-        connectionState: 'new',
-        iceGatheringState: 'new',
-    })) as any;
+    // Mock RTCPeerConnection as a proper class
+    class MockRTCPeerConnection {
+        close = vi.fn();
+        createOffer = vi.fn().mockResolvedValue({ type: 'offer', sdp: 'mock-sdp' });
+        createAnswer = vi.fn().mockResolvedValue({ type: 'answer', sdp: 'mock-sdp' });
+        setLocalDescription = vi.fn().mockResolvedValue(undefined);
+        setRemoteDescription = vi.fn().mockResolvedValue(undefined);
+        addIceCandidate = vi.fn().mockResolvedValue(undefined);
+        createDataChannel = vi.fn().mockReturnValue(mockDataChannel);
+        addEventListener = vi.fn();
+        removeEventListener = vi.fn();
+        localDescription = null;
+        remoteDescription = null;
+        signalingState = 'stable';
+        iceConnectionState = 'new';
+        connectionState = 'new';
+        iceGatheringState = 'new';
+        onicecandidate = null;
+        ondatachannel = null;
+        onnegotiationneeded = null;
+        onconnectionstatechange = null;
+    }
+    global.RTCPeerConnection = MockRTCPeerConnection as any;
 
     // Mock sessionStorage if not available
     if (typeof sessionStorage === 'undefined') {
@@ -67,6 +72,33 @@ beforeAll(() => {
             removeEventListener: vi.fn(),
         } as any;
     }
+
+    // Mock WebSocket for trystero - needs to be a proper class
+    class MockWebSocket {
+        static CONNECTING = 0;
+        static OPEN = 1;
+        static CLOSING = 2;
+        static CLOSED = 3;
+
+        readyState = MockWebSocket.OPEN;
+        onopen: any = null;
+        onclose: any = null;
+        onerror: any = null;
+        onmessage: any = null;
+
+        addEventListener = vi.fn();
+        removeEventListener = vi.fn();
+        send = vi.fn();
+        close = vi.fn();
+
+        constructor(url: string, protocols?: string | string[]) {
+            // Simulate connection opening
+            setTimeout(() => {
+                if (this.onopen) this.onopen({});
+            }, 0);
+        }
+    }
+    global.WebSocket = MockWebSocket as any;
 
     // Mock document for visibility change listener
     if (typeof document === 'undefined') {

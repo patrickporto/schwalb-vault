@@ -18,7 +18,8 @@ export default defineConfig({
     test: {
         environment: 'happy-dom',
         globals: true,
-        exclude: ['node_modules', '.svelte-kit', 'e2e'],
+        include: ['src/**/*.test.ts', 'src/**/*.test.js'],
+        exclude: ['**/node_modules/**', '**/.svelte-kit/**', '**/e2e/**'],
         setupFiles: ['./src/test/setup.ts']
     }
 });
