@@ -6,8 +6,8 @@ const CLIENT_ID = '701898444454-7ml9onnv529k99rkvgh1slhdj4a1arrm.apps.googleuser
 const API_KEY = ''; // Optional if using OAuth2 only for personal data, but usually needed for discovery docs. Drive API often works without separate API Key if using OAuth token.
 
 // Imports for Sync
-import { charactersMap, campaignsMap, deletedIdsMap } from '$lib/db';
-import { liveCharacters, liveCampaigns } from '$lib/stores/live';
+import { charactersMap, campaignsMap, enemiesMap, encountersMap, imagesMap, deletedIdsMap } from '$lib/db';
+import { liveCharacters, liveCampaigns, liveEnemies, liveEncounters } from '$lib/stores/live';
 import { syncStatus, lastSyncTime } from '$lib/stores/syncStatus';
 
 // Scopes: App Data for backup, User Info for avatar/name
@@ -457,6 +457,14 @@ export async function syncFromCloud() {
                     campaignsMap.delete(entryId);
                     console.log('[DEBUG] Removed camp locally based on cloud deletion:', entryId);
                 }
+                if (deletedEntry.type === 'enemy' && enemiesMap.has(entryId)) {
+                    enemiesMap.delete(entryId);
+                    console.log('[DEBUG] Removed enemy locally based on cloud deletion:', entryId);
+                }
+                if (deletedEntry.type === 'encounter' && encountersMap.has(entryId)) {
+                    encountersMap.delete(entryId);
+                    console.log('[DEBUG] Removed encounter locally based on cloud deletion:', entryId);
+                }
             }
         }
 
@@ -522,6 +530,37 @@ export async function syncFromCloud() {
             }
         }
 
+        // Sync Enemies
+        if (cloudData.enemies && Array.isArray(cloudData.enemies)) {
+            for (const cloudEnemy of cloudData.enemies) {
+                const id = String(cloudEnemy.id);
+                if (!deletedIds.has(id) && !enemiesMap.has(id)) {
+                    enemiesMap.set(id, cloudEnemy);
+                }
+            }
+        }
+
+        // Sync Encounters
+        if (cloudData.encounters && Array.isArray(cloudData.encounters)) {
+            for (const cloudEnc of cloudData.encounters) {
+                const id = String(cloudEnc.id);
+                if (!deletedIds.has(id) && !encountersMap.has(id)) {
+                    encountersMap.set(id, cloudEnc);
+                }
+            }
+        }
+
+        // Sync Images
+        if (cloudData.images && typeof cloudData.images === 'object') {
+            console.log('[DEBUG] Syncing', Object.keys(cloudData.images).length, 'images from cloud');
+            for (const [hash, base64] of Object.entries(cloudData.images)) {
+                if (!imagesMap.has(hash)) {
+                    imagesMap.set(hash, base64);
+                    console.log('[DEBUG] New image synced from cloud:', hash);
+                }
+            }
+        }
+
         console.log('[DEBUG] Sync from cloud complete.');
         syncStatus.set('success');
         lastSyncTime.set(Date.now());
@@ -556,10 +595,20 @@ export async function syncToCloud() {
             // This ensures local deletions allow propagate correctly even if there's a race condition
             const cleanCharacters = get(liveCharacters).filter((c: any) => !deletedIdsSet.has(String(c.id)));
             const cleanCampaigns = get(liveCampaigns).filter((c: any) => !deletedIdsSet.has(String(c.id)));
+            const cleanEnemies = get(liveEnemies).filter((c: any) => !deletedIdsSet.has(String(c.id)));
+            const cleanEncounters = get(liveEncounters).filter((c: any) => !deletedIdsSet.has(String(c.id)));
+
+            const images: Record<string, any> = {};
+            imagesMap.forEach((val: any, key: string) => {
+                images[key] = val;
+            });
 
             const data = {
                 characters: cleanCharacters,
                 campaigns: cleanCampaigns,
+                enemies: cleanEnemies,
+                encounters: cleanEncounters,
+                images,
                 deletedIds: deletedIdsArray,
                 timestamp: Date.now(),
                 version: 1,
@@ -569,6 +618,8 @@ export async function syncToCloud() {
             console.log('[DEBUG] Uploading to cloud:', {
                 charactersCount: data.characters.length,
                 campaignsCount: data.campaigns.length,
+                enemiesCount: cleanEnemies.length,
+                imagesCount: Object.keys(images).length,
                 deletedIdsCount: deletedIdsArray.length
             });
 
