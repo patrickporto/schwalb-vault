@@ -3,7 +3,7 @@
     import { sotdlCharacter, sotdlCharacterActions, sotdlActiveEffects } from '$lib/stores/characterStoreSotDL';
     import { modalState } from '$lib/stores/characterStore';
     import { Rewind, FastForward, Eraser, Plus, Edit, Trash2, Clock, Clover, Zap } from 'lucide-svelte';
-    import { MOD_TYPES, DURATION_TYPES, MOD_TARGETS } from '$lib/constants';
+    import { MOD_TYPES } from '$lib/constants';
 
     const { advanceRound, deleteEffect, checkLuckEnds, cleanInactiveEffects, toggleEffect, checkConcentration } = sotdlCharacterActions;
 
@@ -13,19 +13,6 @@
     function openModal(type: string, data: any = null) {
         modalState.update(m => ({ ...m, type, isOpen: true, data, system: 'sofdl' }));
     }
-
-    const SOTDL_MOD_TARGETS: Record<string, string> = {
-        strength: 'Força',
-        agility: 'Agilidade',
-        intellect: 'Intelecto',
-        will: 'Vontade',
-        perception: 'Percepção',
-        defense: 'Defesa',
-        speed: 'Deslocamento',
-        health: 'Vida',
-        damage: 'Dano (Bônus)',
-        healing_rate: 'Taxa de Cura'
-    };
 </script>
 
 <div class="space-y-4">
@@ -114,7 +101,7 @@
                         <div class="flex flex-wrap gap-1 mt-1">
                             {#each eff.modifiers as mod}
                                 <span class="text-[9px] px-1.5 py-0.5 rounded border {mod.type === MOD_TYPES.SET ? 'bg-yellow-900/30 text-yellow-200 border-yellow-800' : 'bg-slate-800 text-slate-300 border-slate-700'} font-medium">
-                                    {SOTDL_MOD_TARGETS[mod.target] || mod.target}: {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? 'x' : (Number(mod.value) > 0 ? '+' : '')}{mod.value}
+                                    {$t(`modals.mod_targets.${mod.target}`)}: {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? 'x' : (Number(mod.value) > 0 ? '+' : '')}{mod.value}
                                 </span>
                             {/each}
                         </div>
@@ -122,7 +109,7 @@
                     <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono mt-1 border-t border-slate-800/50 pt-2">
                         <span class="flex items-center gap-1">
                             <Clock size={10} class="text-indigo-400"/>
-                            {DURATION_TYPES[eff.duration] || eff.duration}
+                            {$t(`character.effects.duration_types.${eff.duration}`)}
                             {eff.duration === 'ROUNDS' ? `(${eff.roundsLeft})` : ''}
                         </span>
                         <div class="flex gap-1">

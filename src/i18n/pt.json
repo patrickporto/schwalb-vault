@@ -206,7 +206,16 @@
       "clean_inactive": "Limpar Inativos",
       "new_effect": "Novo Efeito",
       "none": "Nenhum efeito ativo.",
-      "luck_ends": "Sorte Encerra"
+      "luck_ends": "Sorte Encerra",
+      "active": "Efeitos Ativos",
+      "duration_types": {
+        "ROUNDS": "Rodadas",
+        "INDEFINITE": "Indeterminado",
+        "LUCK_ENDS": "Até a Sorte Encerrar",
+        "CONCENTRATION": "Concentração",
+        "SCENE": "Cena",
+        "END_OF_ROUND": "Fim da Rodada"
+      }
     },
     "actions": {
       "damage": "Dano",

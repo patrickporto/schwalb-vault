@@ -108,7 +108,7 @@
                         </div>
                     {/if}
                     <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono mt-1 border-t border-slate-800/50 pt-2">
-                        <span class="flex items-center gap-1"><Clock size={10} class="text-indigo-400"/> {DURATION_TYPES[eff.duration]} {eff.duration === 'ROUNDS' ? `(${eff.roundsLeft})` : ''}</span>
+                        <span class="flex items-center gap-1"><Clock size={10} class="text-indigo-400"/> {$t(`character.effects.duration_types.${eff.duration}`)} {eff.duration === 'ROUNDS' ? `(${eff.roundsLeft})` : ''}</span>
                         {#if eff.duration === 'LUCK_ENDS' && eff.isActive}
                             <button
                                 onclick={() => checkLuckEnds(eff.id)}

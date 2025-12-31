@@ -213,7 +213,16 @@
             "clean_inactive": "Clean Inactive",
             "new_effect": "New Effect",
             "none": "No active effects.",
-            "luck_ends": "Luck Ends"
+            "luck_ends": "Luck Ends",
+            "active": "Active Effects",
+            "duration_types": {
+              "ROUNDS": "Rounds",
+              "INDEFINITE": "Indefinite",
+              "LUCK_ENDS": "Until Luck Ends",
+              "CONCENTRATION": "Concentration",
+              "SCENE": "Scene",
+              "END_OF_ROUND": "End of Round"
+            }
         },
         "actions": {
             "damage": "Damage",

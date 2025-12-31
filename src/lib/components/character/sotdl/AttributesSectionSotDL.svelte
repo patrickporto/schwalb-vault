@@ -40,7 +40,7 @@
 
             <div class="flex items-center justify-center gap-1.5 mb-1.5">
                 <div class="text-2xl font-black text-white leading-none">
-                    {$sotdlCharacter.attributes[attr.key as keyof typeof $sotdlCharacter.attributes]}
+                    {$sotdlAttributes[attr.key as keyof typeof $sotdlAttributes]}
                 </div>
             </div>
 
