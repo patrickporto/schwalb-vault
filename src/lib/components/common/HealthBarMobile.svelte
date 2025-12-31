@@ -24,11 +24,11 @@
 
 <div class="md:hidden border-t border-white/5 bg-slate-950/20">
     <button
-        class="w-full px-4 py-2 text-left active:bg-white/5 transition-colors"
+        class="w-full px-4 py-4 text-left active:bg-white/5 transition-colors"
         onclick={onClick}
         aria-label={$t('character.header.health_label')}
     >
-        <div class="flex justify-between text-[10px] mb-1">
+        <div class="flex justify-between text-[12px] mb-1">
             <span class="font-black uppercase tracking-widest {isIncapacitated ? 'text-red-500 animate-pulse' : isInjured ? 'text-amber-500' : damage > 0 ? 'text-slate-400' : 'text-emerald-500'}">
                 {#if isIncapacitated}
                     {$t('character.health.incapacitated')}
@@ -38,11 +38,11 @@
                     {$t('character.health.healthy')}
                 {/if}
             </span>
-            <span class="text-slate-300 font-mono font-black">
+            <span class="text-slate-300 font-mono font-black text-[14px]">
                 <span class="{damage === 0 ? 'text-emerald-400' : isIncapacitated ? 'text-red-400' : isInjured ? 'text-amber-400' : 'text-orange-400'}">{damage}</span> / {currentHealth}
             </span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full border border-white/5 relative overflow-hidden shadow-inner">
+        <div class="h-4 w-full bg-slate-950 rounded-full border border-white/5 relative overflow-hidden shadow-inner">
             <div class="absolute top-0 left-0 h-full w-full {damage === 0 ? 'bg-emerald-900/20' : 'bg-slate-900/50'}"></div>
             {#if damagePercentage > 0}
             <div
