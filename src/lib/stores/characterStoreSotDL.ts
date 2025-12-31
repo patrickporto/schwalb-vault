@@ -325,10 +325,21 @@ export const sotdlCharacterActions = {
     }));
   },
   castSpell: (id: string) => {
+    const char = get(sotdlCharacter);
+    const spell = char.spells.find(s => s.id === id);
+    if (!spell) return;
+
     sotdlCharacter.update(c => ({
       ...c,
       spells: c.spells.map(s => s.id === id ? { ...s, castingsUsed: (s.castingsUsed || 0) + 1 } : s)
     }));
+
+    sotdlCharacterActions.addToHistory({
+      source: 'Magia',
+      name: spell.name,
+      description: spell.description,
+      type: 'spell'
+    });
   },
   resetSpellCastings: () => {
     sotdlCharacter.update(c => ({
@@ -356,10 +367,21 @@ export const sotdlCharacterActions = {
     }));
   },
   useTalent: (id: string) => {
+    const char = get(sotdlCharacter);
+    const talent = char.talents.find(t => t.id === id);
+    if (!talent) return;
+
     sotdlCharacter.update(c => ({
       ...c,
       talents: c.talents.map(t => t.id === id && t.uses > 0 ? { ...t, uses: t.uses - 1 } : t)
     }));
+
+    sotdlCharacterActions.addToHistory({
+      source: 'Talento',
+      name: talent.name,
+      description: talent.description,
+      type: 'talent'
+    });
   },
   resetTalentUses: () => {
     sotdlCharacter.update(c => ({
@@ -564,7 +586,8 @@ export const sotdlCharacterActions = {
         name: sourceName,
         description: `Dano de ${sourceName}`,
         formula: `${formula}${modStr}`,
-        total: total
+        total: total,
+        effectsApplied: selectedEffects
       });
     }
   },
