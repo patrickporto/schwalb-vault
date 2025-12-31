@@ -253,7 +253,8 @@ export function joinCampaignRoom(campaignId: string, isGM: boolean = false, char
                     ...c,
                     campaignName: data.name,
                     gmName: data.gmName,
-                    passwordHash: data.passwordHash
+                    passwordHash: data.passwordHash,
+                    system: data.system
                 }));
             }
         });
@@ -391,7 +392,8 @@ export function joinCampaignRoom(campaignId: string, isGM: boolean = false, char
                     sendCampaign({
                         name: current.name,
                         gmName: current.gmName || 'Mestre',
-                        passwordHash: current.passwordHash
+                        passwordHash: current.passwordHash,
+                        system: current.system
                     });
                 }
             }
@@ -429,7 +431,8 @@ export function syncCampaign(campaignId: string, campaignData: any) {
         broadcastCampaign({
             name: campaignData.name,
             gmName: campaignData.gmName || 'Mestre',
-            passwordHash: campaignData.passwordHash
+            passwordHash: campaignData.passwordHash,
+            system: campaignData.system
         });
     }
 }

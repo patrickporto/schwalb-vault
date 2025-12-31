@@ -16,6 +16,7 @@
     import { onMount } from 'svelte';
     import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncCharacter } from '$lib/logic/sync';
     import type { InitiativeStyle } from '$lib/systems';
+    import { DEFAULT_SYSTEM } from '$lib/systems';
     import { sortCombatants } from '$lib/logic/initiative';
 
     let { campaign } = $props<{ campaign: any }>();
@@ -108,8 +109,12 @@
     let players = $derived(allPlayers.filter(p => !p.campaignApproval || p.campaignApproval === 'approved'));
     let pendingPlayers = $derived(allPlayers.filter(p => p.campaignApproval === 'pending'));
 
-    // Available characters to manually add (local characters not already in roster/members)
-    let availableCharacters = $derived($liveCharacters.filter(c => !roster.includes(c.id) && !campaignMembers.some(m => m.id === c.id)));
+    // Available characters to manually add (local characters not already in roster/members AND same system)
+    let availableCharacters = $derived($liveCharacters.filter(c =>
+        !roster.includes(c.id) &&
+        !campaignMembers.some(m => m.id === c.id) &&
+        (c.system || DEFAULT_SYSTEM) === (campaign?.system || DEFAULT_SYSTEM)
+    ));
 
     // Helpers to update Campaign in DB - Using Map directly to avoid stale prop issues
     function updateCampaign(updates: any) {
