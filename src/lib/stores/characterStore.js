@@ -5,8 +5,11 @@ import {
     ITEM_TYPES,
     MOD_TYPES,
     QUALITY,
-    GRIPS,
+  GRIPS
 } from "../../routes/sofww";
+import { Parser } from 'expr-eval';
+
+const parser = new Parser();
 
 // --- STATE ---
 
@@ -132,19 +135,46 @@ export const activeEffects = derived(character, $char => {
     return [...standardEffects, ...talentEffects];
 });
 
+// Helper for evaluation of modifier values (number or expression)
+function evaluateModifierValue(value, character) {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+  // Attempt parse if string
+  const sValue = String(value).trim();
+  if (!isNaN(Number(sValue))) return Number(sValue);
+
+  try {
+    const context = {};
+    if (Array.isArray(character.attributes)) {
+      character.attributes.forEach(attr => {
+        context[attr.key] = attr.value;
+      });
+    }
+    context['level'] = character.level || 0;
+
+    // Support @attribute syntax by removing @
+    const expression = sValue.replace(/@(\w+)/g, '$1');
+    return parser.evaluate(expression, context);
+  } catch (e) {
+    // console.warn("Failed to evaluate modifier:", value, e);
+    return 0;
+  }
+}
+
 // Helper for generic stat calculation (non-store, purely functional logic used inside derived)
-function calculateDerivedStat(key, baseValue, effects) {
+// We need to pass the FULL character object now to access attributes for context
+function calculateDerivedStat(key, baseValue, effects, characterObj) {
     let value = baseValue || 0;
     const allMods = effects.flatMap(e => Array.isArray(e.modifiers) ? e.modifiers : []);
 
     const sets = allMods.filter(m => m.target === key && m.type === MOD_TYPES.SET);
-    if (sets.length > 0) value = sets[sets.length - 1].value;
+  if (sets.length > 0) value = evaluateModifierValue(sets[sets.length - 1].value, characterObj);
 
     const adds = allMods.filter(m => m.target === key && m.type === MOD_TYPES.ADD);
-    adds.forEach(m => { value += m.value; });
+  adds.forEach(m => { value += evaluateModifierValue(m.value, characterObj); });
 
     const mults = allMods.filter(m => m.target === key && m.type === MOD_TYPES.MULT);
-    mults.forEach(m => { value *= m.value; });
+  mults.forEach(m => { value *= evaluateModifierValue(m.value, characterObj); });
 
     return Math.floor(value);
 }
@@ -152,16 +182,19 @@ function calculateDerivedStat(key, baseValue, effects) {
 // Store for checking stats easily in components
 export const derivedStats = derived([character, activeEffects], ([$char, $effects]) => {
     const stats = {};
+  if (Array.isArray($char.attributes)) {
     $char.attributes.forEach(attr => {
-        stats[attr.key] = calculateDerivedStat(attr.key, attr.value, $effects);
-    });
+        // Pass full $char for context
+        stats[attr.key] = calculateDerivedStat(attr.key, attr.value, $effects, $char);
+      });
+  }
     return stats;
 });
 
 // effectiveMaxHealth: currentHealth + active effect modifiers
 // normalHealth is just a reference, currentHealth is the actual cap that can be reduced
-export const effectiveMaxHealth = derived([currentHealth, activeEffects], ([$ch, $effects]) => {
-    return calculateDerivedStat('health', $ch, $effects);
+export const effectiveMaxHealth = derived([character, currentHealth, activeEffects], ([$char, $ch, $effects]) => {
+  return calculateDerivedStat('health', $ch, $effects, $char);
 });
 
 // tempHealth: bonus health from effects (any health above normalHealth)
@@ -186,7 +219,7 @@ export const isInjured = derived([damage, currentHealth, isIncapacitated], ([$dm
 
 export const effectiveSpeed = derived([character, derivedStats, activeEffects], ([$char, $stats, $effects]) => {
     // We can use calculateDerivedStat for base modifiers
-    let s = calculateDerivedStat('speed', $char.speed, $effects);
+  let s = calculateDerivedStat('speed', $char.speed, $effects, $char);
     const affs = $char.afflictions;
     if (affs.includes("Held") || affs.includes("Stunned") || affs.includes("Unconscious") || affs.includes("Incapacitated")) return 0;
     if (affs.includes("Blinded") || affs.includes("Weakened")) s = Math.floor(s / 2);
@@ -212,12 +245,13 @@ export const totalDefense = derived([character, activeEffects], ([$char, $effect
     });
 
     // Explicitly use the helper logic here as we would in the component
-    return calculateDerivedStat('defense', defense + shieldBonus, $effects);
+  return calculateDerivedStat('defense', defense + shieldBonus, $effects, $char);
 });
 
 export const damageBonus = derived([character, activeEffects], ([$char, $effects]) => {
     const allMods = $effects.flatMap(e => Array.isArray(e.modifiers) ? e.modifiers : []);
-    const bonus = allMods.filter(m => m.target === 'damage' && m.type === MOD_TYPES.ADD).reduce((acc, m) => acc + m.value, 0);
+  const bonus = allMods.filter(m => m.target === 'damage' && m.type === MOD_TYPES.ADD)
+    .reduce((acc, m) => acc + evaluateModifierValue(m.value, $char), 0);
     return ($char.bonusDamage || 0) + bonus;
 });
 
@@ -410,10 +444,11 @@ export const characterActions = {
             // Calculate Boons/Banes from Effects
             // Target: 'boons' -> Value is added to modifier.
             // Positive value = Boons, Negative value = Banes (handled by modifier logic below)
+          // Positive value = Boons, Negative value = Banes (handled by modifier logic below)
             const effectBoons = selectedEffects
                 .flatMap(e => Array.isArray(e.modifiers) ? e.modifiers : [])
                 .filter(m => m.target === 'boons' && m.type === MOD_TYPES.ADD)
-                .reduce((acc, m) => acc + m.value, 0);
+              .reduce((acc, m) => acc + evaluateModifierValue(m.value, char), 0);
 
             modifier += effectBoons;
 
@@ -490,11 +525,12 @@ export const characterActions = {
                 charBonus -= 1;
             }
 
+          // Effect Bonus
             // Effect Bonus
             const effectBonus = selectedEffects
                 .flatMap(e => Array.isArray(e.modifiers) ? e.modifiers : [])
                 .filter(m => m.target === 'damage' && m.type === MOD_TYPES.ADD)
-                .reduce((acc, m) => acc + m.value, 0);
+              .reduce((acc, m) => acc + evaluateModifierValue(m.value, char), 0);
 
             const totalBonus = charBonus + effectBonus;
             const totalDice = Math.max(0, baseDice + totalBonus + modifier);

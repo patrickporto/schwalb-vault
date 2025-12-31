@@ -4,6 +4,7 @@
     import { DURATION_TYPES, MOD_TYPES, MOD_TARGETS, MAGIC_TRADITIONS } from '../../../../../routes/sofww';
     import { character, characterActions, modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
+    import { untrack } from 'svelte';
 
     import { uuidv7 } from 'uuidv7';
 
@@ -12,16 +13,19 @@
     let formEffectData = $state<any>(null);
 
     // Initialize state reactively when data changes
+    // Use untrack to prevent formEffectData mutations from re-triggering this effect
     $effect(() => {
         if (isOpen) {
-            if (data && data.parentType) {
-                formEffectData = data.parentData.effect ? { ...data.parentData.effect } : { name: '', description: '', isActive: true, duration: 'ROUNDS', roundsLeft: 1, initialRounds: 1, modifiers: [] };
-            } else if (data) {
-                formEffectData = { ...data };
-                if (!Array.isArray(formEffectData.modifiers)) formEffectData.modifiers = [];
-            } else {
-                formEffectData = { name: '', description: '', isActive: true, duration: 'ROUNDS', roundsLeft: 1, initialRounds: 1, modifiers: [] };
-            }
+            untrack(() => {
+                if (data && data.parentType) {
+                    formEffectData = data.parentData.effect ? { ...data.parentData.effect } : { name: '', description: '', isActive: true, duration: 'ROUNDS', roundsLeft: 1, initialRounds: 1, modifiers: [] };
+                } else if (data) {
+                    formEffectData = { ...data };
+                    if (!Array.isArray(formEffectData.modifiers)) formEffectData.modifiers = [];
+                } else {
+                    formEffectData = { name: '', description: '', isActive: true, duration: 'ROUNDS', roundsLeft: 1, initialRounds: 1, modifiers: [] };
+                }
+            });
         }
     });
 
@@ -42,9 +46,9 @@
             return alert($t('character.modals.effect_name_required'));
         }
 
-        const effectWithInitial = { 
-            ...formEffectData, 
-            initialRounds: formEffectData.duration === 'ROUNDS' ? formEffectData.roundsLeft : 0 
+        const effectWithInitial = {
+            ...formEffectData,
+            initialRounds: formEffectData.duration === 'ROUNDS' ? formEffectData.roundsLeft : 0
         };
 
         if (data?.parentType) {
@@ -103,7 +107,7 @@
                             <option value={MOD_TYPES.SET}>Set (=)</option>
                             <option value={MOD_TYPES.MULT}>Mult (x)</option>
                         </select>
-                        <input type="number" step={mod.type === MOD_TYPES.MULT ? "0.1" : "1"} class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/4 text-center" bind:value={mod.value} />
+                        <input type="text" class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/4 text-center" bind:value={mod.value} />
                         <button onclick={() => removeModifier(idx)} class="text-slate-600 hover:text-red-400 p-1" aria-label={$t('character.modals.remove_modifier')}><Trash2 size={12}/></button>
                     </div>
                 {/each}
@@ -112,7 +116,7 @@
         {#if !data?.parentType}
             <div>
                 <label class="text-xs font-bold text-slate-400 uppercase">
-                    {$t('character.modals.description')} 
+                    {$t('character.modals.description')}
                     <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.description}></textarea>
                 </label>
             </div>

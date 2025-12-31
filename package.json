@@ -43,6 +43,7 @@
     "@types/spark-md5": "^3.0.5",
     "bip39": "^3.1.0",
     "buffer": "^6.0.3",
+    "expr-eval": "^2.0.2",
     "lucide-svelte": "^0.562.0",
     "spark-md5": "^3.0.2",
     "svelte-easy-crop": "^5.0.0",
