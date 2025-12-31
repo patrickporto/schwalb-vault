@@ -78,15 +78,19 @@
     import SpellsTabSotDL from '$lib/components/character/sotdl/SpellsTabSotDL.svelte';
     import SpellEditorSotDL from '$lib/components/character/sotdl/SpellEditorSotDL.svelte';
     import GrimoireSelectionSotDL from '$lib/components/character/sotdl/GrimoireSelectionSotDL.svelte';
+    import TalentsTabSotDL from '$lib/components/character/sotdl/TalentsTabSotDL.svelte';
+    import TalentEditorSotDL from '$lib/components/character/sotdl/TalentEditorSotDL.svelte';
+    import TalentSelectionSotDL from '$lib/components/character/sotdl/TalentSelectionSotDL.svelte';
+    import CharacterInfoEditorSotDL from '$lib/components/character/sotdl/CharacterInfoEditorSotDL.svelte';
 
 
     let loaded = $state(false);
     let notFound = $state(false);
 
     // System check
-    let isSotDL = $derived($character.system === 'sofdl');
     let currentId = $state<string | null>(null);
     let currentSystem = $state<string>('sofww');
+    let isSotDL = $derived(currentSystem === 'sofdl');
 
     // Auto-save and Auto-sync effect
     $effect(() => {
@@ -295,6 +299,8 @@
                            <NotesTabSotDL />
                         {:else if $activeTab === 'magias'}
                            <SpellsTabSotDL />
+                        {:else if $activeTab === 'talentos'}
+                           <TalentsTabSotDL />
                         {:else}
                            <div class="p-8 text-center text-slate-500 italic">
                                {$t('common.labels.coming_soon')}
@@ -436,10 +442,13 @@
     <StatEditor />
     <HealthDamageEditor />
     <CharacterInfoEditor />
+    <CharacterInfoEditorSotDL />
     <ConfirmationModalContent />
     <GrimoireSelection />
     <GrimoireSelectionSotDL />
     <TalentSelection />
+    <TalentSelectionSotDL />
+    <TalentEditorSotDL />
     <AttackOptionsContent />
     <AfflictionManager />
     <RestConfirmationContent />

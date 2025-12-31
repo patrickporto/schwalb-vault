@@ -779,6 +779,24 @@
       "concentration": "Concentração",
       "maintain_concentration": "Manter"
     },
+    "talents": {
+      "title": "Talentos",
+      "subtitle": "Habilidades especiais do personagem",
+      "editor_title": "Editor de Talento",
+      "origin": "Origem",
+      "origins": {
+        "ancestry": "Ancestralidade",
+        "novice": "Novato",
+        "expert": "Especialista",
+        "master": "Mestre"
+      },
+      "uses": "Usos",
+      "use": "Usar",
+      "new_talent": "Novo Talento",
+      "empty": "Nenhum talento aprendido",
+      "add_first": "Adicionar primeiro talento",
+      "reset_uses": "Restaurar Usos"
+    },
     "afflictions": {
       "asleep": {
         "name": "Adormecido",

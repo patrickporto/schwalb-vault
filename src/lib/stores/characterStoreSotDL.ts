@@ -19,12 +19,30 @@ export interface SotDLSpell {
   effect?: any;
 }
 
+export type TalentOrigin = 'ancestry' | 'novice' | 'expert' | 'master';
+
+export interface SotDLTalent {
+  id: string;
+  name: string;
+  description: string;
+  origin: TalentOrigin;
+  isPassive: boolean;
+  uses: number;
+  maxUses: number;
+  effect?: any;
+}
+
 export interface SotDLCharacter {
     id: string;
     system: 'sofdl';
     name: string;
     level: number;
     ancestry: string;
+  paths: {
+    novice: string;
+    expert: string;
+    master: string;
+  };
   imageUrl?: string;
 
     // Attributes
@@ -58,7 +76,7 @@ export interface SotDLCharacter {
   afflictions: string[];
 
     // Collections
-    talents: any[];
+  talents: SotDLTalent[];
   spells: SotDLSpell[];
     equipment: any[];
     effects: any[];
@@ -78,9 +96,14 @@ export interface SotDLCharacter {
 export const defaultSotDLCharacter: SotDLCharacter = {
     id: '',
     system: 'sofdl',
-    name: 'Novo Personagem',
-    level: 0,
+  name: 'Novo Personagem',
     ancestry: 'Humano',
+  level: 0,
+  paths: {
+    novice: '',
+    expert: '',
+    master: ''
+  },
   imageUrl: '',
     attributes: {
         strength: 10,
@@ -274,6 +297,37 @@ export const sotdlCharacterActions = {
       spells: c.spells.map(s => ({ ...s, castingsUsed: 0 }))
     }));
   },
+  // Talent Actions
+  addTalent: (talent: SotDLTalent) => {
+    sotdlCharacter.update(c => ({
+      ...c,
+      talents: [...c.talents, { ...talent, id: talent.id || uuidv7() }]
+    }));
+  },
+  updateTalent: (talent: SotDLTalent) => {
+    sotdlCharacter.update(c => ({
+      ...c,
+      talents: c.talents.map(t => t.id === talent.id ? talent : t)
+    }));
+  },
+  deleteTalent: (id: string) => {
+    sotdlCharacter.update(c => ({
+      ...c,
+      talents: c.talents.filter(t => t.id !== id)
+    }));
+  },
+  useTalent: (id: string) => {
+    sotdlCharacter.update(c => ({
+      ...c,
+      talents: c.talents.map(t => t.id === id && t.uses > 0 ? { ...t, uses: t.uses - 1 } : t)
+    }));
+  },
+  resetTalentUses: () => {
+    sotdlCharacter.update(c => ({
+      ...c,
+      talents: c.talents.map(t => ({ ...t, uses: t.maxUses }))
+    }));
+  },
   // Senses Actions
   addSense: (sense: string) => {
     sotdlCharacter.update(c => ({
@@ -344,8 +398,8 @@ export const sotdlCharacterActions = {
     const char = get(sotdlCharacter);
     const mods = get(sotdlModifiers);
 
-    const isDamage = data.type === 'weapon_damage' || data.type === 'spell_damage';
-    const sourceName = data.source?.name || data.key || 'Atributo';
+    const isDamage = data?.type === 'weapon_damage' || data?.type === 'spell_damage';
+    const sourceName = data?.source?.name || data?.key || 'Atributo';
 
     if (!isDamage) {
       const d20 = Math.floor(Math.random() * 20) + 1;

@@ -783,6 +783,24 @@
           "concentration": "Concentration",
           "maintain_concentration": "Maintain"
         },
+        "talents": {
+          "title": "Talents",
+          "subtitle": "Character special abilities",
+          "editor_title": "Talent Editor",
+          "origin": "Origin",
+          "origins": {
+            "ancestry": "Ancestry",
+            "novice": "Novice",
+            "expert": "Expert",
+            "master": "Master"
+          },
+          "uses": "Uses",
+          "use": "Use",
+          "new_talent": "New Talent",
+          "empty": "No talents learned",
+          "add_first": "Add first talent",
+          "reset_uses": "Reset Uses"
+        },
         "afflictions": {
             "asleep": {
                 "name": "Asleep",

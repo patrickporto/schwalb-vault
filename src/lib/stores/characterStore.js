@@ -397,8 +397,8 @@ export const characterActions = {
         const isAttack = data.type === 'weapon_attack';
         const isLuck = data.type === 'luck';
         const isDamage = data.type === 'weapon_damage';
-        const item = data.source;
-        const sourceName = item.name || 'Ação';
+      const item = data?.source;
+      const sourceName = item?.name || 'Ação';
         const hasTrait = (it, trait) => it.traits && it.traits.toLowerCase().includes(trait.toLowerCase());
 
         if (!isDamage) {

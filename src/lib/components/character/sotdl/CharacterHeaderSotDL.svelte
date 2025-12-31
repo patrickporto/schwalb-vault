@@ -75,7 +75,7 @@
                         </div>
                         <div>
                             <h1 class="text-base font-black text-white leading-tight truncate max-w-[120px]">{$sotdlCharacter.name}</h1>
-                            <p class="text-xs text-slate-500 font-black uppercase tracking-widest">Nv {$sotdlCharacter.level} • SotDL</p>
+                            <p class="text-xs text-slate-500 font-black uppercase tracking-widest">{$t('common.labels.level')} {$sotdlCharacter.level}</p>
                         </div>
                     </button>
 
@@ -92,7 +92,7 @@
                                 <Camera size={16} class="text-indigo-400"/> {$t('character.header.change_photo')}
                             </button>
                             <button
-                                onclick={() => { openModal('character_info'); isMenuOpen = false; }}
+                                onclick={() => { openModal('character_info_sotdl'); isMenuOpen = false; }}
                                 class="w-full text-left px-4 py-3 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-700 flex items-center gap-3 transition-colors"
                             >
                                 <UserCog size={16} class="text-slate-400"/> {$t('character.header.edit_info')}
@@ -140,7 +140,7 @@
             <!-- Right: Actions -->
             <div class="flex items-center gap-2">
                  <button
-                    onclick={() => openModal('character_info')}
+                    onclick={() => openModal('character_info_sotdl')}
                     class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full"
                     title={$t('character.header.settings')}
                 >

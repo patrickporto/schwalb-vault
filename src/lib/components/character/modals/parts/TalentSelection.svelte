@@ -5,7 +5,7 @@
     import Modal from '$lib/components/common/Modal.svelte';
     import { TALENT_SOURCES, DURATION_TYPES } from '../../../../../routes/sofww';
 
-    let isOpen = $derived($modalState.isOpen && $modalState.type === 'select_talent');
+    let isOpen = $derived($modalState.isOpen && $modalState.type === 'select_talent' && ($modalState as any).system !== 'sofdl');
 
     function onClose() {
         modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }));
@@ -37,7 +37,7 @@
                         </h4>
                         <div class="grid grid-cols-1 gap-3">
                             {#each groupedTalents[source] as talent}
-                                <button 
+                                <button
                                     onclick={() => selectTalent(talent)}
                                     class="w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800 hover:border-indigo-500/50 transition-all flex justify-between items-center group {(!talent.isPassive && talent.uses <= 0) ? 'opacity-40 grayscale pointer-events-none' : ''}"
                                 >
@@ -45,7 +45,7 @@
                                         <h4 class="font-black text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight mb-1">{talent.name}</h4>
                                         <p class="text-xs text-slate-500 line-clamp-1">{talent.description}</p>
                                     </div>
-                                    
+
                                     <div class="text-right shrink-0 min-w-[60px] ml-4 pt-1">
                                         {#if talent.activityType === 'Passive' || talent.isPassive}
                                             <span class="text-[10px] text-slate-500 uppercase font-black tracking-widest">{$t('character.modals.passive')}</span>
