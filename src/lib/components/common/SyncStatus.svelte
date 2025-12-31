@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { syncStatus, lastSyncTime } from '$lib/stores/syncStatus';
+    import { syncStatus, lastSyncTime, authError } from '$lib/stores/syncStatus';
     import { syncFromCloud, googleSession, signIn } from '$lib/logic/googleDrive';
-    import { Cloud, RefreshCw, CheckCircle, AlertCircle, CloudOff } from 'lucide-svelte';
+    import { Cloud, RefreshCw, CheckCircle, AlertCircle, CloudOff, ShieldAlert } from 'lucide-svelte';
     import { fade } from 'svelte/transition';
     import { t } from 'svelte-i18n';
-    
+
     let showTooltip = $state(false);
 
     // Format time for the current locale
@@ -14,7 +14,7 @@
 </script>
 
 <div class="relative flex items-center">
-    <button 
+    <button
         onclick={() => !$googleSession.signedIn ? signIn() : syncFromCloud()}
         onmouseenter={() => showTooltip = true}
         onmouseleave={() => showTooltip = false}
@@ -23,7 +23,9 @@
         class="flex items-center justify-center p-2 rounded-xl hover:bg-slate-800/50 transition-all active:scale-95 group focus:outline-none"
         aria-label={$t('common.status.label')}
     >
-        {#if !$googleSession.signedIn}
+        {#if $authError}
+            <ShieldAlert size={20} class="text-amber-500" />
+        {:else if !$googleSession.signedIn}
             <CloudOff size={20} class="text-slate-600 group-hover:text-slate-400" />
         {:else if $syncStatus === 'syncing'}
             <RefreshCw size={20} class="animate-spin text-indigo-400" />
@@ -38,12 +40,18 @@
 
     <!-- Tooltip -->
     {#if showTooltip}
-        <div 
+        <div
             transition:fade={{ duration: 150 }}
             class="absolute top-full right-0 mt-3 whitespace-nowrap bg-slate-900/95 backdrop-blur-md text-white text-[10px] font-bold py-2 px-3 rounded-lg shadow-2xl border border-slate-700/50 z-[100] pointer-events-none min-w-[120px]"
         >
             <div class="flex items-center gap-2">
-                {#if !$googleSession.signedIn}
+                {#if $authError === 'init_failed'}
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span class="text-amber-400">Auth: Init Failed</span>
+                {:else if $authError === 'not_initialized'}
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span class="text-amber-400">Auth: Not Ready</span>
+                {:else if !$googleSession.signedIn}
                     <span class="w-2 h-2 rounded-full bg-slate-600"></span>
                     <span>{$t('common.status.offline')}</span>
                 {:else if $syncStatus === 'syncing'}
@@ -60,7 +68,7 @@
                     <span>{$t('common.status.synced')}</span>
                 {/if}
             </div>
-            
+
             {#if $googleSession.signedIn && $lastSyncTime}
                 <div class="mt-1.5 pt-1.5 border-t border-slate-800 text-[9px] text-slate-400 opacity-80 font-medium flex justify-between items-center gap-4">
                     <span>{$t('common.status.last_sync')}</span>

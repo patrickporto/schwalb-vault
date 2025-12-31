@@ -9,7 +9,7 @@ const API_KEY = ''; // Optional if using OAuth2 only for personal data, but usua
 import { charactersMap, campaignsMap, enemiesMap, encountersMap, imagesMap, deletedIdsMap } from '$lib/db';
 import { appSettings } from '$lib/stores/characterStore';
 import { liveCharacters, liveCampaigns, liveEnemies, liveEncounters } from '$lib/stores/live';
-import { syncStatus, lastSyncTime } from '$lib/stores/syncStatus';
+import { syncStatus, lastSyncTime, authError } from '$lib/stores/syncStatus';
 
 // Scopes: App Data for backup, User Info for avatar/name
 const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
@@ -183,9 +183,10 @@ export async function initializeGoogleAuth() {
         console.log('Google Auth Initialized');
     } catch (err) {
         console.error('Failed to initialize Google Auth:', err);
+      // Track error for UI display
+      authError.set('init_failed');
         // Force init state so button shows (but might fail)
-        googleSession.update(s => ({ ...s, isInited: true }));
-        alert('Falha ao inicializar Google Auth. Verifique sua conexão/Console.');
+      googleSession.update(s => ({ ...s, isInited: true }));
     }
 }
 
@@ -256,11 +257,14 @@ function waitForScripts() {
 
 export function signIn() {
     if (tokenClient) {
+      // Clear any previous error
+      authError.set(null);
         // Request access token
         tokenClient.requestAccessToken();
     } else {
         console.error('Google Auth not initialized');
-        alert('Google Auth ainda não inicializou. Tente novamente em alguns segundos.');
+      authError.set('not_initialized');
+      syncStatus.set('error');
     }
 }
 
