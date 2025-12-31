@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { Plus, Trash2 } from 'lucide-svelte';
-    import { DURATION_TYPES, MOD_TYPES, MOD_TARGETS } from '$lib/constants';
+    import { DURATION_TYPES, MOD_TYPES } from '$lib/constants';
     import { sotdlCharacter, sotdlCharacterActions } from '$lib/stores/characterStoreSotDL';
     import { modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
@@ -12,18 +12,10 @@
     let data = $derived($modalState.data);
     let formEffectData = $state<any>(null);
 
-    const SOTDL_MOD_TARGETS = {
-        strength: 'Força',
-        agility: 'Agilidade',
-        intellect: 'Intelecto',
-        will: 'Vontade',
-        perception: 'Percepção',
-        defense: 'Defesa',
-        speed: 'Deslocamento',
-        health: 'Vida',
-        damage: 'Dano (Bônus)',
-        healing_rate: 'Taxa de Cura'
-    };
+    const SOTDL_MOD_TARGETS = [
+        'strength', 'agility', 'intellect', 'will', 'perception',
+        'defense', 'speed', 'health', 'damage', 'healing_rate', 'power', 'boons'
+    ];
 
     // Initialize state reactively when data changes
     $effect(() => {
@@ -116,12 +108,14 @@
                 {#each formEffectData.modifiers as mod, idx}
                     <div class="flex gap-1 items-center animate-in fade-in slide-in-from-left-1 duration-200">
                         <select class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/3" bind:value={mod.target}>
-                            {#each Object.entries(SOTDL_MOD_TARGETS) as [k,v]}<option value={k}>{v}</option>{/each}
+                            {#each SOTDL_MOD_TARGETS as target}
+                                <option value={target}>{$t(`modals.mod_targets.${target}`)}</option>
+                            {/each}
                         </select>
                         <select class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/4" bind:value={mod.type}>
-                            <option value={MOD_TYPES.ADD}>Add (+/-)</option>
-                            <option value={MOD_TYPES.SET}>Set (=)</option>
-                            <option value={MOD_TYPES.MULT}>Mult (x)</option>
+                            <option value={MOD_TYPES.ADD}>{$t('modals.mod_types.add')}</option>
+                            <option value={MOD_TYPES.SET}>{$t('modals.mod_types.set')}</option>
+                            <option value={MOD_TYPES.MULT}>{$t('modals.mod_types.mult')}</option>
                         </select>
                         <input type="text" class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/4 text-center" bind:value={mod.value} />
                         <button onclick={() => removeModifier(idx)} class="text-slate-600 hover:text-red-400 p-1" aria-label={$t('character.modals.remove_modifier')}><Trash2 size={12}/></button>

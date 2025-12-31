@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
-    import { sotdlCharacter, sotdlTotalHealingRate } from '$lib/stores/characterStoreSotDL';
     import { Shield, Zap, Activity, Eye, HeartPulse, Sparkles, Maximize2 } from 'lucide-svelte';
+    import { sotdlCharacter, sotdlTotalHealingRate, sotdlDerivedStats } from '$lib/stores/characterStoreSotDL';
     import { modalState } from '$lib/stores/characterStore';
 
     function openModal(type: string, data: any) {
@@ -20,7 +20,7 @@
                 <Shield size={12}/> {$t('character.vitals.defense')}
             </div>
             <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-black text-white leading-none">{$sotdlCharacter.defense}</span>
+                <span class="text-3xl font-black text-white leading-none">{$sotdlDerivedStats.defense}</span>
             </div>
         </button>
 
@@ -32,7 +32,7 @@
                 <Zap size={12}/> {$t('character.vitals.speed')}
             </div>
             <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-black text-white leading-none">{$sotdlCharacter.speed}</span>
+                <span class="text-3xl font-black text-white leading-none">{$sotdlDerivedStats.speed}</span>
             </div>
         </button>
     </div>
@@ -48,7 +48,7 @@
                 <Eye size={12}/> {$t('sofdl.attributes.perception')}
             </div>
             <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-black text-cyan-400 leading-none">{$sotdlCharacter.perception}</span>
+                <span class="text-3xl font-black text-cyan-400 leading-none">{$sotdlDerivedStats.perception}</span>
             </div>
         </button>
     </div>
@@ -62,7 +62,7 @@
             <Sparkles size={14} class="text-yellow-500"/> {$t('sofdl.attributes.power')}
         </span>
         <div class="flex items-center gap-3">
-            <span class="text-3xl font-black text-white">{ $sotdlCharacter.power }</span>
+            <span class="text-3xl font-black text-white">{$sotdlDerivedStats.power}</span>
         </div>
     </button>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
-    import { sotdlCharacter, sotdlModifiers } from '$lib/stores/characterStoreSotDL';
+    import { sotdlCharacter, sotdlModifiers, sotdlAttributes } from '$lib/stores/characterStoreSotDL';
     import { modalState } from '$lib/stores/characterStore';
     import { Edit } from 'lucide-svelte';
 

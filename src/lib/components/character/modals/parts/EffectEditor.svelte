@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { Plus, Trash2 } from 'lucide-svelte';
-    import { DURATION_TYPES, MOD_TYPES, MOD_TARGETS, MAGIC_TRADITIONS } from '../../../../../routes/sofww';
+    import { DURATION_TYPES, MOD_TYPES } from '../../../../../routes/sofww';
     import { character, characterActions, modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
     import { untrack } from 'svelte';
@@ -11,6 +11,10 @@
     let isOpen = $derived($modalState.isOpen && $modalState.type === 'effect' && $modalState.system !== 'sofdl');
     let data = $derived($modalState.data);
     let formEffectData = $state<any>(null);
+
+    const WW_MOD_TARGETS = [
+        'str', 'agi', 'int', 'wil', 'defense', 'speed', 'health', 'damage', 'boons'
+    ];
 
     // Initialize state reactively when data changes
     // Use untrack to prevent formEffectData mutations from re-triggering this effect
@@ -100,12 +104,14 @@
                 {#each formEffectData.modifiers as mod, idx}
                     <div class="flex gap-1 items-center animate-in fade-in slide-in-from-left-1 duration-200">
                         <select class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/3" bind:value={mod.target}>
-                            {#each Object.entries(MOD_TARGETS) as [k,v]}<option value={k}>{v}</option>{/each}
+                            {#each WW_MOD_TARGETS as target}
+                                <option value={target}>{$t(`modals.mod_targets.${target}`)}</option>
+                            {/each}
                         </select>
                         <select class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/4" bind:value={mod.type}>
-                            <option value={MOD_TYPES.ADD}>Add (+/-)</option>
-                            <option value={MOD_TYPES.SET}>Set (=)</option>
-                            <option value={MOD_TYPES.MULT}>Mult (x)</option>
+                            <option value={MOD_TYPES.ADD}>{$t('modals.mod_types.add')}</option>
+                            <option value={MOD_TYPES.SET}>{$t('modals.mod_types.set')}</option>
+                            <option value={MOD_TYPES.MULT}>{$t('modals.mod_types.mult')}</option>
                         </select>
                         <input type="text" class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/4 text-center" bind:value={mod.value} />
                         <button onclick={() => removeModifier(idx)} class="text-slate-600 hover:text-red-400 p-1" aria-label={$t('character.modals.remove_modifier')}><Trash2 size={12}/></button>
@@ -115,9 +121,9 @@
         </div>
         {#if !data?.parentType}
             <div>
-                <label class="text-xs font-bold text-slate-400 uppercase">
+                <label for="effectDesc" class="text-xs font-bold text-slate-400 uppercase">
                     {$t('character.modals.description')}
-                    <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.description}></textarea>
+                    <textarea id="effectDesc" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.description}></textarea>
                 </label>
             </div>
         {/if}

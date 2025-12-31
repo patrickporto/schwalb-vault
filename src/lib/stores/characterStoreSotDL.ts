@@ -186,19 +186,64 @@ export const defaultSotDLCharacter: SotDLCharacter = {
 // Store Definition
 export const sotdlCharacter = writable<SotDLCharacter>(JSON.parse(JSON.stringify(defaultSotDLCharacter)));
 
-// Derived Stats
-export const sotdlAttributes = derived(sotdlCharacter, $c => $c.attributes);
-export const sotdlModifiers = derived(sotdlAttributes, $a => ({
-  strength: $a.strength - 10,
-  agility: $a.agility - 10,
-  intellect: $a.intellect - 10,
-  will: $a.will - 10
+export const sotdlActiveEffects = derived(sotdlCharacter, $c => $c.effects.filter(e => e.isActive));
+
+export const sotdlDerivedStats = derived([sotdlCharacter, sotdlActiveEffects], ([$c, $effects]) => {
+  const stats = {
+    strength: $c.attributes.strength,
+    agility: $c.attributes.agility,
+    intellect: $c.attributes.intellect,
+    will: $c.attributes.will,
+    perception: $c.perception,
+    defense: $c.defense,
+    health: $c.health,
+    speed: $c.speed,
+    healingRate: $c.healingRate,
+    power: $c.power,
+    boons: 0
+  };
+
+  $effects.forEach(eff => {
+    if (!eff.modifiers) return;
+    eff.modifiers.forEach((mod: any) => {
+      const val = evaluateModifierValueSotDL(mod.value, $c);
+      switch (mod.target) {
+        case 'strength': stats.strength += val; break;
+        case 'agility': stats.agility += val; break;
+        case 'intellect': stats.intellect += val; break;
+        case 'will': stats.will += val; break;
+        case 'perception': stats.perception += val; break;
+        case 'defense': stats.defense += val; break;
+        case 'health': stats.health += val; break;
+        case 'speed': stats.speed += val; break;
+        case 'healingRate':
+        case 'healing_rate': stats.healingRate += val; break;
+        case 'power': stats.power += val; break;
+        case 'boons': stats.boons += val; break;
+      }
+    });
+  });
+
+  return stats;
+});
+
+export const sotdlAttributes = derived(sotdlDerivedStats, $s => ({
+  strength: $s.strength,
+  agility: $s.agility,
+  intellect: $s.intellect,
+  will: $s.will
 }));
 
-export const sotdlCurrentHealth = derived(sotdlCharacter, $c => $c.health - $c.damage);
-export const sotdlIsInjured = derived(sotdlCharacter, $c => $c.damage >= $c.health / 2);
-export const sotdlIsIncapacitated = derived(sotdlCharacter, $c => $c.damage >= $c.health);
-export const sotdlActiveEffects = derived(sotdlCharacter, $c => $c.effects.filter(e => e.isActive));
+export const sotdlModifiers = derived(sotdlDerivedStats, $s => ({
+  strength: $s.strength - 10,
+  agility: $s.agility - 10,
+  intellect: $s.intellect - 10,
+  will: $s.will - 10
+}));
+
+export const sotdlCurrentHealth = derived([sotdlCharacter, sotdlDerivedStats], ([$c, $s]) => $s.health - $c.damage);
+export const sotdlIsInjured = derived([sotdlCharacter, sotdlDerivedStats], ([$c, $s]) => $c.damage >= $s.health / 2);
+export const sotdlIsIncapacitated = derived([sotdlCharacter, sotdlDerivedStats], ([$c, $s]) => $c.damage >= $s.health);
 
 export function evaluateModifierValueSotDL(value: number | string, characterObj: SotDLCharacter): number {
   if (typeof value === 'number') return value;
@@ -232,20 +277,7 @@ export function evaluateModifierValueSotDL(value: number | string, characterObj:
   }
 }
 
-export const sotdlTotalHealingRate = derived([sotdlCharacter, sotdlActiveEffects], ([$c, $effects]) => {
-  let base = $c.healingRate;
-  // Apply additions
-  $effects.forEach(e => {
-    if (e.modifiers) {
-      e.modifiers.forEach((m: any) => {
-        if (m.target === 'healing_rate' && m.type === 'ADD') {
-          base += evaluateModifierValueSotDL(m.value, $c);
-        }
-      });
-    }
-  });
-  return Math.max(0, base);
-});
+export const sotdlTotalHealingRate = derived(sotdlDerivedStats, $s => Math.max(0, $s.healingRate));
 
 export const sotdlCharacterActions = {
   set: (data: Partial<SotDLCharacter>) => {
@@ -528,6 +560,7 @@ export const sotdlCharacterActions = {
   finalizeRoll: (data: any, modifier: number, selectedEffects: string[] = []) => {
     const char = get(sotdlCharacter);
     const mods = get(sotdlModifiers);
+    const derivedStats = get(sotdlDerivedStats);
 
     const isDamage = data?.type === 'weapon_damage' || data?.type === 'spell_damage';
     const t = get(_);
@@ -547,15 +580,16 @@ export const sotdlCharacterActions = {
       }
 
       // Boon/Bane Logic (1d6 highest)
+      let netModifier = modifier + (derivedStats.boons || 0);
       let boonBaneTotal = 0;
       let boonBaneStr = '';
-      if (modifier !== 0) {
-        const numDice = Math.abs(modifier);
+      if (netModifier !== 0) {
+        const numDice = Math.abs(netModifier);
         let rolls = [];
         for (let i = 0; i < numDice; i++) rolls.push(Math.floor(Math.random() * 6) + 1);
         const highest = Math.max(...rolls);
 
-        if (modifier > 0) {
+        if (netModifier > 0) {
           boonBaneTotal = highest;
           boonBaneStr = ` + ${highest} [${t('sofdl.rolls.boon')}]`;
         } else {

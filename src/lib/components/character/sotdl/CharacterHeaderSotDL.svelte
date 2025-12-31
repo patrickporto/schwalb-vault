@@ -1,19 +1,20 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
-    import { sotdlCharacter, sotdlCurrentHealth, sotdlIsInjured, sotdlIsIncapacitated } from '$lib/stores/characterStoreSotDL';
-    import { ChevronLeft, LayoutDashboard, Brain, Skull, History, Moon, Camera, UserCog, Settings, Share2 } from 'lucide-svelte';
+    import { sotdlCharacter, sotdlDerivedStats } from '$lib/stores/characterStoreSotDL';
+    import { ChevronLeft, LayoutDashboard, Brain, Skull, History, Moon, Camera, UserCog } from 'lucide-svelte';
     import { saveImage } from '$lib/logic/image';
     import ImageCropperModal from '$lib/components/common/ImageCropperModal.svelte';
     import { goto } from '$app/navigation';
     import { resolve } from '$app/paths';
     import Avatar from '$lib/components/common/Avatar.svelte';
-    import { fade } from 'svelte/transition';
 
     import { modalState, isHistoryOpen, hasUnreadRolls } from '$lib/stores/characterStore';
     import HealthBarDesktop from '$lib/components/common/HealthBarDesktop.svelte';
     import HealthBarMobile from '$lib/components/common/HealthBarMobile.svelte';
 
-    let healthPercentage = $derived(($sotdlCharacter.health > 0) ? (($sotdlCharacter.damage / $sotdlCharacter.health) * 100) : 0);
+    let healthPercentage = $derived(($sotdlDerivedStats.health > 0) ? (($sotdlCharacter.damage / $sotdlDerivedStats.health) * 100) : 0);
+    let sotdlIsInjured = $derived($sotdlCharacter.damage >= $sotdlDerivedStats.health / 2);
+    let sotdlIsIncapacitated = $derived($sotdlCharacter.damage >= $sotdlDerivedStats.health);
 
     let isMenuOpen = $state(false);
     let isCropperOpen = $state(false);
@@ -126,11 +127,11 @@
 
                 <!-- Health Bar (WW Style - Growing Damage) -->
                  <HealthBarDesktop
-                    currentHealth={$sotdlCharacter.health}
+                    currentHealth={$sotdlDerivedStats.health}
                     damage={$sotdlCharacter.damage}
                     tempHealth={0}
-                    isInjured={$sotdlIsInjured}
-                    isIncapacitated={$sotdlIsIncapacitated}
+                    isInjured={sotdlIsInjured}
+                    isIncapacitated={sotdlIsIncapacitated}
                     damagePercentage={healthPercentage}
                     onClick={() => openModal('health_damage')}
                  />
@@ -168,11 +169,11 @@
 
       <!-- Health Bar -->
       <HealthBarMobile
-          currentHealth={$sotdlCharacter.health}
+          currentHealth={$sotdlDerivedStats.health}
           damage={$sotdlCharacter.damage}
           tempHealth={0}
-          isInjured={$sotdlIsInjured}
-          isIncapacitated={$sotdlIsIncapacitated}
+          isInjured={sotdlIsInjured}
+          isIncapacitated={sotdlIsIncapacitated}
           damagePercentage={healthPercentage}
           onClick={() => openModal('health_damage')}
       />
