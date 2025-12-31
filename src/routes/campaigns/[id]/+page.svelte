@@ -118,7 +118,7 @@
 
     <!-- Dice Roll Popover Menu -->
     {#if isQuickRollMenuOpen}
-        <div class="fixed bottom-24 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 z-[60] flex flex-col items-center gap-2">
+        <div class="fixed bottom-24 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 z-[60] flex flex-col items-center gap-2">
             <div class="bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-2xl p-2 flex items-center gap-2 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
                 <button onclick={() => { startQuickRoll(20); isQuickRollMenuOpen = false; }} class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-indigo-500/20">
                     <span class="text-[10px] opacity-70">d20</span>
@@ -149,7 +149,7 @@
     {/if}
 
     <!-- Desktop Floating Action Button -->
-    <div class="hidden md:block fixed bottom-8 right-8 z-[60]">
+    <div class="hidden md:block fixed bottom-8 left-8 z-[60]">
         <button
             onclick={() => isQuickRollMenuOpen = !isQuickRollMenuOpen}
             class="w-16 h-16 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-[0_0_20px_rgba(79,70,229,0.4)] flex items-center justify-center transition-all active:scale-90 border-2 border-white/10 group"
