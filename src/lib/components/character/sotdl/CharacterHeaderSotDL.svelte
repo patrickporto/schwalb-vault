@@ -1,13 +1,13 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { sotdlCharacter, sotdlCurrentHealth, sotdlIsInjured, sotdlIsIncapacitated } from '$lib/stores/characterStoreSotDL';
-    import { Settings, ChevronLeft, LayoutDashboard, Brain, Skull } from 'lucide-svelte';
+    import { Settings, ChevronLeft, LayoutDashboard, Brain, Skull, History } from 'lucide-svelte';
     import { goto } from '$app/navigation';
     import { resolve } from '$app/paths';
     import Avatar from '$lib/components/common/Avatar.svelte';
     import { fade } from 'svelte/transition';
 
-    import { modalState } from '$lib/stores/characterStore';
+    import { modalState, isHistoryOpen, hasUnreadRolls } from '$lib/stores/characterStore';
     import ImageCropperModal from '$lib/components/common/ImageCropperModal.svelte';
     import { saveImage } from '$lib/logic/image';
     import { Camera, UserCog } from 'lucide-svelte';
@@ -139,6 +139,22 @@
 
             <!-- Right: Actions -->
             <div class="flex items-center gap-2">
+                 <button
+                    onclick={() => isHistoryOpen.update(v => !v)}
+                    class="p-2 bg-indigo-600/10 text-indigo-400 border border-indigo-400/20 rounded-lg hover:bg-indigo-600 hover:text-white transition-all relative"
+                    aria-label={$t('character.header.history')}
+                    title={$t('character.header.history')}
+                    aria-pressed={$isHistoryOpen}
+                 >
+                     <History size={20}/>
+                     {#if $hasUnreadRolls === true}
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-slate-900"></span>
+                        </span>
+                     {/if}
+                 </button>
+
                  <button
                     onclick={() => openModal('character_info_sotdl')}
                     class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full"
