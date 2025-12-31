@@ -20,6 +20,7 @@
     import { quintOut } from 'svelte/easing';
     import SyncStatus from '$lib/components/common/SyncStatus.svelte';
     import { DEFAULT_SYSTEM, getSystem } from '$lib/systems';
+    import AppSettingsModal from './AppSettingsModal.svelte';
 
     // Pull to Refresh State
     let pullStartY = $state(0);
@@ -96,6 +97,7 @@
 
     let activeTab = $state('characters');
     let previousTab = $state('characters');
+    let isAppSettingsOpen = $state(false);
 
     // Track tab changes for directional transitions
     $effect(() => {
@@ -382,6 +384,15 @@
         <!-- User Area -->
         <div class="flex items-center justify-end min-w-[40px] gap-3">
           <SyncStatus />
+
+          <button
+              class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
+              onclick={() => isAppSettingsOpen = true}
+              title={$t('settings.title')}
+          >
+              <Settings size={20} />
+          </button>
+
           <div class="relative">
             <button
                 class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800"
@@ -639,5 +650,6 @@
    <ConfirmationModal isOpen={isConfirmOpen} title={confirmConfig.title} message={confirmConfig.message} onConfirm={confirmConfig.onConfirm} onCancel={() => isConfirmOpen = false} />
 
    <CharacterSettingsModal isOpen={isCharSettingsOpen} characterData={settingsCharData} onClose={() => isCharSettingsOpen = false} onSave={saveCharSettings} />
+   <AppSettingsModal isOpen={isAppSettingsOpen} onClose={() => isAppSettingsOpen = false} />
 
 </div>

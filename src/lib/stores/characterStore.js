@@ -79,6 +79,42 @@ export const normalHealth = writable(24);
 export const currentHealth = writable(24);
 export const damage = writable(0);
 export const isHistoryOpen = writable(false);
+export const hasUnreadRolls = writable(false);
+
+// --- APP SETTINGS ---
+
+const initialSettings = {
+  autoOpenHistory: false,
+  stickyHistory: false,
+  theme: 'dark'
+};
+
+function createAppSettings() {
+  const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('wwv_app_settings') : null;
+  const { subscribe, set, update } = writable(saved ? { ...initialSettings, ...JSON.parse(saved) } : initialSettings);
+
+  return {
+    subscribe,
+    set: (value) => {
+      if (typeof localStorage !== 'undefined') localStorage.setItem('wwv_app_settings', JSON.stringify(value));
+      set(value);
+    },
+    update: (fn) => {
+      update(old => {
+        const newValue = fn(old);
+        if (typeof localStorage !== 'undefined') localStorage.setItem('wwv_app_settings', JSON.stringify(newValue));
+        return newValue;
+      });
+    }
+  };
+}
+
+export const appSettings = createAppSettings();
+
+// Clear unread on open
+isHistoryOpen.subscribe(open => {
+  if (open) hasUnreadRolls.set(false);
+});
 
 // --- DERIVED STORES & HELPERS ---
 
@@ -245,7 +281,13 @@ export const characterActions = {
         };
 
         rollHistory.update(h => [entry, ...h]);
-        isHistoryOpen.set(true);
+
+      const settings = get(appSettings);
+      if (settings.autoOpenHistory) {
+          isHistoryOpen.set(true);
+        } else if (!get(isHistoryOpen)) {
+          hasUnreadRolls.set(true);
+        }
 
         // Sync via Trystero if in a campaign
         if (shouldSync && char.campaignId) {
@@ -492,8 +534,7 @@ export const characterActions = {
             if (item.type === ITEM_TYPES.EXPLOSIVE) characterActions.useConsumable(item);
         }
 
-        modalState.set({ type: null, isOpen: false, data: null });
-        isHistoryOpen.set(true);
+      modalState.set({ type: null, isOpen: false, data: null });
     },
 
     reloadWeapon: (item) => {

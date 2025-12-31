@@ -7,6 +7,7 @@ const API_KEY = ''; // Optional if using OAuth2 only for personal data, but usua
 
 // Imports for Sync
 import { charactersMap, campaignsMap, enemiesMap, encountersMap, imagesMap, deletedIdsMap } from '$lib/db';
+import { appSettings } from '$lib/stores/characterStore';
 import { liveCharacters, liveCampaigns, liveEnemies, liveEncounters } from '$lib/stores/live';
 import { syncStatus, lastSyncTime } from '$lib/stores/syncStatus';
 
@@ -558,6 +559,12 @@ export async function syncFromCloud() {
             }
         }
 
+        // Sync App Settings
+        if (cloudData.appSettings) {
+            console.log('[DEBUG] Syncing app settings from cloud');
+            appSettings.set(cloudData.appSettings);
+        }
+
         console.log('[DEBUG] Sync from cloud complete.');
         syncStatus.set('success');
         lastSyncTime.set(Date.now());
@@ -607,6 +614,7 @@ export async function syncToCloud() {
                 encounters: cleanEncounters,
                 images,
                 deletedIds: deletedIdsArray,
+                appSettings: get(appSettings),
                 timestamp: Date.now(),
                 version: 1,
                 appName: 'WeirdWizardVault'

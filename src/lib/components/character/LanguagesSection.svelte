@@ -23,15 +23,15 @@
             <Languages size={16} class="text-indigo-500"/> {$t('character.languages.title')}
         </h4>
     </div>
-    
+
     <div class="flex flex-wrap gap-2 mb-4">
         {#each $character.languages as lang, idx}
             <div class="bg-slate-950 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-2 group transition-all hover:border-indigo-500/50">
                 {lang}
-                <button 
-                    onclick={() => removeLanguage(idx)} 
+                <button
+                    onclick={() => removeLanguage(idx)}
                     class="text-slate-500 hover:text-red-400 p-1 rounded-full hover:bg-red-400/10 transition-all"
-                    aria-label="Remover idioma {lang}"
+                    aria-label="{$t('common.buttons.remove')} {lang}"
                 >
                     <X size={14}/>
                 </button>
@@ -43,11 +43,11 @@
     </div>
 
     <div class="relative group">
-        <input 
-            type="text" 
-            placeholder={$t('character.languages.add_placeholder')} 
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600 focus:ring-1 focus:ring-indigo-500/20" 
-            onkeydown={handleKeyDown} 
+        <input
+            type="text"
+            placeholder={$t('character.languages.add_placeholder')}
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600 focus:ring-1 focus:ring-indigo-500/20"
+            onkeydown={handleKeyDown}
             aria-label={$t('character.languages.add_label')}
         />
         <div class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-slate-800 rounded-lg text-slate-500 group-focus-within:text-indigo-400 group-focus-within:bg-indigo-400/10 transition-all">

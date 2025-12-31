@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
-  import { character, modalState, damage, effectiveMaxHealth, tempHealth, isInjured, isIncapacitated, damagePercentage, rollHistory, isHistoryOpen } from '$lib/stores/characterStore';
-  import { Settings, Moon, Dices, ChevronLeft, LayoutDashboard } from 'lucide-svelte';
+  import { character, modalState, damage, effectiveMaxHealth, tempHealth, isInjured, isIncapacitated, damagePercentage, rollHistory, isHistoryOpen, hasUnreadRolls } from '$lib/stores/characterStore';
+  import { Settings, Moon, History, ChevronLeft, LayoutDashboard } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import CampaignStatus from './CampaignStatus.svelte';
@@ -175,12 +175,12 @@
              <button
                 onclick={() => isHistoryOpen.update(v => !v)}
                 class="p-2 bg-indigo-600/10 text-indigo-400 border border-indigo-400/20 rounded-lg hover:bg-indigo-600 hover:text-white transition-all relative"
-                aria-label="Toggle Histórico"
-                title="Histórico"
+                aria-label={$t('character.header.history')}
+                title={$t('character.header.history')}
                 aria-pressed={$isHistoryOpen}
              >
-                 <Dices size={20}/>
-                 {#if $rollHistory.length > 0}
+                 <History size={20}/>
+                 {#if $hasUnreadRolls === true}
                     <span class="absolute -top-1 -right-1 flex h-3 w-3">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-slate-900"></span>
@@ -191,7 +191,7 @@
              <button
                 onclick={() => openModal('character_info')}
                 class="hidden sm:flex p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
-                title="Configurações"
+                title={$t('common.buttons.settings')}
              >
                 <Settings size={18}/>
              </button>

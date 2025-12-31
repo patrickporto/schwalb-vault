@@ -2,8 +2,7 @@
   import { ChevronLeft, LayoutDashboard, History, Sword, Library, Settings, Wifi, WifiOff, Users } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { isHistoryOpen } from '$lib/stores/characterStore';
-  import { rollHistory } from '$lib/stores/characterStore';
+  import { isHistoryOpen, hasUnreadRolls, rollHistory } from '$lib/stores/characterStore';
   import { syncState } from '$lib/logic/sync';
   import { t } from 'svelte-i18n';
 
@@ -33,8 +32,8 @@
              <button
                 onclick={() => goto(resolve('/'))}
                 class="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-all flex items-center gap-1 group"
-                aria-label="Voltar para Dashboard"
-                title="Voltar para Dashboard"
+                aria-label={$t('character.header.back_dashboard')}
+                title={$t('character.header.back_dashboard')}
              >
                 <ChevronLeft size={20} class="group-hover:-translate-x-0.5 transition-transform"/>
                 <LayoutDashboard size={18} class="hidden sm:block opacity-50"/>
@@ -56,7 +55,7 @@
                 aria-pressed={activeSubTab === 'session'}
              >
                 <Sword size={14} class={activeSubTab === 'session' ? 'opacity-100' : 'opacity-50'}/>
-                <span class="hidden min-[400px]:block">Sessão</span>
+                <span class="hidden min-[400px]:block">{$t('common.labels.session')}</span>
              </button>
              <button
                 onclick={() => onTabChange('bestiary')}
@@ -64,7 +63,7 @@
                 aria-pressed={activeSubTab === 'bestiary'}
              >
                 <Library size={14} class={activeSubTab === 'bestiary' ? 'opacity-100' : 'opacity-50'}/>
-                <span class="hidden min-[400px]:block">Bestiário</span>
+                <span class="hidden min-[400px]:block">{$t('common.labels.bestiary')}</span>
              </button>
           </div>
 
@@ -93,8 +92,8 @@
              <button
                 onclick={onOpenSettings}
                 class="p-2 sm:p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-                aria-label="Configurações da Campanha"
-                title="Configurações"
+                aria-label={$t('common.buttons.settings')}
+                title={$t('common.buttons.settings')}
              >
                  <Settings size={20}/>
              </button>
@@ -102,12 +101,12 @@
              <button
                 onclick={() => isHistoryOpen.update(v => !v)}
                 class="p-2 sm:p-2.5 bg-indigo-600/10 text-indigo-400 border border-indigo-400/20 rounded-lg hover:bg-indigo-600 hover:text-white transition-all relative"
-                aria-label="Toggle Histórico"
-                title="Histórico"
+                aria-label={$t('character.header.history')}
+                title={$t('character.header.history')}
                 aria-pressed={$isHistoryOpen}
              >
                  <History size={20}/>
-                 {#if $rollHistory && $rollHistory.length > 0}
+                 {#if $hasUnreadRolls}
                     <span class="absolute -top-1 -right-1 flex h-3 w-3">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-slate-900"></span>

@@ -24,6 +24,7 @@
       "level": "Nível",
       "master": "Mestre",
       "session": "Sessão",
+      "bestiary": "Bestiário",
       "language": "Idioma"
     },
     "status": {
@@ -67,6 +68,12 @@
     }
   },
   "campaign": {
+    "active": "Campanha Ativa",
+    "waiting_approval": "Aguardando Aprovação",
+    "leave_confirm": "Sair da campanha?",
+    "status": {
+      "pending": "Pendente de Aprovação"
+    },
     "not_found": {
       "title": "Campanha Não Encontrada",
       "message": "Esta campanha não existe na sua base local ou foi removida. Crie uma nova campanha através da página inicial."
@@ -120,6 +127,7 @@
     },
     "senses": {
       "title": "Sentidos",
+      "none": "Nenhum sentido especial.",
       "add": "Adicionar",
       "select_placeholder": "Selecione...",
       "value_label": "Alcance (jardas)",
@@ -691,5 +699,24 @@
       "android_step1": "Toque no menu do navegador {icon}",
       "android_step2": "Selecione <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>."
     }
+  },
+  "settings": {
+    "title": "Configurações do App",
+    "description": "Personalize sua experiência",
+    "sections": {
+      "interface": "Interface & Comportamento",
+      "appearance": "Aparência"
+    },
+    "options": {
+      "auto_open_history": {
+        "label": "Auto-abrir Histórico",
+        "description": "Abre a barra lateral automaticamente sempre que um dado for rolado."
+      },
+      "theme": {
+        "label": "Tema (Em breve)",
+        "description": "O Vault será apenas escuro por enquanto."
+      }
+    },
+    "sync_info": "Suas configurações são sincronizadas automaticamente com sua conta do Google Drive sempre que forem alteradas."
   }
 }

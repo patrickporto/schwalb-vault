@@ -237,7 +237,7 @@
 
           <CharacterHeader />
 
-          <main class="max-w-6xl mx-auto md:px-4 mt-6 lg:mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <main class="w-full max-w-6xl mx-auto md:px-4 mt-0 md:mt-6 grid grid-cols-1 lg:grid-cols-12 gap-0 md:gap-6 pb-12">
 
              <!-- SIDEBAR ESQUERDA (desktop only) -->
              <aside class="hidden lg:block lg:col-span-3 space-y-4">
@@ -266,7 +266,7 @@
                 <div class="bg-slate-900 md:rounded-xl md:border md:border-slate-800 min-h-[calc(100vh-200px)] md:min-h-[60vh] flex flex-col">
                    <TabNavigation />
 
-                   <div class="p-4 md:p-6 flex-1 flex flex-col">
+                   <div class="p-4 xs:p-5 md:p-6 flex-1 flex flex-col">
                       {#if $activeTab === 'stats'}
                          <StatsTab />
                       {/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
-  import { rollHistory, characterActions } from '$lib/stores/characterStore';
+  import { rollHistory, characterActions, appSettings } from '$lib/stores/characterStore';
   import { History, X, Trash2 } from 'lucide-svelte';
 
   interface Props {
@@ -17,7 +17,9 @@
 <div class="fixed inset-0 bg-black/50 z-[90] lg:hidden backdrop-blur-sm" onclick={onClose} role="button" aria-label={$t('character.history.close')} tabindex="-1"></div>
 {/if}
 
-<aside class="fixed top-0 right-0 h-full w-full sm:w-96 bg-slate-900/95 backdrop-blur-xl border-l border-white/10 z-[100] transition-transform duration-500 ease-out shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col {isOpen ? 'translate-x-0' : 'translate-x-full'}">
+<aside
+  class="h-full bg-slate-900/95 backdrop-blur-xl border-l border-white/10 transition-all duration-500 ease-out shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col fixed top-0 right-0 z-[100] w-full sm:w-96 {isOpen ? 'translate-x-0' : 'translate-x-full'}"
+>
 <div class="px-6 py-5 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
   <div class="flex items-center gap-3">
     <div class="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">

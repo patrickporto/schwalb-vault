@@ -17,11 +17,11 @@
     <div class="lg:hidden">
         <CurrencySection />
     </div>
-    
+
     <div class="flex justify-between items-center">
         <h3 class="text-xs font-bold text-slate-500 uppercase">{$t('character.inventory.title')}</h3>
-        <button 
-            onclick={() => openModal('item')} 
+        <button
+            onclick={() => openModal('item')}
             class="text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded text-white font-bold flex items-center gap-1"
         >
             <Plus size={14} /> {$t('character.inventory.new_item')}
@@ -44,7 +44,7 @@
                    <td class="p-3">
                        <div class="font-bold text-white">{item.name}</div>
                        <div class="text-[10px] text-slate-500">
-                           {item.quality} • {item.availability} • {item.price}gp 
+                           {item.quality} • {item.availability} • {item.price}gp
                            {#if item.notes}<span class="block italic text-slate-400">{item.notes}</span>{/if}
                            {#if item.type === ITEM_TYPES.ARMOR}
                                • Def {#if item.defenseFixed}Fixed {item.defenseFixed}{:else}+{item.defenseMod}{/if}
@@ -54,17 +54,17 @@
                    <td class="p-3"><span class="text-[10px] border border-slate-700 px-1 rounded uppercase bg-slate-900">{item.type}</span></td>
                    <td class="p-3 text-center">
                       {#if item.type === ITEM_TYPES.CONSUMABLE}
-                          <button 
-                              onclick={() => useConsumable(item)} 
-                              disabled={item.quantity <= 0} 
+                          <button
+                              onclick={() => useConsumable(item)}
+                              disabled={item.quantity <= 0}
                               class="text-xs bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-600"
-                              aria-label="Usar {item.name}"
+                              aria-label="{$t('character.inventory.use')} {item.name}"
                           >
                               {$t('character.inventory.use')}
                           </button>
                       {:else if item.type === ITEM_TYPES.ARMOR}
-                          <button 
-                              onclick={() => equipItem(item)} 
+                          <button
+                              onclick={() => equipItem(item)}
                               class="text-xs px-2 py-1 rounded border transition-colors {item.equipped ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-600 text-slate-400'}"
                               aria-label={item.equipped ? 'Desequipar armadura' : 'Equipar armadura'}
                           >
@@ -73,8 +73,8 @@
                       {:else if item.type === ITEM_TYPES.WEAPON || item.type === ITEM_TYPES.SHIELD}
                           <div class="flex justify-center gap-1">
                               {#if item.grip === GRIPS.TWO}
-                                  <button 
-                                      onclick={() => equipItem(item, item.equippedState ? null : 'two')} 
+                                  <button
+                                      onclick={() => equipItem(item, item.equippedState ? null : 'two')}
                                       class="text-[10px] px-2 py-1 rounded border {item.equippedState === 'two' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-600 text-slate-500'}"
                                       aria-label={item.equippedState === 'two' ? 'Desequipar 2H' : 'Equipar 2H'}
                                   >
@@ -82,16 +82,16 @@
                                   </button>
                               {:else}
                                   {#if item.grip !== GRIPS.OFF}
-                                      <button 
-                                          onclick={() => equipItem(item, item.equippedState === 'main' ? null : 'main')} 
+                                      <button
+                                          onclick={() => equipItem(item, item.equippedState === 'main' ? null : 'main')}
                                           class="text-[10px] px-2 py-1 rounded border {item.equippedState === 'main' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-600 text-slate-500'}"
                                           aria-label={item.equippedState === 'main' ? 'Desequipar Main Hand' : 'Equipar Main Hand'}
                                       >
                                           Main
                                       </button>
                                   {/if}
-                                  <button 
-                                      onclick={() => equipItem(item, item.equippedState === 'off' ? null : 'off')} 
+                                  <button
+                                      onclick={() => equipItem(item, item.equippedState === 'off' ? null : 'off')}
                                       class="text-[10px] px-2 py-1 rounded border {item.equippedState === 'off' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-600 text-slate-500'}"
                                       aria-label={item.equippedState === 'off' ? 'Desequipar Off Hand' : 'Equipar Off Hand'}
                                   >
@@ -103,8 +103,8 @@
                    </td>
                    <td class="p-3 text-right font-mono">{item.quantity}</td>
                    <td class="p-3 text-right">
-                       <button 
-                           onclick={() => openModal('item', item)} 
+                       <button
+                           onclick={() => openModal('item', item)}
                            class="text-slate-500 hover:text-white"
                            aria-label="Editar {item.name}"
                        >

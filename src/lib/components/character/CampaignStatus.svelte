@@ -1,13 +1,14 @@
 <script lang="ts">
+   import { t } from 'svelte-i18n';
    import { character, characterActions } from '$lib/stores/characterStore';
    import { isGmOnline } from '$lib/logic/sync';
    import { Users, LogOut, Wifi, WifiOff } from 'lucide-svelte';
-   
+
    interface Props {
       compact?: boolean;
       banner?: boolean;
    }
-   
+
    let { compact = false, banner = false }: Props = $props();
 </script>
 
@@ -25,23 +26,23 @@
                 </div>
                 <div>
                      <div class="text-[10px] {isPending ? 'text-amber-500/70' : 'text-indigo-400/70'} font-black uppercase tracking-[0.2em] leading-none mb-1">
-                        Campanha Ativa
+                        {$t('campaign.active')}
                      </div>
                      <div class="font-bold text-white text-base leading-tight">{$character.campaignName}</div>
                      {#if isPending}
-                        <div class="text-[9px] font-black text-amber-500 uppercase tracking-tighter mt-1 animate-pulse">Aguardando Aprovação</div>
+                        <div class="text-[9px] font-black text-amber-500 uppercase tracking-tighter mt-1 animate-pulse">{$t('campaign.waiting_approval')}</div>
                      {:else}
                         <div class="text-[10px] text-slate-400 mt-0.5 font-medium flex items-center gap-1">
-                            <span class="opacity-50 font-bold uppercase tracking-tighter">Mestre:</span> 
+                            <span class="opacity-50 font-bold uppercase tracking-tighter">{$t('common.labels.master')}:</span>
                             <span class="text-indigo-300">{$character.gmName}</span>
                         </div>
                      {/if}
                 </div>
             </div>
-            <button 
-                onclick={() => { if(confirm('Sair da campanha?')) characterActions.leaveCampaign() }} 
+            <button
+                onclick={() => { if(confirm($t('campaign.leave_confirm'))) characterActions.leaveCampaign() }}
                 class="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-slate-500 hover:text-red-400 transition-all active:scale-95"
-                title="Sair"
+                title={$t('common.buttons.back')}
             >
                 <LogOut size={18}/>
             </button>
@@ -60,22 +61,22 @@
                         <Users size={16}/>
                     </div>
                     <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                        Campanha Ativa
+                        {$t('campaign.active')}
                     </h3>
                 </div>
-                <button 
-                    onclick={characterActions.leaveCampaign} 
+                <button
+                    onclick={characterActions.leaveCampaign}
                     class="p-2 text-slate-600 hover:text-red-400 hover:bg-red-400/5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                    title="Abandonar Campanha"
+                    title={$t('campaign.leave_confirm')}
                 >
                     <LogOut size={14}/>
                 </button>
             </div>
-            
+
             <div class="space-y-1">
                  <div class="font-bold text-white text-lg tracking-tight leading-tight">{$character.campaignName}</div>
                  <div class="text-[10px] font-medium text-slate-500 flex items-center gap-1.5 pt-0.5">
-                    <span class="uppercase tracking-tighter opacity-70">Mestre:</span>
+                    <span class="uppercase tracking-tighter opacity-70">{$t('common.labels.master')}:</span>
                     <span class="text-indigo-400 font-bold">{$character.gmName}</span>
                  </div>
             </div>
@@ -84,7 +85,7 @@
                  <div class="flex items-center gap-2">
                     <div class="w-1.5 h-1.5 rounded-full {isPending ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)] animate-pulse' : ($isGmOnline ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)] animate-pulse' : 'bg-slate-700')}"></div>
                     <span class="text-[11px] font-bold uppercase tracking-wider {isPending ? 'text-amber-500' : ($isGmOnline ? 'text-slate-400' : 'text-slate-600')}">
-                        {isPending ? 'Pendente de Aprovação' : ($isGmOnline ? 'Online' : 'Offline')}
+                        {isPending ? $t('campaign.status.pending') : ($isGmOnline ? $t('common.status.connected') : $t('common.status.offline'))}
                     </span>
                  </div>
                  <div class="flex items-center gap-1 text-[10px] text-slate-600 font-mono">

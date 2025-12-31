@@ -74,7 +74,7 @@
             </Tooltip>
         {/each}
         {#if (!$character.senses || $character.senses.length === 0)}
-            <span class="text-sm text-slate-500 italic py-2 px-1">Nenhum sentido especial.</span>
+            <span class="text-sm text-slate-500 italic py-2 px-1">{$t('character.senses.none') || 'No special senses.'}</span>
         {/if}
     </div>
 

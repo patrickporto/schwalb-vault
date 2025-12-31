@@ -12,24 +12,24 @@
             <Coins size={14} class="text-yellow-500"/> {$t('character.currency.title')}
         </h4>
     </div>
-    
+
     <div class="grid grid-cols-3 gap-2">
         <!-- GP -->
         <div class="bg-slate-950 rounded-xl p-2 border border-slate-800/50 flex flex-col items-center gap-1.5 relative overflow-hidden group">
             <div class="text-[9px] text-yellow-500 font-black uppercase tracking-tight relative z-10">GP</div>
             <div class="flex items-center justify-between w-full relative z-10 bg-black/40 rounded-lg p-0.5 border border-white/5">
-                <button 
-                    onclick={() => updateCurrency('gp', -1)} 
-                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all active:scale-75" 
-                    aria-label="Diminuir GP"
+                <button
+                    onclick={() => updateCurrency('gp', -1)}
+                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all active:scale-75"
+                    aria-label="{$t('common.buttons.remove')} GP"
                 >
                     <Minus size={14}/>
                 </button>
                 <span class="text-sm font-black text-white font-mono leading-none">{$character.currency.gp}</span>
-                <button 
-                    onclick={() => updateCurrency('gp', 1)} 
-                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-green-400 hover:bg-green-400/10 rounded-md transition-all active:scale-75" 
-                    aria-label="Aumentar GP"
+                <button
+                    onclick={() => updateCurrency('gp', 1)}
+                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-green-400 hover:bg-green-400/10 rounded-md transition-all active:scale-75"
+                    aria-label="{$t('common.buttons.add')} GP"
                 >
                     <Plus size={14}/>
                 </button>
@@ -40,18 +40,18 @@
         <div class="bg-slate-950 rounded-xl p-2 border border-slate-800/50 flex flex-col items-center gap-1.5 relative overflow-hidden group">
             <div class="text-[9px] text-slate-300 font-black uppercase tracking-tight relative z-10">SP</div>
             <div class="flex items-center justify-between w-full relative z-10 bg-black/40 rounded-lg p-0.5 border border-white/5">
-                <button 
-                    onclick={() => updateCurrency('sp', -1)} 
-                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all active:scale-75" 
-                    aria-label="Diminuir SP"
+                <button
+                    onclick={() => updateCurrency('sp', -1)}
+                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all active:scale-75"
+                    aria-label="{$t('common.buttons.remove')} SP"
                 >
                     <Minus size={14}/>
                 </button>
                 <span class="text-sm font-black text-white font-mono leading-none">{$character.currency.sp}</span>
-                <button 
-                    onclick={() => updateCurrency('sp', 1)} 
-                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-green-400 hover:bg-green-400/10 rounded-md transition-all active:scale-75" 
-                    aria-label="Aumentar SP"
+                <button
+                    onclick={() => updateCurrency('sp', 1)}
+                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-green-400 hover:bg-green-400/10 rounded-md transition-all active:scale-75"
+                    aria-label="{$t('common.buttons.add')} SP"
                 >
                     <Plus size={14}/>
                 </button>
@@ -62,18 +62,18 @@
         <div class="bg-slate-950 rounded-xl p-2 border border-slate-800/50 flex flex-col items-center gap-1.5 relative overflow-hidden group">
             <div class="text-[9px] text-orange-700/80 font-black uppercase tracking-tight relative z-10">CP</div>
             <div class="flex items-center justify-between w-full relative z-10 bg-black/40 rounded-lg p-0.5 border border-white/5">
-                <button 
-                    onclick={() => updateCurrency('cp', -1)} 
-                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all active:scale-75" 
-                    aria-label="Diminuir CP"
+                <button
+                    onclick={() => updateCurrency('cp', -1)}
+                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all active:scale-75"
+                    aria-label="{$t('common.buttons.remove')} CP"
                 >
                     <Minus size={14}/>
                 </button>
                 <span class="text-sm font-black text-white font-mono leading-none">{$character.currency.cp}</span>
-                <button 
-                    onclick={() => updateCurrency('cp', 1)} 
-                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-green-400 hover:bg-green-400/10 rounded-md transition-all active:scale-75" 
-                    aria-label="Aumentar CP"
+                <button
+                    onclick={() => updateCurrency('cp', 1)}
+                    class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-green-400 hover:bg-green-400/10 rounded-md transition-all active:scale-75"
+                    aria-label="{$t('common.buttons.add')} CP"
                 >
                     <Plus size={14}/>
                 </button>
