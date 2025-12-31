@@ -521,14 +521,18 @@ export const sotdlCharacterActions = {
           boonBaneStr = ` + ${highest} [Dádiva]`;
         } else {
           boonBaneTotal = -highest;
-          boonBaneStr = ` - ${highest} [Perrdição]`;
+          boonBaneStr = ` - ${highest} [Perdição]`;
         }
       }
+
+      let source = 'Atributo';
+      if (data.type === 'weapon_attack') source = 'Ataque';
+      else if (data.type === 'luck' || data.type === 'luck_ends') source = 'Sorte';
 
       const total = d20 + attrMod + boonBaneTotal;
 
       sotdlCharacterActions.addToHistory({
-        source: data.type === 'luck' || data.type === 'luck_ends' ? 'Sorte' : 'Atributo',
+        source,
         name: attrLabel,
         description: data.type === 'luck_ends' ? `Teste de Sorte para encerrar efeito ${sourceName}` : `Teste de ${attrLabel} ${modifier !== 0 ? `com ${modifier} dádivas/perdições` : ''}`,
         formula: `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr}`,

@@ -288,7 +288,7 @@
         </div>
       {:else if currentSystem === 'sofdl'}
           <!-- SOTDL VIEW -->
-          <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
+
 
           <CharacterHeaderSotDL />
           <main class="w-full max-w-6xl mx-auto md:px-4 mt-0 md:mt-6 grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 pb-12">
@@ -341,9 +341,6 @@
 
       {:else}
           <!-- WEIRD WIZARD VIEW -->
-          <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
-
-
 
           <CharacterHeader />
 
@@ -379,41 +376,17 @@
                    <div class="p-4 xs:p-5 md:p-6 flex-1 flex flex-col">
                       {#if $activeTab === 'stats'}
                          <StatsTab />
-                      {/if}
-
-                      {#if $activeTab === 'acoes'}
-                         {#if isSotDL}
-                             <ActionsTabSotDL />
-                         {:else}
-                             <ActionsTab />
-                         {/if}
-                      {/if}
-
-                      {#if $activeTab === 'efeitos'}
-                         {#if isSotDL}
-                             <EffectsTabSotDL />
-                         {:else}
-                             <EffectsTab />
-                         {/if}
-                      {/if}
-
-                      {#if $activeTab === 'notas'}
-                         {#if isSotDL}
-                             <NotesTabSotDL />
-                         {:else}
-                             <NotesTab />
-                         {/if}
-                      {/if}
-
-                      {#if $activeTab === 'magias'}
+                      {:else if $activeTab === 'acoes'}
+                         <ActionsTab />
+                      {:else if $activeTab === 'efeitos'}
+                         <EffectsTab />
+                      {:else if $activeTab === 'notas'}
+                         <NotesTab />
+                      {:else if $activeTab === 'magias'}
                          <SpellsTab />
-                      {/if}
-
-                      {#if $activeTab === 'talentos'}
+                      {:else if $activeTab === 'talentos'}
                          <TalentsTab />
-                      {/if}
-
-                      {#if $activeTab === 'equipamento'}
+                      {:else if $activeTab === 'equipamento'}
                          <InventoryTab />
                       {/if}
                    </div>
@@ -478,5 +451,7 @@
     <AttackOptionsContentSotDL />
     <AfflictionManager />
     <RestConfirmationContent />
+
+    <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
 </div>
 ```
