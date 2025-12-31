@@ -2,9 +2,10 @@
     import { t } from 'svelte-i18n';
     import { Dices, Wand2, Sword, ArrowLeft, Plus, Minus } from 'lucide-svelte';
     import { modalState, characterActions, character, activeEffects } from '$lib/stores/characterStore';
+    import { sotdlCharacter, sotdlActiveEffects, sotdlCharacterActions } from '$lib/stores/characterStoreSotDL';
     import Modal from '$lib/components/common/Modal.svelte';
 
-    let isOpen = $derived($modalState.isOpen && ($modalState.type === 'weapon_menu' || $modalState.type === 'pre_roll'));
+    let isOpen = $derived($modalState.isOpen && $modalState.type === 'weapon_menu');
     let data = $derived($modalState.data);
 
     let view = $state<'selection' | 'roll'>('selection');
@@ -12,19 +13,22 @@
     let modifier = $state(0);
     let selectedEffectsIds = $state<string[]>([]);
 
-    // Reset state when modal opens
+    // System detection
+    let currentSystem = $derived(data?.system || $character.system || 'sofww');
+    let displayEffects = $derived(currentSystem === 'sofdl' ? $sotdlActiveEffects : $activeEffects);
+
+    // Reset state when modal opens OR closes
     $effect(() => {
         if (isOpen) {
             modifier = 0;
-            selectedEffectsIds = $activeEffects.map(e => e.id);
-
-            if ($modalState.type === 'pre_roll') {
-                view = 'roll';
-                rollType = data.type === 'luck' ? 'luck' : 'attribute'; // data.type might be 'luck'
-            } else {
-                view = 'selection';
-                rollType = 'attack';
-            }
+            // SEMPRE pegar os efeitos do personagem ATUAL quando o modal abre
+            selectedEffectsIds = displayEffects.map(e => e.id);
+            view = 'selection';
+            rollType = 'attack';
+        } else {
+            // Limpar completamente quando o modal fecha para evitar "vazamento" entre personagens
+            selectedEffectsIds = [];
+            modifier = 0;
         }
     });
 
@@ -60,9 +64,13 @@
             key: data.key // Ensure key is passed for attributes
         };
 
-        const selectedEffects = $activeEffects.filter(e => selectedEffectsIds.includes(e.id));
+        const selectedEffects = displayEffects.filter(e => selectedEffectsIds.includes(e.id));
 
-        characterActions.finalizeRoll(rollData, modifier, selectedEffects);
+        if (currentSystem === 'sofdl') {
+            sotdlCharacterActions.finalizeRoll(rollData, modifier, selectedEffects.map(e => e.name));
+        } else {
+            characterActions.finalizeRoll(rollData, modifier, selectedEffects);
+        }
         onClose();
     }
 </script>
@@ -176,11 +184,11 @@
                 </div>
 
                 <!-- ACTIVE EFFECTS SELECTION -->
-                {#if $activeEffects.length > 0}
+                {#if displayEffects.length > 0}
                     <div class="space-y-2">
                          <h4 class="text-xs font-bold text-slate-500 uppercase px-1">{$t('character.effects.active')}</h4>
                          <div class="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto pr-1">
-                            {#each $activeEffects as eff (eff.id)}
+                            {#each displayEffects as eff (eff.id)}
                                 <button
                                     onclick={() => toggleEffect(eff.id)}
                                     class="flex items-center justify-between p-3 rounded-lg border transition-all text-left {selectedEffectsIds.includes(eff.id) ? 'bg-indigo-900/30 border-indigo-500/50 shadow-sm' : 'bg-slate-900/50 border-slate-800 opacity-60 hover:opacity-100 hover:border-slate-700'}"

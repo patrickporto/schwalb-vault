@@ -3,7 +3,7 @@
     import {
         activeTab, modalState, rollHistory, character, defaultCharacter,
         isHistoryOpen, normalHealth, currentHealth, damage, totalDefense,
-        effectiveMaxHealth, characterActions
+        effectiveMaxHealth, characterActions, activeEffects
     } from '$lib/stores/characterStore';
 
     // Yjs / DB
@@ -59,7 +59,9 @@
         sotdlCharacter,
         defaultSotDLCharacter,
         sotdlModifiers,
-        sotdlTotalHealingRate
+        sotdlTotalHealingRate,
+        sotdlActiveEffects,
+        sotdlCharacterActions
     } from '$lib/stores/characterStoreSotDL';
     import CharacterHeaderSotDL from '$lib/components/character/sotdl/CharacterHeaderSotDL.svelte';
     import AttributesSectionSotDL from '$lib/components/character/sotdl/AttributesSectionSotDL.svelte';
@@ -184,9 +186,14 @@
 
             if (system === 'sofdl') {
                 sotdlCharacter.set({ ...defaultSotDLCharacter, ...data, id });
+                // Clear WW store to prevent data bleed
+                character.set({ ...defaultCharacter, id: '' });
             } else {
                 // Include id in character store for sync identification
                 character.set({ ...defaultCharacter, ...data, id });
+                // Clear SotDL store to prevent data bleed
+                sotdlCharacter.set({ ...defaultSotDLCharacter, id: '' });
+
                 if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
                 if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
                 if (data.damage !== undefined) damage.set(data.damage);
@@ -203,6 +210,7 @@
 
 
         if (browser) {
+            modalState.set({ type: null, isOpen: false, data: null });
             const isMobile = window.innerWidth < 768;
             if (isMobile) {
                 activeTab.set('stats');
@@ -300,37 +308,7 @@
           <!-- WEIRD WIZARD VIEW -->
           <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
 
-          <!-- Self-standing Modals -->
-          <ItemEditor />
-          <SpellEditor />
-          <TalentEditor />
-          <EffectEditor />
-          <AttributeEditor />
-          <StatEditor />
-          <HealthDamageEditor />
-          <CharacterInfoEditor />
-          <ConfirmationModalContent />
-          <GrimoireSelection />
-          <TalentSelection />
-          <AttackOptionsContent />
-          <AfflictionManager />
-          <RestConfirmationContent />
 
-          <DiceRollModal
-              isOpen={$modalState.isOpen && $modalState.type === 'pre_roll'}
-              title={$t('character.dice_roll.confirm_roll')}
-              label={$modalState.data?.type === 'weapon_damage' ? $t('character.dice_roll.extra_dice') : $t('character.dice_roll.boons_banes')}
-              rollLabel={$t('character.dice_roll.roll')}
-              onClose={() => modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }))}
-              onRoll={(mod) => {
-                  characterActions.finalizeRoll(
-                      $modalState.data,
-                      mod,
-                      $character.effects.filter(e => e.isActive).map(e => e.name)
-                  );
-                  modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }));
-              }}
-          />
 
           <CharacterHeader />
 
@@ -417,20 +395,46 @@
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
         </div>
     {/if}
-   <!-- Shared Modals -->
-   <ItemEditor />
-   <SpellEditor />
-   <TalentEditor />
-   <EffectEditor />
-   <AttributeEditor />
-   <StatEditor />
-   <HealthDamageEditor />
-   <CharacterInfoEditor />
-   <ConfirmationModalContent />
-   <GrimoireSelection />
-   <TalentSelection />
-   <AttackOptionsContent />
-   <AfflictionManager />
-   <RestConfirmationContent />
+    <!-- Shared Modals & Utilities -->
+    <DiceRollModal
+        isOpen={$modalState.isOpen && $modalState.type === 'pre_roll'}
+        title={$t('character.dice_roll.confirm_roll')}
+        label={$modalState.data?.type === 'weapon_damage' ? $t('character.dice_roll.extra_dice') : $t('character.dice_roll.boons_banes')}
+        rollLabel={$t('character.dice_roll.roll')}
+        effects={isSotDL ? $sotdlActiveEffects : $activeEffects}
+        onClose={() => modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }))}
+        onRoll={(mod, selectedEffects) => {
+            if (isSotDL) {
+                // @ts-ignore - finalizeRoll exists on sotdlCharacterActions
+                sotdlCharacterActions.finalizeRoll(
+                    $modalState.data,
+                    mod,
+                    selectedEffects.map(e => e.name)
+                );
+            } else {
+                characterActions.finalizeRoll(
+                    $modalState.data,
+                    mod,
+                    selectedEffects
+                );
+            }
+            modalState.update(m => ({ ...m, type: null, isOpen: false, data: null }));
+        }}
+    />
+
+    <ItemEditor />
+    <SpellEditor />
+    <TalentEditor />
+    <EffectEditor />
+    <AttributeEditor />
+    <StatEditor />
+    <HealthDamageEditor />
+    <CharacterInfoEditor />
+    <ConfirmationModalContent />
+    <GrimoireSelection />
+    <TalentSelection />
+    <AttackOptionsContent />
+    <AfflictionManager />
+    <RestConfirmationContent />
 </div>
 ```

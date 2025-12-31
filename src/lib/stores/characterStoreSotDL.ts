@@ -3,7 +3,7 @@ import { uuidv7 } from 'uuidv7';
 // Use the global rollHistory from characterStore for now to have a unified history
 // We import as type any or handle the JS import properly
 // @ts-ignore
-import { rollHistory, appSettings, isHistoryOpen, hasUnreadRolls } from './characterStore';
+import { rollHistory, appSettings, isHistoryOpen, hasUnreadRolls, modalState } from './characterStore';
 
 export interface SotDLCharacter {
     id: string;
@@ -191,8 +191,18 @@ export const sotdlCharacterActions = {
         console.log('Advance round', direction);
     },
     checkLuckEnds: (id: string) => {
-        // Logic for luck rolls ending effects
-        console.log('Check luck ends', id);
+      const char = get(sotdlCharacter);
+      const effect = char.effects.find(e => e.id === id);
+      modalState.set({
+        type: 'pre_roll',
+        isOpen: true,
+        data: {
+          type: 'luck_ends',
+          system: 'sofdl',
+          effectId: id,
+          source: { name: effect?.name || 'Efeito' }
+        }
+      });
     },
   // Senses Actions
   addSense: (sense: string) => {
@@ -301,13 +311,22 @@ export const sotdlCharacterActions = {
       const total = d20 + attrMod + boonBaneTotal;
 
       sotdlCharacterActions.addToHistory({
-        source: data.type === 'luck' ? 'Sorte' : 'Atributo',
+        source: data.type === 'luck' || data.type === 'luck_ends' ? 'Sorte' : 'Atributo',
         name: attrLabel,
-        description: `Teste de ${attrLabel} ${modifier !== 0 ? `com ${modifier} dádivas/perdições` : ''}`,
+        description: data.type === 'luck_ends' ? `Teste de Sorte para encerrar efeito ${sourceName}` : `Teste de ${attrLabel} ${modifier !== 0 ? `com ${modifier} dádivas/perdições` : ''}`,
         formula: `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr}`,
         total: total,
-        crit: d20 === 20
+        crit: d20 === 20,
+        effectsApplied: selectedEffects
       });
+
+      // Special logic for luck_ends
+      if (data.type === 'luck_ends' && total >= 10) {
+        sotdlCharacter.update(c => ({
+          ...c,
+          effects: c.effects.map(e => e.id === data.effectId ? { ...e, isActive: false } : e)
+        }));
+      }
     } else {
       // Damage roll placeholder for SotDL
       const dice = data.source?.damageDice || '1d6';
