@@ -10,15 +10,15 @@
     let talentEffects = $derived($activeEffects.filter((e: any) => e.sourceType === 'talent'));
 
     function openModal(type: string, data: any = null) {
-        modalState.update(m => ({ ...m, type, isOpen: true, data }));
+        modalState.update(m => ({ ...m, type, isOpen: true, data, system: 'sofww' }));
     }
 </script>
 
 <div class="space-y-4">
     <div class="flex justify-between items-center bg-slate-900 p-3 rounded-lg border border-slate-800">
         <div class="flex items-center gap-4">
-            <button 
-                onclick={() => advanceRound('prev')} 
+            <button
+                onclick={() => advanceRound('prev')}
                 disabled={!!$character.campaignId}
                 class="p-2 hover:bg-slate-700 rounded text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed"
                 aria-label={$t('character.effects.prev_round')}
@@ -35,8 +35,8 @@
                     <div class="text-sm font-bold text-slate-500 uppercase tracking-tighter mt-1 italic">{$t('character.effects.out_of_combat')}</div>
                 {/if}
             </div>
-            <button 
-                onclick={() => advanceRound('next')} 
+            <button
+                onclick={() => advanceRound('next')}
                 disabled={!!$character.campaignId}
                 class="p-2 hover:bg-slate-700 rounded text-white disabled:opacity-30 disabled:cursor-not-allowed"
                 aria-label={$t('character.effects.next_round')}
@@ -45,21 +45,21 @@
             </button>
         </div>
         <div class="flex gap-2">
-            <button 
-                onclick={characterActions.cleanInactiveEffects} 
+            <button
+                onclick={characterActions.cleanInactiveEffects}
                 class="bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-300 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 border border-slate-700"
             >
                 <Eraser size={14}/> {$t('character.effects.clean_inactive')}
             </button>
-            <button 
-                onclick={() => openModal('effect')} 
+            <button
+                onclick={() => openModal('effect')}
                 class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1"
             >
                 <Plus size={14}/> {$t('character.effects.new_effect')}
             </button>
         </div>
     </div>
-    
+
     <div class="space-y-2">
         <!-- Manual/Character Effects -->
         {#if $character.effects.length > 0}
@@ -70,8 +70,8 @@
                         <div class="flex items-center gap-2">
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
-                            <button 
-                                onclick={() => characterActions.toggleEffect(eff.id)} 
+                            <button
+                                onclick={() => characterActions.toggleEffect(eff.id)}
                                 class="w-8 h-4 rounded-full relative transition-colors {eff.isActive ? 'bg-green-500' : 'bg-slate-600'}"
                                 aria-label={eff.isActive ? 'Desativar efeito {eff.name}' : 'Ativar efeito {eff.name}'}
                                 aria-pressed={eff.isActive}
@@ -81,15 +81,15 @@
                             <span class="font-bold text-white tracking-tight">{eff.name}</span>
                         </div>
                         <div class="flex gap-2">
-                            <button 
-                                onclick={() => openModal('effect', eff)} 
+                            <button
+                                onclick={() => openModal('effect', eff)}
                                 class="text-slate-500 hover:text-white p-1 hover:bg-slate-800 rounded transition-colors"
                                 aria-label="Editar {eff.name}"
                             >
                                 <Edit size={14}/>
                             </button>
-                            <button 
-                                onclick={() => deleteEffect(eff.id)} 
+                            <button
+                                onclick={() => deleteEffect(eff.id)}
                                 class="text-slate-500 hover:text-red-400 p-1 hover:bg-slate-800 rounded transition-colors"
                                 aria-label="Excluir {eff.name}"
                             >
@@ -102,7 +102,7 @@
                         <div class="flex flex-wrap gap-1 mt-1">
                             {#each eff.modifiers as mod}
                                 <span class="text-[9px] px-1.5 py-0.5 rounded border {mod.type === MOD_TYPES.SET ? 'bg-yellow-900/30 text-yellow-200 border-yellow-800' : 'bg-slate-800 text-slate-300 border-slate-700'} font-medium">
-                                    {MOD_TARGETS[mod.target] || mod.target}: {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? 'x' : (mod.value > 0 ? '+' : '')}{mod.value}
+                                    {MOD_TARGETS[mod.target] || mod.target}: {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? 'x' : (Number(mod.value) > 0 ? '+' : '')}{mod.value}
                                 </span>
                             {/each}
                         </div>
@@ -110,8 +110,8 @@
                     <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono mt-1 border-t border-slate-800/50 pt-2">
                         <span class="flex items-center gap-1"><Clock size={10} class="text-indigo-400"/> {DURATION_TYPES[eff.duration]} {eff.duration === 'ROUNDS' ? `(${eff.roundsLeft})` : ''}</span>
                         {#if eff.duration === 'LUCK_ENDS' && eff.isActive}
-                            <button 
-                                onclick={() => checkLuckEnds(eff.id)} 
+                            <button
+                                onclick={() => checkLuckEnds(eff.id)}
                                 class="bg-yellow-900/40 hover:bg-yellow-800/40 text-yellow-500 border border-yellow-800 px-2 py-0.5 rounded flex items-center gap-1 transition-colors"
                                 aria-label="Sortear encerramento do efeito"
                             >
@@ -136,8 +136,8 @@
                             <span class="font-bold text-slate-300 tracking-tight">{eff.name}</span>
                         </div>
                         <div class="flex gap-2">
-                             <a 
-                                href="#talents" 
+                             <a
+                                href="#talents"
                                 onclick={(e) => {
                                     e.preventDefault();
                                     // Hacky way to switch tab, ideally we should use a method from parent
@@ -153,7 +153,7 @@
                         <div class="flex flex-wrap gap-1 mt-1 pl-10">
                             {#each eff.modifiers as mod}
                                 <span class="text-[9px] px-1.5 py-0.5 rounded border {mod.type === MOD_TYPES.SET ? 'bg-yellow-900/30 text-yellow-200 border-yellow-800' : 'bg-slate-800 text-slate-300 border-slate-700'} font-medium">
-                                    {MOD_TARGETS[mod.target] || mod.target}: {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? 'x' : (mod.value > 0 ? '+' : '')}{mod.value}
+                                    {MOD_TARGETS[mod.target] || mod.target}: {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? 'x' : (Number(mod.value) > 0 ? '+' : '')}{mod.value}
                                 </span>
                             {/each}
                         </div>

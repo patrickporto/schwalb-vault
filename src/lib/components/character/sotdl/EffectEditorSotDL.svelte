@@ -1,19 +1,31 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { Plus, Trash2 } from 'lucide-svelte';
-    import { DURATION_TYPES, MOD_TYPES, MOD_TARGETS, MAGIC_TRADITIONS } from '../../../../../routes/sofww';
-    import { character, characterActions, modalState } from '$lib/stores/characterStore';
+    import { DURATION_TYPES, MOD_TYPES, MOD_TARGETS } from '$lib/constants';
+    import { sotdlCharacter, sotdlCharacterActions } from '$lib/stores/characterStoreSotDL';
+    import { modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
     import { untrack } from 'svelte';
-
     import { uuidv7 } from 'uuidv7';
 
-    let isOpen = $derived($modalState.isOpen && $modalState.type === 'effect' && $modalState.system !== 'sofdl');
+    let isOpen = $derived($modalState.isOpen && $modalState.type === 'effect' && $modalState.system === 'sofdl');
     let data = $derived($modalState.data);
     let formEffectData = $state<any>(null);
 
+    const SOTDL_MOD_TARGETS = {
+        strength: 'Força',
+        agility: 'Agilidade',
+        intellect: 'Intelecto',
+        will: 'Vontade',
+        perception: 'Percepção',
+        defense: 'Defesa',
+        speed: 'Deslocamento',
+        health: 'Vida',
+        damage: 'Dano (Bônus)',
+        healing_rate: 'Taxa de Cura'
+    };
+
     // Initialize state reactively when data changes
-    // Use untrack to prevent formEffectData mutations from re-triggering this effect
     $effect(() => {
         if (isOpen) {
             untrack(() => {
@@ -34,7 +46,7 @@
     }
 
     function addModifier() {
-        formEffectData.modifiers = [...(formEffectData.modifiers || []), { target: 'str', type: MOD_TYPES.ADD, value: 1 }];
+        formEffectData.modifiers = [...(formEffectData.modifiers || []), { target: 'strength', type: MOD_TYPES.ADD, value: 1 }];
     }
 
     function removeModifier(idx: number) {
@@ -59,10 +71,16 @@
         }
 
         // Standalone effect
-        if (formEffectData.id && $character.effects.some(e => e.id === formEffectData.id)) {
-            characterActions.updateEffect(effectWithInitial);
+        if (formEffectData.id && $sotdlCharacter.effects.some(e => e.id === formEffectData.id)) {
+            sotdlCharacter.update(c => ({
+                ...c,
+                effects: c.effects.map(e => e.id === formEffectData.id ? effectWithInitial : e)
+            }));
         } else {
-            characterActions.addEffect({ ...effectWithInitial, id: uuidv7(), isActive: true });
+            sotdlCharacter.update(c => ({
+                ...c,
+                effects: [...c.effects, { ...effectWithInitial, id: uuidv7(), isActive: true }]
+            }));
         }
         onClose();
     }
@@ -77,8 +95,6 @@
                 <input id="effectName" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.name} />
                 {#if !formEffectData.name}<p class="text-[10px] text-red-500">{$t('character.modals.effect_name_required')}</p>{/if}
             </div>
-        {:else}
-            <div class="text-center text-xs text-slate-500 italic mb-2">{$t('character.modals.inherited_from_parent')}</div>
         {/if}
         <div>
             <label for="effectDuration" class="text-xs font-bold text-slate-400 uppercase">{$t('character.modals.duration')}</label>
@@ -100,7 +116,7 @@
                 {#each formEffectData.modifiers as mod, idx}
                     <div class="flex gap-1 items-center animate-in fade-in slide-in-from-left-1 duration-200">
                         <select class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/3" bind:value={mod.target}>
-                            {#each Object.entries(MOD_TARGETS) as [k,v]}<option value={k}>{v}</option>{/each}
+                            {#each Object.entries(SOTDL_MOD_TARGETS) as [k,v]}<option value={k}>{v}</option>{/each}
                         </select>
                         <select class="bg-slate-900 border border-slate-700 rounded text-[10px] text-white p-1 w-1/4" bind:value={mod.type}>
                             <option value={MOD_TYPES.ADD}>Add (+/-)</option>
@@ -115,10 +131,8 @@
         </div>
         {#if !data?.parentType}
             <div>
-                <label class="text-xs font-bold text-slate-400 uppercase">
-                    {$t('character.modals.description')}
-                    <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.description}></textarea>
-                </label>
+                <label for="effectDesc" class="text-xs font-bold text-slate-400 uppercase">{$t('character.modals.description')}</label>
+                <textarea id="effectDesc" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formEffectData.description}></textarea>
             </div>
         {/if}
         <button onclick={saveEffect} class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">{$t('character.modals.save_effect')}</button>

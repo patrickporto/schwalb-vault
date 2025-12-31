@@ -76,7 +76,8 @@
         modalState.update(m => ({
             ...m,
             type: 'effect',
-            data: { parentType: 'talent_sotdl', parentData: formData, system: 'sofdl' }
+            data: { parentType: 'talent_sotdl', parentData: formData, system: 'sofdl' },
+            system: 'sofdl'
         }));
     }
 </script>

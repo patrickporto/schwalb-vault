@@ -85,6 +85,7 @@
     import ItemEditorSotDL from '$lib/components/character/sotdl/ItemEditorSotDL.svelte';
     import InventoryTabSotDL from '$lib/components/character/sotdl/InventoryTabSotDL.svelte';
     import AttackOptionsContentSotDL from '$lib/components/character/sotdl/AttackOptionsContentSotDL.svelte';
+    import EffectEditorSotDL from '$lib/components/character/sotdl/EffectEditorSotDL.svelte';
 
 
     let loaded = $state(false);
@@ -435,6 +436,7 @@
     <SpellEditorSotDL />
     <TalentEditor />
     <EffectEditor />
+    <EffectEditorSotDL />
     <AttributeEditor />
     <StatEditor />
     <HealthDamageEditor />

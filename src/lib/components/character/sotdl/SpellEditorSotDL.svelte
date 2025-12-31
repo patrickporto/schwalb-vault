@@ -63,7 +63,8 @@
         modalState.update(m => ({
             ...m,
             type: 'effect',
-            data: { parentType: 'spell_sotdl', parentData: formData, system: 'sofdl' }
+            data: { parentType: 'spell_sotdl', parentData: formData, system: 'sofdl' },
+            system: 'sofdl'
         }));
     }
 </script>

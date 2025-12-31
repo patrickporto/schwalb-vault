@@ -171,7 +171,7 @@ export const defaultCharacter: WWCharacter = {
 
 export const character = writable<WWCharacter>(JSON.parse(JSON.stringify(defaultCharacter)));
 export const rollHistory = writable<RollHistoryEntry[]>([]);
-export const modalState = writable<{ type: string | null; isOpen: boolean; data: any }>({ type: null, isOpen: false, data: null });
+export const modalState = writable<{ type: string | null; isOpen: boolean; data: any; system?: string }>({ type: null, isOpen: false, data: null });
 export const activeTab = writable('acoes');
 export const normalHealth = writable(24);
 export const currentHealth = writable(24);
