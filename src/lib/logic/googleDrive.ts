@@ -1,5 +1,9 @@
 import { writable, get } from 'svelte/store';
 
+declare global {
+  const google: any;
+}
+
 // Client ID provided by the user (PLACEHOLDER - NEED TO REQUEST FROM USER)
 // Using a placeholder for now, user needs to update this or I'll ask for it.
 const CLIENT_ID = '701898444454-7ml9onnv529k99rkvgh1slhdj4a1arrm.apps.googleusercontent.com';
@@ -215,11 +219,39 @@ function handleAuthCallback(resp: any) {
     fetchUserProfile(resp.access_token);
 }
 
+let scriptLoadPromise: Promise<void> | null = null;
+
 function waitForScripts() {
-    return new Promise<void>((resolve, reject) => {
-        // If already loaded, resolve immediately
+  if (typeof window === 'undefined') return Promise.resolve();
+
+  // If already loaded, resolve immediately
+  if (typeof google !== 'undefined' && google.accounts) {
+    return Promise.resolve();
+  }
+
+  if (scriptLoadPromise) return scriptLoadPromise;
+
+  scriptLoadPromise = new Promise<void>((resolve, reject) => {
+    // Check if script already exists in DOM (e.g. from previous attempt or manual addition)
+    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existingScript) {
+      // If it exists but we are here, it might still be loading or failed
+      // To be safe, we'll wait for the global to appear or timeout
+      const checkGoogle = setInterval(() => {
         if (typeof google !== 'undefined' && google.accounts) {
-            resolve();
+          clearInterval(checkGoogle);
+          resolve();
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(checkGoogle);
+        if (typeof google === 'undefined' || !google.accounts) {
+          // Script exists but didn't load google object within 5s
+          scriptLoadPromise = null; // Allow retry
+          reject(new Error('Google Identity Services script found but failed to initialize'));
+        }
+      }, 5000);
             return;
         }
 
@@ -242,17 +274,25 @@ function waitForScripts() {
             setTimeout(() => {
                 clearInterval(checkGoogle);
                 if (typeof google === 'undefined' || !google.accounts) {
+                  scriptLoadPromise = null; // Allow retry
                     reject(new Error('Google object not available after script load'));
                 }
-            }, 3000);
+            }, 5000);
         };
 
         script.onerror = () => {
-            reject(new Error('Failed to load Google Identity Services script'));
+          scriptLoadPromise = null; // Allow retry on next call
+          const isOffline = !navigator.onLine;
+          const msg = isOffline
+            ? 'Failed to load Google script: No internet connection'
+            : 'Failed to load Google script: Blocked by browser or network error';
+          reject(new Error(msg));
         };
 
         document.head.appendChild(script);
     });
+
+  return scriptLoadPromise;
 }
 
 export function signIn() {
