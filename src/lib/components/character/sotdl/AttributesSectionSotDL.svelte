@@ -42,6 +42,11 @@
                 <div class="text-2xl font-black text-white leading-none">
                     {$sotdlAttributes[attr.key as keyof typeof $sotdlAttributes]}
                 </div>
+                {#if $sotdlAttributes[attr.key as keyof typeof $sotdlAttributes] !== $sotdlCharacter.attributes[attr.key as keyof typeof $sotdlCharacter.attributes]}
+                    <div class="text-[11px] font-bold {$sotdlAttributes[attr.key as keyof typeof $sotdlAttributes] > $sotdlCharacter.attributes[attr.key as keyof typeof $sotdlCharacter.attributes] ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'} px-1 rounded-md">
+                        {$sotdlAttributes[attr.key as keyof typeof $sotdlAttributes] > $sotdlCharacter.attributes[attr.key as keyof typeof $sotdlCharacter.attributes] ? '+' : ''}{$sotdlAttributes[attr.key as keyof typeof $sotdlAttributes] - $sotdlCharacter.attributes[attr.key as keyof typeof $sotdlCharacter.attributes]}
+                    </div>
+                {/if}
             </div>
 
             <div class="inline-flex px-2 py-0.5 bg-indigo-500/10 rounded-lg">

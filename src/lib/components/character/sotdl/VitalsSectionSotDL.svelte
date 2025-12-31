@@ -19,8 +19,13 @@
             <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors flex items-center gap-1.5 mb-2">
                 <Shield size={12}/> {$t('character.vitals.defense')}
             </div>
-            <div class="flex items-baseline gap-1">
+            <div class="flex items-baseline gap-1.5">
                 <span class="text-3xl font-black text-white leading-none">{$sotdlDerivedStats.defense}</span>
+                {#if $sotdlDerivedStats.defense !== $sotdlCharacter.defense}
+                    <div class="text-[11px] font-bold {$sotdlDerivedStats.defense > $sotdlCharacter.defense ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'} px-1 rounded-md">
+                        {$sotdlDerivedStats.defense > $sotdlCharacter.defense ? '+' : ''}{$sotdlDerivedStats.defense - $sotdlCharacter.defense}
+                    </div>
+                {/if}
             </div>
         </button>
 
@@ -31,8 +36,13 @@
             <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors flex items-center gap-1.5 mb-2">
                 <Zap size={12}/> {$t('character.vitals.speed')}
             </div>
-            <div class="flex items-baseline gap-1">
+            <div class="flex items-baseline gap-1.5">
                 <span class="text-3xl font-black text-white leading-none">{$sotdlDerivedStats.speed}</span>
+                {#if $sotdlDerivedStats.speed !== $sotdlCharacter.speed}
+                    <div class="text-[11px] font-bold {$sotdlDerivedStats.speed > $sotdlCharacter.speed ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'} px-1 rounded-md">
+                        {$sotdlDerivedStats.speed > $sotdlCharacter.speed ? '+' : ''}{$sotdlDerivedStats.speed - $sotdlCharacter.speed}
+                    </div>
+                {/if}
             </div>
         </button>
     </div>
@@ -47,8 +57,13 @@
             <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors flex items-center gap-1.5 mb-2">
                 <Eye size={12}/> {$t('sofdl.attributes.perception')}
             </div>
-            <div class="flex items-baseline gap-1">
+            <div class="flex items-baseline gap-1.5">
                 <span class="text-3xl font-black text-cyan-400 leading-none">{$sotdlDerivedStats.perception}</span>
+                {#if $sotdlDerivedStats.perception !== $sotdlCharacter.perception}
+                    <div class="text-[11px] font-bold {$sotdlDerivedStats.perception > $sotdlCharacter.perception ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'} px-1 rounded-md">
+                        {$sotdlDerivedStats.perception > $sotdlCharacter.perception ? '+' : ''}{$sotdlDerivedStats.perception - $sotdlCharacter.perception}
+                    </div>
+                {/if}
             </div>
         </button>
     </div>
@@ -63,6 +78,11 @@
         </span>
         <div class="flex items-center gap-3">
             <span class="text-3xl font-black text-white">{$sotdlDerivedStats.power}</span>
+            {#if $sotdlDerivedStats.power !== $sotdlCharacter.power}
+                <div class="text-[11px] font-bold {$sotdlDerivedStats.power > $sotdlCharacter.power ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'} px-1 rounded-md">
+                    {$sotdlDerivedStats.power > $sotdlCharacter.power ? '+' : ''}{$sotdlDerivedStats.power - $sotdlCharacter.power}
+                </div>
+            {/if}
         </div>
     </button>
 
