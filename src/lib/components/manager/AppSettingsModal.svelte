@@ -1,9 +1,11 @@
 <script lang="ts">
-    import { t } from 'svelte-i18n';
+    import { t, locale } from 'svelte-i18n';
     import { appSettings } from '$lib/stores/characterStore';
-    import { X, Settings, History, Monitor, Smartphone, Palette } from 'lucide-svelte';
+    import { X, Settings, History, Monitor, Smartphone, Palette, Globe, ArrowLeft, Check } from 'lucide-svelte';
     import Toggle from '../common/Toggle.svelte';
-    import { fly, fade } from 'svelte/transition';
+    import { slide, fly, fade } from 'svelte/transition';
+    import { quintOut } from 'svelte/easing';
+    import { onMount } from 'svelte';
 
     interface Props {
         isOpen: boolean;
@@ -11,9 +13,22 @@
     }
 
     let { isOpen = false, onClose }: Props = $props();
+    let isMobile = $state(false);
+
+    onMount(() => {
+        const checkMobile = () => isMobile = window.innerWidth < 768;
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    });
 
     function updateSetting(key: string, value: any) {
         appSettings.update(s => ({ ...s, [key]: value }));
+    }
+
+    function setLanguage(lang: string) {
+        locale.set(lang);
+        localStorage.setItem('user_locale', lang);
     }
 </script>
 
@@ -21,36 +36,48 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center md:p-4"
         onclick={onClose}
         transition:fade={{ duration: 200 }}
     >
         <div
-            class="bg-slate-900 border border-white/10 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            class="bg-slate-900 border-white/10 w-full md:max-w-md md:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-full md:h-auto md:max-h-[90vh]"
             onclick={e => e.stopPropagation()}
-            transition:fly={{ y: 20, duration: 300 }}
+            in:fly={isMobile ? { x: '100%', duration: 600, easing: quintOut } : { y: 20, duration: 300 }}
+            out:fly={isMobile ? { x: '100%', duration: 600, easing: quintOut } : { y: 20, duration: 300 }}
         >
             <!-- Header -->
             <div class="px-6 py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                 <div class="flex items-center gap-3">
-                    <div class="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                        <Settings size={20} class="text-indigo-400" />
-                    </div>
+                    {#if isMobile}
+                        <button
+                            onclick={onClose}
+                            class="p-2 -ml-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-all active:scale-95"
+                        >
+                            <ArrowLeft size={24} />
+                        </button>
+                    {:else}
+                        <div class="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+                            <Settings size={20} class="text-indigo-400" />
+                        </div>
+                    {/if}
                     <div>
                         <h2 class="text-lg font-black text-white uppercase tracking-tight">{$t('settings.title')}</h2>
                         <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{$t('settings.description')}</p>
                     </div>
                 </div>
-                <button
-                    onclick={onClose}
-                    class="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-all active:scale-95"
-                >
-                    <X size={24} />
-                </button>
+                {#if !isMobile}
+                    <button
+                        onclick={onClose}
+                        class="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-all active:scale-95"
+                    >
+                        <X size={24} />
+                    </button>
+                {/if}
             </div>
 
             <!-- Content -->
-            <div class="p-6 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div class="flex-1 p-6 space-y-8 overflow-y-auto custom-scrollbar pb-32 md:pb-6">
 
                 <!-- Section: Interface -->
                 <div class="space-y-4">
@@ -66,6 +93,42 @@
                             label={$t('settings.options.auto_open_history.label')}
                             description={$t('settings.options.auto_open_history.description')}
                         />
+                    </div>
+                </div>
+
+                <!-- Section: Language -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 mb-2 text-amber-400">
+                        <Globe size={16} />
+                        <h3 class="text-xs font-black uppercase tracking-widest">{$t('common.labels.language') || 'Language'}</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                        <button
+                            onclick={() => setLanguage('pt')}
+                            class="flex items-center justify-between px-4 py-3 rounded-2xl border transition-all {$locale === 'pt' ? 'bg-indigo-600/10 border-indigo-500/50 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}"
+                        >
+                            <div class="flex items-center gap-3">
+                                <span class="text-xl">🇧🇷</span>
+                                <span class="font-bold">Português (Brasil)</span>
+                            </div>
+                            {#if $locale === 'pt'}
+                                <Check size={18} class="text-indigo-400" />
+                            {/if}
+                        </button>
+
+                        <button
+                            onclick={() => setLanguage('en')}
+                            class="flex items-center justify-between px-4 py-3 rounded-2xl border transition-all {$locale === 'en' ? 'bg-indigo-600/10 border-indigo-500/50 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}"
+                        >
+                            <div class="flex items-center gap-3">
+                                <span class="text-xl">🇺🇸</span>
+                                <span class="font-bold">English (US)</span>
+                            </div>
+                            {#if $locale === 'en'}
+                                <Check size={18} class="text-indigo-400" />
+                            {/if}
+                        </button>
                     </div>
                 </div>
 
@@ -97,15 +160,17 @@
                 </div>
             </div>
 
-            <!-- Bottom Action -->
-            <div class="p-4 bg-white/[0.02] border-t border-white/5">
-                <button
-                    onclick={onClose}
-                    class="w-full bg-slate-800 hover:bg-slate-700 text-white font-black uppercase tracking-widest py-3 rounded-2xl transition-all active:scale-[0.98] text-sm"
-                >
-                    {$t('common.buttons.close')}
-                </button>
-            </div>
+            <!-- Bottom Action - Only on Desktop -->
+            {#if !isMobile}
+                <div class="p-4 bg-white/[0.02] border-t border-white/5">
+                    <button
+                        onclick={onClose}
+                        class="w-full bg-slate-800 hover:bg-slate-700 text-white font-black uppercase tracking-widest py-3 rounded-2xl transition-all active:scale-[0.98] text-sm"
+                    >
+                        {$t('common.buttons.close')}
+                    </button>
+                </div>
+            {/if}
         </div>
     </div>
 {/if}
