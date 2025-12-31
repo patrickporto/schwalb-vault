@@ -797,6 +797,15 @@
       "add_first": "Adicionar primeiro talento",
       "reset_uses": "Restaurar Usos"
     },
+    "rolls": {
+      "boon": "Dádiva",
+      "bane": "Perdição",
+      "luck_ends": "Teste de Sorte para encerrar efeito {effect}",
+      "attribute_test": "Teste de {attr} {modifier, select, 0 {} other {com {modifier} dádivas/perdições}}",
+      "damage_description": "Dano de {source}",
+      "concentration": "Concentração",
+      "effect": "Efeito"
+    },
     "afflictions": {
       "asleep": {
         "name": "Adormecido",

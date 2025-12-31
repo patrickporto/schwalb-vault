@@ -1,4 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
+import { _ } from 'svelte-i18n';
 import { uuidv7 } from 'uuidv7';
 // Use the global rollHistory from characterStore for now to have a unified history
 // We import as type any or handle the JS import properly
@@ -132,8 +133,8 @@ export interface SotDLCharacter {
 export const defaultSotDLCharacter: SotDLCharacter = {
   id: '',
   system: 'sofdl',
-  name: 'Novo Personagem',
-  ancestry: 'Humano',
+  name: '',
+  ancestry: '',
   level: 0,
   paths: {
     novice: '',
@@ -279,6 +280,7 @@ export const sotdlCharacterActions = {
   checkLuckEnds: (id: string) => {
     const char = get(sotdlCharacter);
     const effect = char.effects.find(e => e.id === id);
+    const t = get(_);
     modalState.set({
       type: 'pre_roll',
       isOpen: true,
@@ -286,13 +288,14 @@ export const sotdlCharacterActions = {
         type: 'luck_ends',
         system: 'sofdl',
         effectId: id,
-        source: { name: effect?.name || 'Efeito' }
+        source: { name: effect?.name || t('sofdl.rolls.effect') }
       }
     });
   },
   checkConcentration: (effectId: string) => {
     const char = get(sotdlCharacter);
     const effect = char.effects.find(e => e.id === effectId);
+    const t = get(_);
     modalState.set({
       type: 'pre_roll',
       isOpen: true,
@@ -301,7 +304,7 @@ export const sotdlCharacterActions = {
         system: 'sofdl',
         effectId,
         key: 'will',
-        source: { name: effect?.name || 'Concentração' }
+        source: { name: effect?.name || t('sofdl.rolls.concentration') }
       }
     });
   },
@@ -335,7 +338,7 @@ export const sotdlCharacterActions = {
     }));
 
     sotdlCharacterActions.addToHistory({
-      source: 'Magia',
+      source: 'spell',
       name: spell.name,
       description: spell.description,
       type: 'spell'
@@ -377,7 +380,7 @@ export const sotdlCharacterActions = {
     }));
 
     sotdlCharacterActions.addToHistory({
-      source: 'Talento',
+      source: 'talent',
       name: talent.name,
       description: talent.description,
       type: 'talent'
@@ -492,7 +495,8 @@ export const sotdlCharacterActions = {
     const mods = get(sotdlModifiers);
 
     const isDamage = data?.type === 'weapon_damage' || data?.type === 'spell_damage';
-    const sourceName = data?.source?.name || data?.key || 'Atributo';
+    const t = get(_);
+    const sourceName = data?.source?.name || data?.key || t('character.modals.attribute');
 
     if (!isDamage) {
       const d20 = Math.floor(Math.random() * 20) + 1;
@@ -501,10 +505,10 @@ export const sotdlCharacterActions = {
 
       if (data.type === 'attribute') {
         attrMod = mods[data.key as keyof typeof mods] || 0;
-        attrLabel = data.key;
+        attrLabel = t(`sofdl.attributes.${data.key}`);
       } else if (data.type === 'luck') {
         attrMod = 0;
-        attrLabel = 'Sorte';
+        attrLabel = t('character.luck_test');
       }
 
       // Boon/Bane Logic (1d6 highest)
@@ -518,23 +522,25 @@ export const sotdlCharacterActions = {
 
         if (modifier > 0) {
           boonBaneTotal = highest;
-          boonBaneStr = ` + ${highest} [Dádiva]`;
+          boonBaneStr = ` + ${highest} [${t('sofdl.rolls.boon')}]`;
         } else {
           boonBaneTotal = -highest;
-          boonBaneStr = ` - ${highest} [Perdição]`;
+          boonBaneStr = ` - ${highest} [${t('sofdl.rolls.bane')}]`;
         }
       }
 
-      let source = 'Atributo';
-      if (data.type === 'weapon_attack') source = 'Ataque';
-      else if (data.type === 'luck' || data.type === 'luck_ends') source = 'Sorte';
+      let source = 'attribute';
+      if (data.type === 'weapon_attack') source = 'attack';
+      else if (data.type === 'luck' || data.type === 'luck_ends') source = 'luck';
 
       const total = d20 + attrMod + boonBaneTotal;
 
       sotdlCharacterActions.addToHistory({
         source,
         name: attrLabel,
-        description: data.type === 'luck_ends' ? `Teste de Sorte para encerrar efeito ${sourceName}` : `Teste de ${attrLabel} ${modifier !== 0 ? `com ${modifier} dádivas/perdições` : ''}`,
+        description: data.type === 'luck_ends'
+          ? t('sofdl.rolls.luck_ends', { values: { effect: sourceName } })
+          : t('sofdl.rolls.attribute_test', { values: { attr: attrLabel, modifier } }),
         formula: `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr}`,
         total: total,
         crit: d20 === 20,
@@ -585,10 +591,11 @@ export const sotdlCharacterActions = {
       const total = sum + modifier + damageMod;
       const modStr = (modifier + damageMod) !== 0 ? `${(modifier + damageMod) > 0 ? '+' : ''}${modifier + damageMod}` : '';
 
+      const t = get(_);
       sotdlCharacterActions.addToHistory({
-        source: 'Dano',
+        source: 'damage',
         name: sourceName,
-        description: `Dano de ${sourceName}`,
+        description: t('sofdl.rolls.damage_description', { values: { source: sourceName } }),
         formula: `${formula}${modStr}`,
         total: total,
         effectsApplied: selectedEffects

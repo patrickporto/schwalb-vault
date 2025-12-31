@@ -6,7 +6,7 @@
     import { getSotDLCastings } from '$lib/constants';
     import Modal from '$lib/components/common/Modal.svelte';
 
-    let isOpen = $derived($modalState.isOpen && $modalState.type === 'cast_spell' && $modalState.system === 'sofdl');
+    let isOpen = $derived($modalState.isOpen && $modalState.type === 'cast_spell' && ($modalState as any).system === 'sofdl');
     let power = $derived($sotdlCharacter.power);
     let spells = $derived($sotdlCharacter.spells);
 

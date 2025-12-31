@@ -801,6 +801,15 @@
           "add_first": "Add first talent",
           "reset_uses": "Reset Uses"
         },
+        "rolls": {
+          "boon": "Boon",
+          "bane": "Bane",
+          "luck_ends": "Luck Roll to end effect {effect}",
+          "attribute_test": "{attr} Roll {modifier, select, 0 {} other {with {modifier} boons/banes}}",
+          "damage_description": "Damage from {source}",
+          "concentration": "Concentration",
+          "effect": "Effect"
+        },
         "afflictions": {
             "asleep": {
                 "name": "Asleep",

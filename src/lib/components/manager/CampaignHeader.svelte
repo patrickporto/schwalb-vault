@@ -76,7 +76,7 @@
                         <span class="text-xs font-bold hidden sm:block">{$t('common.status.connected')}</span>
                     </div>
                     {#if $syncState.peers.length > 0}
-                         <div class="flex items-center gap-1 text-slate-400 ml-1" title={$t('common.status.peers', { count: $syncState.peers.length })}>
+                         <div class="flex items-center gap-1 text-slate-400 ml-1" title={$t('common.status.peers', { values: { count: $syncState.peers.length } })}>
                             <Users size={14} />
                             <span class="text-xs">{$syncState.peers.length}</span>
                         </div>
