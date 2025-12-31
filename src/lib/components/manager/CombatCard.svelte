@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { charactersMap } from '$lib/db';
-    import { Swords, CheckCircle, Skull, X, Plus, Flame, ChevronUp, ChevronDown, Eye } from 'lucide-svelte';
+    import { Swords, CheckCircle, Skull, X, Plus, Flame, ChevronUp, ChevronDown, Eye, Brain } from 'lucide-svelte';
     import { slide } from 'svelte/transition';
     import Avatar from '../common/Avatar.svelte';
     import AfflictionModal from '../common/AfflictionModal.svelte';
@@ -23,6 +23,7 @@
 
     // Derived values
     let isPlayer = $derived(entity.type === 'player');
+    let isSotDL = $derived(entity.system === 'sofdl');
     let damage = $derived(entity.damage || 0);
     // normalHealth is the base max health; health is effectiveMaxHealth with modifiers
     let maxHealth = $derived(entity.normalHealth || entity.health || 10);
@@ -268,6 +269,14 @@
                                 <span class="text-[10px] text-slate-500 font-mono self-end mb-0.5 opacity-70">/{maxHealth}</span>
                              </div>
                         </div>
+
+                        {#if isSotDL}
+                            <!-- Perception -->
+                            <div class="flex flex-col items-center justify-between bg-cyan-950/20 border border-cyan-500/30 rounded-lg p-1.5 w-[4.5rem] h-[3.75rem] shadow-sm">
+                                 <span class="text-[9px] font-black text-cyan-400 uppercase tracking-wider mb-0.5">{$t('sofdl.attributes.perception')}</span>
+                                 <span class="text-xl font-bold text-white font-mono leading-none">{entity.perception || 10}</span>
+                            </div>
+                        {/if}
                     </div>
 
                     <!-- Afflictions Wrap -->
@@ -308,19 +317,41 @@
                     <div class="h-px flex-1 bg-slate-800"></div>
                 </div>
                 <div class="grid grid-cols-4 gap-2">
-                    {#each ['str', 'agi', 'int', 'wil'] as stat}
+                    {#each (isSotDL ? ['strength', 'agility', 'intellect', 'will'] : ['str', 'agi', 'int', 'wil']) as key}
+                        {@const val = isSotDL ? (entity.attributes?.[key] ?? 10) : (entity.stats?.[key] ?? entity.attributes?.[key] ?? 10)}
+                        {@const mod = val - 10}
                         <div class="bg-slate-900/50 p-2 rounded border border-slate-800/50 text-center">
-                            <span class="text-[9px] text-slate-500 uppercase font-black block mb-0.5">{stat}</span>
+                            <span class="text-[9px] text-slate-500 uppercase font-black block mb-0.5">{isSotDL ? key.slice(0, 3) : key}</span>
                             <div class="text-white font-bold font-mono text-lg leading-none">
-                                {(entity.stats?.[stat] ?? entity.attributes?.[stat] ?? 10)}
+                                {val}
                             </div>
-                            <div class="text-[9px] font-bold {(entity.stats?.[stat] ?? entity.attributes?.[stat] ?? 10) - 10 >= 0 ? 'text-emerald-500' : 'text-red-500'}">
-                                {(entity.stats?.[stat] ?? entity.attributes?.[stat] ?? 10) - 10 >= 0 ? '+' : ''}{(entity.stats?.[stat] ?? entity.attributes?.[stat] ?? 10) - 10}
+                            <div class="text-[9px] font-bold {mod >= 0 ? 'text-emerald-500' : 'text-red-500'}">
+                                {mod >= 0 ? '+' : ''}{mod}
                             </div>
                         </div>
                     {/each}
                 </div>
             </div>
+
+            {#if isSotDL}
+                <!-- SotDL Status Row -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="p-3 rounded-xl bg-purple-950/20 border border-purple-500/30 flex justify-between items-center group/ins">
+                        <div>
+                            <span class="text-[9px] text-purple-400 uppercase font-black block">{$t('sofdl.attributes.insanity')}</span>
+                            <span class="text-white font-bold text-lg font-mono leading-none">{entity.insanity || 0}</span>
+                        </div>
+                        <Brain size={20} class="text-purple-500/30 group-hover/ins:text-purple-500 transition-colors" />
+                    </div>
+                    <div class="p-3 rounded-xl bg-red-950/20 border border-red-500/30 flex justify-between items-center group/cor">
+                        <div>
+                            <span class="text-[9px] text-red-400 uppercase font-black block">{$t('sofdl.attributes.corruption')}</span>
+                            <span class="text-white font-bold text-lg font-mono leading-none">{entity.corruption || 0}</span>
+                        </div>
+                        <Skull size={20} class="text-red-500/30 group-hover/cor:text-red-500 transition-colors" />
+                    </div>
+                </div>
+            {/if}
 
             <!-- Details view -->
             <div class="grid grid-cols-3 gap-4 mb-4">
@@ -360,6 +391,14 @@
                                  </Tooltip>
                              {/each}
                          </div>
+
+                         {#if isSotDL}
+                             <!-- Perception -->
+                             <div class="flex flex-col items-center justify-between bg-cyan-950/20 border border-cyan-500/30 rounded-lg p-1.5 w-[4.5rem] h-[3.75rem] shadow-sm">
+                                  <span class="text-[9px] font-black text-cyan-400 uppercase tracking-wider mb-0.5">{$t('sofdl.attributes.perception')}</span>
+                                  <span class="text-xl font-bold text-white font-mono leading-none">{entity.perception || 10}</span>
+                             </div>
+                         {/if}
                     </div>
                  {/if}
 

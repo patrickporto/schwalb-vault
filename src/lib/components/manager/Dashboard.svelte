@@ -151,37 +151,73 @@
 
     async function saveCharacter(formData: any) {
         const id = uuidv7();
+        let newChar: any;
 
-        const newChar: any = {
-            id,
-            name: formData.name,
-            playerName: formData.playerName || '',
-            ancestry: formData.ancestry,
-            level: formData.level,
-            defense: formData.defense,
-            system: formData.system || DEFAULT_SYSTEM,
-            paths: {
-                novice: formData.novicePath || '-',
-                expert: '-',
-                master: '-'
-            },
-            attributes: [
-                { name: "Força", value: 10, key: "str" },
-                { name: "Agilidade", value: 10, key: "agi" },
-                { name: "Intelecto", value: 10, key: "int" },
-                { name: "Vontade", value: 10, key: "wil" }
-            ],
-            speed: 5,
-            health: formData.health,
-            currentHealth: formData.health,
-            spells: [],
-            talents: [],
-            equipment: [],
-            afflictions: [],
-            effects: [],
-            currency: { gp: 0, sp: 0, cp: 0 },
-            languages: ['Comum']
-        };
+        if (formData.system === 'sofdl') {
+            newChar = {
+                id,
+                system: 'sofdl',
+                name: formData.name,
+                playerName: formData.playerName || '',
+                ancestry: formData.ancestry,
+                level: formData.level,
+                attributes: {
+                    strength: 10,
+                    agility: 10,
+                    intellect: 10,
+                    will: 10
+                },
+                perception: 10,
+                defense: formData.defense || 10,
+                health: formData.health || 10,
+                healingRate: Math.floor((formData.health || 10) / 4),
+                size: 1,
+                speed: 10,
+                power: 0,
+                damage: 0,
+                insanity: 0,
+                corruption: 0,
+                description: '',
+                notes: '',
+                professions: [],
+                languages: ['Comum'],
+                talents: [],
+                spells: [],
+                equipment: [],
+                effects: []
+            };
+        } else {
+            newChar = {
+                id,
+                name: formData.name,
+                playerName: formData.playerName || '',
+                ancestry: formData.ancestry,
+                level: formData.level,
+                defense: formData.defense,
+                system: formData.system || DEFAULT_SYSTEM,
+                paths: {
+                    novice: formData.novicePath || '-',
+                    expert: '-',
+                    master: '-'
+                },
+                attributes: [
+                    { name: "Força", value: 10, key: "str" },
+                    { name: "Agilidade", value: 10, key: "agi" },
+                    { name: "Intelecto", value: 10, key: "int" },
+                    { name: "Vontade", value: 10, key: "wil" }
+                ],
+                speed: 5,
+                health: formData.health,
+                currentHealth: formData.health,
+                spells: [],
+                talents: [],
+                equipment: [],
+                afflictions: [],
+                effects: [],
+                currency: { gp: 0, sp: 0, cp: 0 },
+                languages: ['Comum']
+            };
+        }
 
         charactersMap.set(id, newChar);
         isCharModalOpen = false;

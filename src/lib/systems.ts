@@ -15,9 +15,7 @@ export const SYSTEMS: GameSystem[] = [
     {
         id: 'sofdl',
         name: 'Shadow of the Demon Lord',
-        description: 'A dark fantasy tabletop RPG.',
-        disabled: true,
-        comingSoon: true
+        description: 'A dark fantasy tabletop RPG.'
     },
     {
         id: 'dle',
@@ -29,6 +27,8 @@ export const SYSTEMS: GameSystem[] = [
 ];
 
 export const DEFAULT_SYSTEM = 'sofww';
+
+export type InitiativeStyle = 'dle' | 'standard' | 'team' | 'individual';
 
 export function getSystem(id?: string): GameSystem {
     return SYSTEMS.find(s => s.id === id) || SYSTEMS.find(s => s.id === DEFAULT_SYSTEM)!;

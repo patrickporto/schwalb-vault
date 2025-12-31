@@ -54,13 +54,45 @@
     import StatsTab from '$lib/components/character/StatsTab.svelte';
     import { ChevronRight, Clover, Users, Ghost, ArrowLeft } from 'lucide-svelte';
 
+    // SOTDL Imports
+    import {
+        sotdlCharacter,
+        defaultSotDLCharacter,
+        sotdlModifiers,
+        sotdlTotalHealingRate
+    } from '$lib/stores/characterStoreSotDL';
+    import CharacterHeaderSotDL from '$lib/components/character/sotdl/CharacterHeaderSotDL.svelte';
+    import AttributesSectionSotDL from '$lib/components/character/sotdl/AttributesSectionSotDL.svelte';
+    import VitalsSectionSotDL from '$lib/components/character/sotdl/VitalsSectionSotDL.svelte';
+    import SensesSectionSotDL from '$lib/components/character/sotdl/SensesSectionSotDL.svelte';
+    import AfflictionsSectionSotDL from '$lib/components/character/sotdl/AfflictionsSectionSotDL.svelte';
+    import LanguagesSectionSotDL from '$lib/components/character/sotdl/LanguagesSectionSotDL.svelte';
+    import ProfessionsSectionSotDL from '$lib/components/character/sotdl/ProfessionsSectionSotDL.svelte';
+    import CampaignStatusSotDL from '$lib/components/character/sotdl/CampaignStatusSotDL.svelte';
+    import StatsTabSotDL from '$lib/components/character/sotdl/StatsTabSotDL.svelte';
+    import ActionsTabSotDL from '$lib/components/character/sotdl/ActionsTabSotDL.svelte';
+    import EffectsTabSotDL from '$lib/components/character/sotdl/EffectsTabSotDL.svelte';
+    import NotesTabSotDL from '$lib/components/character/sotdl/NotesTabSotDL.svelte';
+
+
     let loaded = $state(false);
     let notFound = $state(false);
+
+    // System check
+    let isSotDL = $derived($character.system === 'sofdl');
     let currentId = $state<string | null>(null);
+    let currentSystem = $state<string>('sofww');
 
     // Auto-save and Auto-sync effect
     $effect(() => {
         if (!loaded || notFound || !currentId) return;
+
+        if (currentSystem === 'sofdl') {
+             // SOTDL Sync Logic (Simplified for now - can be expanded)
+             const charData = $sotdlCharacter;
+             charactersMap.set(currentId, charData);
+             return;
+        }
 
         const charData = $character;
         const nh = $normalHealth;
@@ -99,7 +131,7 @@
 
     // Heartbeat for online status
     $effect(() => {
-        if (!loaded || notFound || !currentId) return;
+        if (!loaded || notFound || !currentId || currentSystem === 'sofdl') return; // Skip heartbeat for sotdl for now or implement similar
         const charData = get(character);
         if (!charData.campaignId) return;
 
@@ -146,17 +178,24 @@
 
         // Load or 404
         if (charactersMap.has(id)) {
-            const data = charactersMap.get(id);
-            // Include id in character store for sync identification
-            character.set({ ...defaultCharacter, ...data, id });
-            if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
-            if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
-            if (data.damage !== undefined) damage.set(data.damage);
+            const data: any = charactersMap.get(id);
+            const system = data.system || 'sofww';
+            currentSystem = system;
 
-            // Auto-join campaign room with character ID for bidirectional sync
-            const charData = get(character);
-            if (charData.campaignId) {
-                joinCampaignRoom(charData.campaignId, false, currentId);
+            if (system === 'sofdl') {
+                sotdlCharacter.set({ ...defaultSotDLCharacter, ...data, id });
+            } else {
+                // Include id in character store for sync identification
+                character.set({ ...defaultCharacter, ...data, id });
+                if (data.normalHealth !== undefined) normalHealth.set(data.normalHealth);
+                if (data.currentHealth !== undefined) currentHealth.set(data.currentHealth);
+                if (data.damage !== undefined) damage.set(data.damage);
+
+                 // Auto-join campaign room with character ID for bidirectional sync
+                const charData = get(character);
+                if (charData.campaignId) {
+                    joinCampaignRoom(charData.campaignId, false, currentId);
+                }
             }
         } else {
             notFound = true;
@@ -200,7 +239,65 @@
                 </button>
             </div>
         </div>
+      {:else if currentSystem === 'sofdl'}
+          <!-- SOTDL VIEW -->
+          <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
+
+          <CharacterHeaderSotDL />
+          <main class="w-full max-w-6xl mx-auto md:px-4 mt-0 md:mt-6 grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 pb-12">
+               <!-- SIDEBAR ESQUERDA (desktop only) -->
+               <aside class="hidden md:block md:col-span-4 lg:col-span-3 space-y-4">
+                  <AttributesSectionSotDL />
+
+                  <button
+                      onclick={() => modalState.set({type: 'pre_roll', isOpen: true, data: {type:'luck', system: 'sofdl', source: {name: $t('character.luck_test')}}})}
+                      class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 p-4 rounded-2xl border border-emerald-500/30 flex items-center justify-center gap-3 group transition-all shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
+                  >
+                      <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <Clover size={24} class="text-white"/>
+                      </div>
+                      <span class="font-black text-white uppercase tracking-wider text-sm">{$t('character.luck_test')}</span>
+                  </button>
+
+                  <VitalsSectionSotDL />
+                  <SensesSectionSotDL />
+                  <LanguagesSectionSotDL />
+                  <ProfessionsSectionSotDL />
+                  <AfflictionsSectionSotDL />
+
+                  <div class="pt-2">
+                      <CampaignStatusSotDL />
+                  </div>
+               </aside>
+
+               <section class="md:col-span-8 lg:col-span-9">
+                  <div class="bg-slate-900 md:rounded-xl md:border md:border-slate-800 min-h-[calc(100vh-200px)] md:min-h-[60vh] flex flex-col">
+                     <TabNavigation />
+                     <div class="p-4 xs:p-5 md:p-6 flex-1 flex flex-col">
+                        {#if $activeTab === 'stats'}
+                           <StatsTabSotDL />
+                        {:else if $activeTab === 'acoes'}
+                           <ActionsTabSotDL />
+                        {:else if $activeTab === 'efeitos'}
+                           <EffectsTabSotDL />
+                        {:else if $activeTab === 'notas'}
+                           <NotesTabSotDL />
+                        {:else}
+                           <div class="p-8 text-center text-slate-500 italic">
+                               {$t('common.labels.coming_soon')}
+                           </div>
+                        {/if}
+                     </div>
+                  </div>
+               </section>
+          </main>
+
+          <div class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 p-2 pb-safe z-50">
+             <TabNavigation />
+          </div>
+
       {:else}
+          <!-- WEIRD WIZARD VIEW -->
           <HistorySidebar isOpen={$isHistoryOpen} onClose={() => isHistoryOpen.set(false)} />
 
           <!-- Self-standing Modals -->
@@ -237,10 +334,10 @@
 
           <CharacterHeader />
 
-          <main class="w-full max-w-6xl mx-auto md:px-4 mt-0 md:mt-6 grid grid-cols-1 lg:grid-cols-12 gap-0 md:gap-6 pb-12">
+          <main class="w-full max-w-6xl mx-auto md:px-4 mt-0 md:mt-6 grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 pb-12">
 
              <!-- SIDEBAR ESQUERDA (desktop only) -->
-             <aside class="hidden lg:block lg:col-span-3 space-y-4">
+             <aside class="hidden md:block md:col-span-4 lg:col-span-3 space-y-4">
                 <AttributesSection />
 
                 <button onclick={() => modalState.set({type: 'pre_roll', isOpen: true, data: {type:'luck', source: {name:'Sorte'}}})} class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 p-4 rounded-2xl border border-emerald-500/30 flex items-center justify-center gap-3 group transition-all shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/20 active:scale-[0.98] cursor-pointer">
@@ -262,7 +359,7 @@
              </aside>
 
              <!-- MAIN CONTENT -->
-             <section class="lg:col-span-9">
+             <section class="md:col-span-8 lg:col-span-9">
                 <div class="bg-slate-900 md:rounded-xl md:border md:border-slate-800 min-h-[calc(100vh-200px)] md:min-h-[60vh] flex flex-col">
                    <TabNavigation />
 
@@ -272,7 +369,27 @@
                       {/if}
 
                       {#if $activeTab === 'acoes'}
-                         <ActionsTab />
+                         {#if isSotDL}
+                             <ActionsTabSotDL />
+                         {:else}
+                             <ActionsTab />
+                         {/if}
+                      {/if}
+
+                      {#if $activeTab === 'efeitos'}
+                         {#if isSotDL}
+                             <EffectsTabSotDL />
+                         {:else}
+                             <EffectsTab />
+                         {/if}
+                      {/if}
+
+                      {#if $activeTab === 'notas'}
+                         {#if isSotDL}
+                             <NotesTabSotDL />
+                         {:else}
+                             <NotesTab />
+                         {/if}
                       {/if}
 
                       {#if $activeTab === 'efeitos'}
@@ -308,5 +425,20 @@
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
         </div>
     {/if}
+   <!-- Shared Modals -->
+   <ItemEditor />
+   <SpellEditor />
+   <TalentEditor />
+   <EffectEditor />
+   <AttributeEditor />
+   <StatEditor />
+   <HealthDamageEditor />
+   <CharacterInfoEditor />
+   <ConfirmationModalContent />
+   <GrimoireSelection />
+   <TalentSelection />
+   <AttackOptionsContent />
+   <AfflictionManager />
+   <RestConfirmationContent />
 </div>
 ```

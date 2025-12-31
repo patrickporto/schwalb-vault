@@ -25,7 +25,8 @@
       "master": "Mestre",
       "session": "Sessão",
       "bestiary": "Bestiário",
-      "language": "Idioma"
+      "language": "Idioma",
+      "health_label": "Vida"
     },
     "status": {
       "syncing": "Sincronizando",
@@ -66,8 +67,19 @@
       "public_description": "Uma jornada por terras desconhecidas aguarda heróis.",
       "online": "Online"
     }
+
   },
   "campaign": {
+    "settings": {
+      "title": "Configurações da Campanha",
+      "initiative_style": "Estilo de Iniciativa",
+      "initiative_styles": {
+        "dle": "Demon Lord Engine (Padrão)",
+        "standard": "Padrão (Rápido/Lento)",
+        "team": "Iniciativa de Time",
+        "individual": "Individual (d20 + Agi)"
+      }
+    },
     "active": "Campanha Ativa",
     "waiting_approval": "Aguardando Aprovação",
     "leave_confirm": "Sair da campanha?",
@@ -114,7 +126,8 @@
       "defense": "Defesa",
       "speed": "Deslocamento",
       "bonus_damage": "Bônus de Dano",
-      "extra_dice": "Dados Extras"
+      "extra_dice": "Dados Extras",
+      "healing_rate": "Taxa de Cura"
     },
     "currency": {
       "title": "Moedas"
@@ -718,5 +731,115 @@
       }
     },
     "sync_info": "Suas configurações são sincronizadas automaticamente com sua conta do Google Drive sempre que forem alteradas."
+  },
+  "sofdl": {
+    "attributes": {
+      "strength": "Força",
+      "agility": "Agilidade",
+      "intellect": "Intelecto",
+      "will": "Vontade",
+      "perception": "Percepção",
+      "insanity": "Insanidade",
+      "corruption": "Corrupção",
+      "power": "Poder",
+      "speed": "Deslocamento",
+      "size": "Tamanho"
+    },
+    "afflictions": {
+      "asleep": {
+        "name": "Adormecido",
+        "description": "Uma criatura adormecida está caída e inconsciente. Outra criatura que possa alcançá-la pode usar uma ação para acordá-la. A menos que indicado o contrário, receber dano remove esta aflição."
+      },
+      "blinded": {
+        "name": "Cego",
+        "description": "Uma criatura cega não pode ver. Ela trata tudo como totalmente obscurecido. Outras criaturas fazem rolagens de ataque com 1 boon contra a Defesa ou Agilidade de uma criatura cega. Desafios de Percepção que dependem da visão falham automaticamente. Finalmente, o Deslocamento da criatura cega torna-se 2, a menos que seu normal seja menor."
+      },
+      "charmed": {
+        "name": "Enfeitiçado",
+        "description": "Uma criatura enfeitiçada vê a fonte da aflição como um amigo confiável e aliado. A criatura enfeitiçada não pode escolher a criatura que a enfeitiçou como alvo de seus ataques."
+      },
+      "compelled": {
+        "name": "Compelido",
+        "description": "Uma criatura compelida não pode usar ações ou se mover. Em vez disso, durante cada turno rápido, a criatura que causou a aflição pode forçar a criatura compelida a se mover até seu Deslocamento ou usar uma ação. A criatura causadora toma todas as decisões pela criatura compelida."
+      },
+      "dazed": {
+        "name": "Atordoado",
+        "description": "Uma criatura atordoada não pode usar ações."
+      },
+      "deafened": {
+        "name": "Surdo",
+        "description": "Uma criatura surda não pode ouvir. Desafios de Percepção para ouvir falham automaticamente."
+      },
+      "defenseless": {
+        "name": "Indefeso",
+        "description": "Uma criatura indefesa não pode se defender. Sua Defesa é 5, não pode usar ações e falha em desafios de atributo. A criatura ainda pode perceber os arredores e fazer testes de Percepção normalmente."
+      },
+      "diseased": {
+        "name": "Doente",
+        "description": "Uma criatura doente faz todas as rolagens de ataque e desafios com 1 bane."
+      },
+      "fatigued": {
+        "name": "Fatigado",
+        "description": "Uma criatura fatigada faz todas as rolagens de ataque e desafios com 1 bane."
+      },
+      "frightened": {
+        "name": "Assustado",
+        "description": "Uma criatura assustada faz todas as rolagens de ataque e desafios com 1 bane. Além disso, não pode realizar turnos rápidos."
+      },
+      "grabbed": {
+        "name": "Agarrado",
+        "description": "Os efeitos dependem do Tamanho. Se o Tamanho da criatura agarrada for <= ao do agarrador, ela não pode se mover até ser solta. Se for maior, o agarrador pode se mover com ela ou soltar (end grab)."
+      },
+      "immobilized": {
+        "name": "Imobilizado",
+        "description": "Uma criatura imobilizada tem Deslocamento 0 e não se beneficia de bônus de Deslocamento. Outras criaturas fazem ataques contra ela com 1 boon."
+      },
+      "impaired": {
+        "name": "Prejudicado",
+        "description": "Uma criatura prejudicada faz todas as rolagens de ataque e desafios com 1 bane."
+      },
+      "poisoned": {
+        "name": "Envenenado",
+        "description": "Uma criatura envenenada faz todas as rolagens de ataque e desafios com 1 bane."
+      },
+      "prone": {
+        "name": "Caído",
+        "description": "Uma criatura caída deita no chão. Outros podem se mover pelo seu espaço. Enquanto caída, só pode rastejar ou levantar-se. Faz rolagens de Força e Agilidade com 1 bane. Ataques corpo a corpo contra ela têm 1 boon, ataques à distância contra Defesa têm 1 bane."
+      },
+      "slowed": {
+        "name": "Lento",
+        "description": "Uma criatura lenta pode realizar apenas um turno lento, seu Deslocamento é reduzido à metade e não se beneficia de aumentos de Deslocamento."
+      },
+      "stunned": {
+        "name": "Aturdido",
+        "description": "Uma criatura aturdida não pode se mover ou usar ações. Falha automaticamente em todos os desafios. Outras criaturas fazem ataques contra ela com 1 boon."
+      },
+      "surprised": {
+        "name": "Surpreso",
+        "description": "Uma criatura surpresa não pode usar ações, se mover e falha automaticamente em desafios."
+      },
+      "unconscious": {
+        "name": "Inconsciente",
+        "description": "Uma criatura inconsciente é incapaz de agir, mover ou perceber. Defesa 5. Falha em todos os desafios."
+      }
+    },
+    "senses": {
+      "shadowsight": {
+        "name": "Visão na Penumbra",
+        "description": "A criatura pode ver em áreas obscurecidas por sombras como se estivessem iluminadas."
+      },
+      "darksight": {
+        "name": "Visão no Escuro",
+        "description": "A criatura pode ver em áreas de sombras e escuridão até médio alcance como se estivessem iluminadas. Além disso, trata escuridão como sombras."
+      },
+      "sightless": {
+        "name": "Sem Visão",
+        "description": "Conta com outros sentidos. Pode localizar criaturas a longo alcance. Ignora banes de obscurecimento. Nunca fica cega."
+      },
+      "truesight": {
+        "name": "Visão Verdadeira",
+        "description": "Vê em sombras e escuridão como se iluminado. Vê criaturas invisíveis e reconhece ilusões."
+      }
+    }
   }
 }

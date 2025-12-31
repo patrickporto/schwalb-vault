@@ -68,6 +68,16 @@
         }
     },
     "campaign": {
+        "settings": {
+            "title": "Campaign Settings",
+            "initiative_style": "Initiative Style",
+            "initiative_styles": {
+                "dle": "Demon Lord Engine (Default)",
+                "standard": "Standard (Fast/Slow)",
+                "team": "Team Initiative",
+                "individual": "Individual (d20 + Agi)"
+            }
+        },
         "active": "Active Campaign",
         "waiting_approval": "Waiting Approval",
         "leave_confirm": "Leave campaign?",
@@ -114,7 +124,8 @@
             "defense": "Defense",
             "speed": "Speed",
             "bonus_damage": "Bonus Damage",
-            "extra_dice": "Extra Dice"
+            "extra_dice": "Extra Dice",
+            "healing_rate": "Healing Rate"
         },
         "currency": {
             "title": "Currency"
@@ -719,5 +730,120 @@
         }
       },
       "sync_info": "Your settings are automatically synchronized with your Google Drive account whenever they are changed."
+    },
+    "sofdl": {
+        "attributes": {
+            "strength": "Strength",
+            "agility": "Agility",
+            "intellect": "Intellect",
+            "will": "Will",
+            "perception": "Perception",
+            "insanity": "Insanity",
+            "corruption": "Corruption",
+            "power": "Power",
+            "speed": "Speed",
+            "size": "Size"
+        },
+        "professions": {
+            "title": "Professions",
+            "none": "No professions.",
+            "add_placeholder": "Add new profession..."
+        },
+        "afflictions": {
+            "asleep": {
+                "name": "Asleep",
+                "description": "A sleeping creature is prone and unconscious. Another creature that can reach it can use an action to wake it up. Unless otherwise noted, taking damage removes this affliction."
+            },
+            "blinded": {
+                "name": "Blinded",
+                "description": "A blinded creature cannot see. It treats everything else as totally obscured. Other creatures make attack rolls with 1 boon against a blinded creature’s Defense or Agility. Perception challenge rolls that rely on sight automatically result in a failure. Finally, the blinded creature’s Speed becomes 2 unless its normal Speed is lower."
+            },
+            "charmed": {
+                "name": "Charmed",
+                "description": "A charmed creature sees the source of the affliction as a trusted friend and ally. The charmed creature cannot choose the creature that bestowed the affliction as the target of its attacks."
+            },
+            "compelled": {
+                "name": "Compelled",
+                "description": "A compelled creature cannot use actions or move. Instead, during each fast turn, the creature that bestowed the affliction can force the compelled creature to move up to its Speed or to use an action. The creature that bestowed the affliction makes all decisions on the compelled creature’s behalf."
+            },
+            "dazed": {
+                "name": "Dazed",
+                "description": "A dazed creature cannot use actions."
+            },
+            "deafened": {
+                "name": "Deafened",
+                "description": "A deafened creature cannot hear. Perception challenge rolls made to listen automatically result in failure."
+            },
+            "defenseless": {
+                "name": "Defenseless",
+                "description": "A defenseless creature cannot defend itself. Its Defense is 5, it cannot use actions, and its challenge rolls using attributes result in failure. The creature can still perceive its surroundings, however, and can make Perception challenge rolls as normal."
+            },
+            "diseased": {
+                "name": "Diseased",
+                "description": "A diseased creature makes all attack rolls and challenge rolls with 1 bane."
+            },
+            "fatigued": {
+                "name": "Fatigued",
+                "description": "A fatigued creature makes all attack rolls and challenge rolls with 1 bane."
+            },
+            "frightened": {
+                "name": "Frightened",
+                "description": "A frightened creature makes all attack rolls and challenge rolls with 1 bane. As well, frightened creatures cannot take fast turns."
+            },
+            "grabbed": {
+                "name": "Grabbed",
+                "description": "The effects depend on Size. If grabbed creature’s Size <= grabber's, it cannot move away until removed. If larger, grabber can move with it or end grab."
+            },
+            "immobilized": {
+                "name": "Immobilized",
+                "description": "An immobilized creature has Speed 0 and cannot benefit from bonuses to Speed. Other creatures make all attack rolls against the immobilized creature with 1 boon."
+            },
+            "impaired": {
+                "name": "Impaired",
+                "description": "An impaired creature makes all attack rolls and challenge rolls with 1 bane."
+            },
+            "poisoned": {
+                "name": "Poisoned",
+                "description": "A poisoned creature makes all attack rolls and challenge rolls with 1 bane."
+            },
+            "prone": {
+                "name": "Prone",
+                "description": "A prone creature lies on the ground. Others can move through its space. While prone, can move only by crawling or stand up. Prone creature makes Strength and Agility rolls with 1 bane. Melee attacks against it have 1 boon, ranged attacks against Defense have 1 bane."
+            },
+            "slowed": {
+                "name": "Slowed",
+                "description": "A slowed creature can take only a slow turn, its Speed is halved, and it cannot benefit from increases to Speed."
+            },
+            "stunned": {
+                "name": "Stunned",
+                "description": "A stunned creature cannot move or use actions. Automatically gets failures on all challenge rolls. Other creatures make all attack rolls against the stunned creature with 1 boon."
+            },
+            "surprised": {
+                "name": "Surprised",
+                "description": "A surprised creature cannot use actions, cannot move, and automatically gets a failure on all challenge rolls it would make."
+            },
+            "unconscious": {
+                "name": "Unconscious",
+                "description": "An unconscious creature is unable to act, move, or perceive its surroundings. Defense is 5. Cannot use actions or move, and all challenge rolls result in failure."
+            }
+        },
+        "senses": {
+            "shadowsight": {
+                "name": "Shadowsight",
+                "description": "The creature can see in areas obscured by shadows as if those areas were lit."
+            },
+            "darksight": {
+                "name": "Darksight",
+                "description": "The creature can see in areas obscured by shadows and darkness within medium range of it as if those areas were lit. Beyond this distance, treats darkness as shadows and shadows as lit."
+            },
+            "sightless": {
+                "name": "Sightless",
+                "description": "Relies on senses other than sight. Can pinpoint creatures/objects within long range. Creatures within area cannot hide from it. Ignores banes from obscurement. Never subject to blinded."
+            },
+            "truesight": {
+                "name": "Truesight",
+                "description": "Can see in shadows and darkness as if lit. Can see invisible creatures and objects. Automatically recognizes illusions."
+            }
+        }
     }
 }

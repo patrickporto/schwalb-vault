@@ -1,6 +1,7 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { character, modalState } from '$lib/stores/characterStore';
+    import { sotdlCharacter, sotdlCharacterActions } from '$lib/stores/characterStoreSotDL';
     import Modal from '$lib/components/common/Modal.svelte';
 
     let isOpen = $derived($modalState.isOpen && $modalState.type === 'stat');
@@ -9,9 +10,21 @@
 
     $effect(() => {
         if (isOpen && data) {
-             formData = data === 'defense' 
-                ? { key: 'naturalDefense', name: 'Defesa Natural', value: $character.naturalDefense }
-                : { key: 'speed', name: 'Velocidade', value: $character.speed };
+            if (data.system === 'sofdl') {
+                const key = data.key;
+                // Handle different keys for labels if needed, or use translation key in label
+                formData = {
+                    key,
+                    value: $sotdlCharacter[key as keyof typeof $sotdlCharacter],
+                    system: 'sofdl',
+                    // Default labels, can be improved with t() lookup based on key
+                    name: key.charAt(0).toUpperCase() + key.slice(1)
+                };
+            } else {
+                 formData = data === 'defense'
+                    ? { key: 'naturalDefense', name: 'Defesa Natural', value: $character.naturalDefense }
+                    : { key: 'speed', name: 'Velocidade', value: $character.speed };
+            }
         }
     });
 
@@ -20,10 +33,24 @@
     }
 
     function saveStat() {
-        character.update(c => ({
-            ...c,
-            [formData.key]: parseInt(formData.value as any) || 0
-        }));
+        if (formData.system === 'sofdl') {
+             // For Attributes, use sotdlCharacterActions.updateAttribute? No, this is for stats
+             // We can use updateStat or generic update
+             if (formData.key === 'insanity' || formData.key === 'corruption') {
+                 sotdlCharacterActions.updateStat(formData.key, parseInt(formData.value));
+             } else {
+                 // Fallback for other stats like speed, defense, etc.
+                 sotdlCharacter.update(c => ({
+                     ...c,
+                     [formData.key]: parseInt(formData.value) || 0
+                 }));
+             }
+        } else {
+            character.update(c => ({
+                ...c,
+                [formData.key]: parseInt(formData.value as any) || 0
+            }));
+        }
         onClose();
     }
 </script>
@@ -33,7 +60,7 @@
         <h3 class="text-white font-bold text-lg uppercase">{formData.name}</h3>
         <div>
             <label class="text-xs text-slate-400 uppercase font-bold">
-                {$t('character.modals.base_value')} 
+                {$t('character.modals.base_value')}
                 <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.value} />
             </label>
         </div>

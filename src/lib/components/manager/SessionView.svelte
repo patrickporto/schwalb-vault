@@ -6,15 +6,17 @@
     import { character, characterActions, isHistoryOpen } from '$lib/stores/characterStore';
     import { campaignsMap } from '$lib/db';
     import { resolve } from '$app/paths';
-    import { Users, UserPlus, Ghost, GripVertical, Plus, Minus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History, Layers, Play, Copy, QrCode, Check, Globe, Wifi, Trash2, Search, Library, PlusCircle, LayoutDashboard } from 'lucide-svelte';
+    import { Users, UserPlus, Ghost, GripVertical, Plus, Minus, Swords, RotateCcw, X, Clock, AlertTriangle, Dices, ChevronLeft, ChevronDown, ChevronUp, History, Layers, Play, Copy, QrCode, Check, Globe, Wifi, Trash2, Search, Library, PlusCircle, LayoutDashboard, Brain, Skull, Eye } from 'lucide-svelte';
     import DiceRollModal from '$lib/components/common/DiceRollModal.svelte';
     import CombatCard from './CombatCard.svelte';
     import HistorySidebar from '$lib/components/character/HistorySidebar.svelte';
     import ConfirmationModal from './ConfirmationModal.svelte';
     import { flip } from 'svelte/animate';
     import { calculateDiceRoll } from '$lib/logic/dice';
-import { onMount } from 'svelte';
-import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncCharacter } from '$lib/logic/sync';
+    import { onMount } from 'svelte';
+    import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncCharacter } from '$lib/logic/sync';
+    import type { InitiativeStyle } from '$lib/systems';
+    import { sortCombatants } from '$lib/logic/initiative';
 
     let { campaign } = $props<{ campaign: any }>();
 
@@ -78,6 +80,7 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
     let combat = $derived(campaign?.combat || defaultCombat);
     let activeEnemies = $derived(campaign?.activeEnemies || []);
     let campaignMembers = $derived(campaign?.members || []);
+    let currentStyle = $derived<InitiativeStyle>(campaign?.initiativeStyle || 'dle');
 
     // Players present in the campaign - includes those in the session roster and anyone who joined via invite
     // IMPORTANT: Member data (synced via WebRTC) takes priority for real-time fields like health/damage
@@ -303,25 +306,12 @@ import { joinCampaignRoom, leaveCampaignRoom, syncCombat, syncCampaign, syncChar
         return () => clearInterval(int);
     });
 
-    // Explicit derivation of sorted combatants
+    // Explicit derivation of sorted combatants based on Initiative Style
     let sortedCombatants = $derived<any[]>((() => {
         // Players to show: ONLY those in roster
         const activePlayers = players.filter(p => roster.includes(p.id));
 
-        const playersWithInit = activePlayers.filter(c => c && c.initiative).map(c => ({...c, type: 'player'}));
-        const enemies = activeEnemies.map(e => ({...e, type: 'enemy'}));
-        const playersNoInit = activePlayers.filter(c => c && !c.initiative).map(c => ({...c, type: 'player'}));
-
-        const all = [...playersWithInit, ...enemies, ...playersNoInit];
-
-        const seen = new Set();
-        return all.filter(entity => {
-            if (!entity) return false;
-            const key = entity.type === 'player' ? entity.id : entity.instanceId;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
+        return sortCombatants(currentStyle, activePlayers, activeEnemies);
     })());
 
     function isOnline(char: any) {

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { character, modalState } from '$lib/stores/characterStore';
+    import { sotdlCharacter, sotdlCharacterActions } from '$lib/stores/characterStoreSotDL';
     import Modal from '$lib/components/common/Modal.svelte';
 
     let isOpen = $derived($modalState.isOpen && $modalState.type === 'attribute');
@@ -10,6 +11,8 @@
     $effect(() => {
         if (isOpen && data) {
             formData = { ...data };
+            // If SotDL, ensure we have the localized name if not passed in data
+            // data from AttributesSectionSotDL usually has: system, key, value
         }
     });
 
@@ -18,24 +21,28 @@
     }
 
     function saveAttribute() {
-         character.update(c => ({
-             ...c,
-             attributes: c.attributes.map(a => a.key === formData.key ? { ...a, value: parseInt(formData.value) } : a)
-         }));
+         if (formData.system === 'sofdl') {
+             sotdlCharacterActions.updateAttribute(formData.key, parseInt(formData.value));
+         } else {
+             character.update(c => ({
+                 ...c,
+                 attributes: c.attributes.map(a => a.key === formData.key ? { ...a, value: parseInt(formData.value) } : a)
+             }));
+         }
          onClose();
     }
 </script>
 
-<Modal 
-    {isOpen} 
-    title={$t('character.modals.attribute')} 
+<Modal
+    {isOpen}
+    title={$t('character.modals.attribute')}
     {onClose}
 >
     <div class="space-y-4 p-1">
         <h3 class="text-white font-bold text-lg">{formData.name}</h3>
         <div>
             <label class="text-xs text-slate-400 uppercase font-bold">
-                {$t('character.modals.base_value')} 
+                {$t('character.modals.base_value')}
                 <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.value} />
             </label>
         </div>

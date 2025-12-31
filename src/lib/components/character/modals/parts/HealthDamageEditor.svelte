@@ -1,14 +1,23 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
     import { damage, normalHealth, currentHealth, modalState } from '$lib/stores/characterStore';
+    import { sotdlCharacter, sotdlCharacterActions } from '$lib/stores/characterStoreSotDL';
     import Modal from '$lib/components/common/Modal.svelte';
 
-    let isOpen = $derived($modalState.isOpen && $modalState.type === 'health');
+    let isOpen = $derived($modalState.isOpen && ($modalState.type === 'health' || $modalState.type === 'health_damage'));
+    let isSotDL = $derived($modalState.type === 'health_damage');
     let formData = $state({ d: 0, nh: 0, ch: 0 });
 
     $effect(() => {
         if (isOpen) {
-            formData = { d: $damage, nh: $normalHealth, ch: $currentHealth };
+            if (isSotDL) {
+                // SotDL: Calculate current health from Health - Damage
+                const health = $sotdlCharacter.health;
+                const dmg = $sotdlCharacter.damage;
+                formData = { d: dmg, nh: health, ch: health - dmg };
+            } else {
+                formData = { d: $damage, nh: $normalHealth, ch: $currentHealth };
+            }
         }
     });
 
@@ -17,35 +26,74 @@
     }
 
     function saveHealth() {
-        damage.set(Math.max(0, parseInt(formData.d as any)));
-        normalHealth.set(Math.max(1, parseInt(formData.nh as any)));
-        currentHealth.set(Math.max(0, parseInt(formData.ch as any)));
+        if (isSotDL) {
+            // SotDL: Save Damage directly
+            const newDamage = Math.max(0, parseInt(formData.d as any));
+
+            sotdlCharacter.update(c => ({
+                ...c,
+                damage: newDamage
+            }));
+        } else {
+            damage.set(Math.max(0, parseInt(formData.d as any)));
+            normalHealth.set(Math.max(1, parseInt(formData.nh as any)));
+            currentHealth.set(Math.max(0, parseInt(formData.ch as any)));
+        }
         onClose();
+    }
+
+    // Reactivity for SotDL inputs to sync Damage <-> Current Health
+    function handleDamageChange() {
+        if (isSotDL) {
+             const d = parseInt(formData.d as any) || 0;
+             formData.ch = Math.max(0, formData.nh - d);
+        }
+    }
+
+    function handleCurrentHealthChange() {
+        if (isSotDL) {
+             const ch = parseInt(formData.ch as any) || 0;
+             formData.d = Math.max(0, formData.nh - ch);
+        }
     }
 </script>
 
 <Modal {isOpen} title={$t('character.modals.health_damage')} {onClose}>
     <div class="space-y-4 p-1">
         <div class="grid grid-cols-2 gap-4">
+            {#if !isSotDL}
             <div>
                 <label class="text-xs text-slate-400 uppercase font-bold">
-                    {$t('character.modals.normal_health')} 
+                    {$t('character.modals.normal_health')}
                     <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.nh} />
                 </label>
             </div>
-            <div>
+            {/if}
+            <div class={isSotDL ? "col-span-2" : ""}>
                 <label class="text-xs text-slate-400 uppercase font-bold">
-                    {$t('character.modals.current_health')} 
-                    <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.ch} />
+                    {$t('character.modals.current_health')}
+                    <input
+                        type="number"
+                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"
+                        bind:value={formData.ch}
+                        oninput={handleCurrentHealthChange}
+                    />
                 </label>
             </div>
         </div>
+
         <div>
             <label class="text-xs text-red-400 uppercase font-bold">
-                {$t('character.modals.damage')} 
-                <input type="number" class="w-full bg-slate-900 border border-red-900/50 rounded p-2 text-white" bind:value={formData.d} />
+                {$t('character.modals.damage')}
+                <input
+                    type="number"
+                    class="w-full bg-slate-900 border border-red-900/50 rounded p-2 text-white"
+                    bind:value={formData.d}
+                    oninput={handleDamageChange}
+                />
             </label>
         </div>
+
         <button onclick={saveHealth} class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded">
             {$t('character.modals.update')}
         </button>
