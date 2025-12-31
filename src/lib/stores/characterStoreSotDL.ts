@@ -208,18 +208,18 @@ export const sotdlDerivedStats = derived([sotdlCharacter, sotdlActiveEffects], (
     eff.modifiers.forEach((mod: any) => {
       const val = evaluateModifierValueSotDL(mod.value, $c);
       switch (mod.target) {
-        case 'strength': stats.strength += val; break;
-        case 'agility': stats.agility += val; break;
-        case 'intellect': stats.intellect += val; break;
-        case 'will': stats.will += val; break;
-        case 'perception': stats.perception += val; break;
-        case 'defense': stats.defense += val; break;
-        case 'health': stats.health += val; break;
-        case 'speed': stats.speed += val; break;
+        case 'strength': stats.strength = Math.floor(stats.strength + val); break;
+        case 'agility': stats.agility = Math.floor(stats.agility + val); break;
+        case 'intellect': stats.intellect = Math.floor(stats.intellect + val); break;
+        case 'will': stats.will = Math.floor(stats.will + val); break;
+        case 'perception': stats.perception = Math.floor(stats.perception + val); break;
+        case 'defense': stats.defense = Math.floor(stats.defense + val); break;
+        case 'health': stats.health = Math.floor(stats.health + val); break;
+        case 'speed': stats.speed = Math.floor(stats.speed + val); break;
         case 'healingRate':
-        case 'healing_rate': stats.healingRate += val; break;
-        case 'power': stats.power += val; break;
-        case 'boons': stats.boons += val; break;
+        case 'healing_rate': stats.healingRate = Math.floor(stats.healingRate + val); break;
+        case 'power': stats.power = Math.floor(stats.power + val); break;
+        case 'boons': stats.boons = Math.floor(stats.boons + val); break;
       }
     });
   });

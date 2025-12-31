@@ -522,10 +522,10 @@ export const characterActions = {
                 attrUsed = attrLabel;
             }
 
-            const effectBoons = selectedEffects
+            const effectBoons = Math.floor(selectedEffects
                 .flatMap(e => Array.isArray(e.modifiers) ? e.modifiers : [])
                 .filter(m => m.target === 'boons' && m.type === MOD_TYPES.ADD)
-                .reduce((acc, m) => acc + evaluateModifierValue(m.value, char), 0);
+                .reduce((acc, m) => acc + evaluateModifierValue(m.value, char), 0));
 
             modifier += effectBoons;
 
