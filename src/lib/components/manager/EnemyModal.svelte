@@ -4,7 +4,7 @@
     import Avatar from '../common/Avatar.svelte';
     import ImageCropperModal from '../common/ImageCropperModal.svelte';
     import { saveImage } from '$lib/logic/image';
-    
+
     interface Props {
         isOpen: boolean;
         initialData?: string;
@@ -47,13 +47,13 @@
     }
 
     function createDefaultForm() {
-        return { 
-            name: '', difficulty: 1, defense: 10, health: 10, damage: 0, size: 1, speed: 10, 
+        return {
+            name: '', difficulty: 1, defense: 10, health: 10, damage: 0, size: 1, speed: 10,
             description: '', senses: '', languages: '', immune: '', imageUrl: '',
             stats: { str: 10, agi: 10, int: 10, wil: 10 },
-            traits: [] as {name: string, desc: string}[], 
-            actions: [] as {name: string, desc: string}[], 
-            reactions: [] as {name: string, desc: string}[], 
+            traits: [] as {name: string, desc: string}[],
+            actions: [] as {name: string, desc: string}[],
+            reactions: [] as {name: string, desc: string}[],
             endOfRound: [] as {name: string, desc: string}[]
         };
     }
@@ -76,7 +76,7 @@
     function addAbility(key: 'traits' | 'actions' | 'reactions' | 'endOfRound') {
         form[key] = [...form[key], { name: '', desc: '' }];
     }
-    
+
     function removeAbility(key: 'traits' | 'actions' | 'reactions' | 'endOfRound', index: number) {
         form[key] = form[key].filter((_, i) => i !== index);
     }
@@ -91,20 +91,20 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onclick={handleBackdropClick} role="button" aria-label={$t('session.enemy_modal.close')} tabindex="-1">
     <div class="bg-slate-800 rounded-xl w-full max-w-6xl h-[90vh] border border-slate-700 shadow-2xl overflow-hidden flex flex-col lg:flex-row" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-          
+
           <!-- Editor Column -->
           <div class="w-full lg:w-1/2 flex flex-col h-full border-r border-slate-700">
                 <div class="p-4 border-b border-slate-700 bg-slate-900 flex justify-between items-center">
                     <h3 id="modal-title" class="font-bold text-white text-lg">{$t('session.enemy_modal.title')}</h3>
                     <button onclick={onClose} class="lg:hidden text-slate-400 hover:text-white"><X size={20}/></button>
                 </div>
-                
+
                 <div class="flex border-b border-slate-700 bg-slate-900/50">
                     <button onclick={() => tab = 'stats'} class="flex-1 py-3 text-sm font-bold border-b-2 transition-colors {tab === 'stats' ? 'border-indigo-500 text-indigo-400 bg-slate-800' : 'border-transparent text-slate-500 hover:text-white'}">{$t('session.enemy_modal.tab_general')}</button>
                     <button onclick={() => tab = 'attributes'} class="flex-1 py-3 text-sm font-bold border-b-2 transition-colors {tab === 'attributes' ? 'border-indigo-500 text-indigo-400 bg-slate-800' : 'border-transparent text-slate-500 hover:text-white'}">{$t('session.enemy_modal.tab_attributes')}</button>
                     <button onclick={() => tab = 'abilities'} class="flex-1 py-3 text-sm font-bold border-b-2 transition-colors {tab === 'abilities' ? 'border-indigo-500 text-indigo-400 bg-slate-800' : 'border-transparent text-slate-500 hover:text-white'}">{$t('session.enemy_modal.tab_abilities')}</button>
                 </div>
-                
+
                 <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-800/50">
                     {#if tab === 'stats'}
                         <div class="space-y-4">
@@ -130,9 +130,9 @@
                              </div>
                              <div>
                                  <label for="enemy-desc" class="text-xs text-slate-500 uppercase font-bold block mb-1">{$t('session.enemy_modal.description')}</label>
-                                 <textarea 
+                                 <textarea
                                      id="enemy-desc"
-                                     class="w-full bg-slate-900 border border-slate-700 rounded p-3 text-white text-sm min-h-[100px] resize-none focus:border-indigo-500 focus:outline-none transition-colors" 
+                                     class="w-full bg-slate-900 border border-slate-700 rounded p-3 text-white text-sm min-h-[100px] resize-none focus:border-indigo-500 focus:outline-none transition-colors"
                                      placeholder={$t('session.enemy_modal.description_placeholder')}
                                      bind:value={form.description}
                                  ></textarea>
@@ -148,7 +148,7 @@
                                 <div class="grid grid-cols-4 gap-3">
                                     {#each ['str', 'agi', 'int', 'wil'] as attr}
                                         <div class="bg-slate-900 p-2 rounded border border-slate-700 text-center">
-                                            <label for="attr-{attr}" class="text-[10px] text-slate-500 uppercase font-bold block mb-1">{attr}</label>
+                                            <label for="attr-{attr}" class="text-[10px] text-slate-500 uppercase font-bold block mb-1">{$t('sofww.attributes.' + attr).substring(0,3)}</label>
                                             <input id="attr-{attr}" type="number" class="w-full bg-transparent text-center font-bold text-white text-xl focus:outline-none mb-1" bind:value={form.stats[attr as 'str' | 'agi' | 'int' | 'wil']} />
                                             <div class="text-xs font-bold {(form.stats[attr as 'str' | 'agi' | 'int' | 'wil'] - 10) >= 0 ? 'text-green-500' : 'text-red-500'}">{(form.stats[attr as 'str' | 'agi' | 'int' | 'wil'] - 10) >= 0 ? '+' : ''}{form.stats[attr as 'str' | 'agi' | 'int' | 'wil'] - 10}</div>
                                         </div>
@@ -164,22 +164,22 @@
                     {:else if tab === 'abilities'}
                          <div class="space-y-6">
                             {#each [
-                                { key: 'traits' as const, title: 'Traços (Traits)', color: 'text-indigo-400', border: 'border-indigo-500/30' },
-                                { key: 'actions' as const, title: 'Ações', color: 'text-red-400', border: 'border-red-500/30' },
-                                { key: 'reactions' as const, title: 'Reações', color: 'text-orange-400', border: 'border-orange-500/30' },
-                                { key: 'endOfRound' as const, title: 'Fim da Rodada', color: 'text-yellow-400', border: 'border-yellow-500/30' }
+                                { key: 'traits' as const, label: 'traits', color: 'text-indigo-400', border: 'border-indigo-500/30' },
+                                { key: 'actions' as const, label: 'actions', color: 'text-red-400', border: 'border-red-500/30' },
+                                { key: 'reactions' as const, label: 'reactions', color: 'text-orange-400', border: 'border-orange-500/30' },
+                                { key: 'endOfRound' as const, label: 'end_of_round', color: 'text-yellow-400', border: 'border-yellow-500/30' }
                             ] as section}
                                 <div class="p-4 bg-slate-900 rounded border {section.border}">
                                     <div class="flex justify-between items-center mb-3">
-                                        <h4 class="font-bold text-sm uppercase {section.color}">{section.title}</h4>
+                                        <h4 class="font-bold text-sm uppercase {section.color}">{$t('session.enemy_modal.' + section.label)}</h4>
                                         <button onclick={() => addAbility(section.key)} class="text-xs bg-slate-800 px-2 py-1 rounded hover:bg-slate-700 text-white flex items-center gap-1 border border-slate-700"><Plus size={12}/> {$t('session.enemy_modal.add')}</button>
                                     </div>
                                     <div class="space-y-3">
                                         {#each form[section.key] as item, idx}
                                             <div class="flex gap-2 items-start animate-in fade-in slide-in-from-left-2">
                                                 <div class="flex-1 space-y-1">
-                                                    <input class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm font-bold placeholder-slate-600 focus:border-indigo-500 focus:outline-none" placeholder="Nome" bind:value={item.name} />
-                                                    <textarea class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm placeholder-slate-600 resize-none focus:border-indigo-500 focus:outline-none" rows="2" placeholder="Descrição..." bind:value={item.desc}></textarea>
+                                                    <input class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm font-bold placeholder-slate-600 focus:border-indigo-500 focus:outline-none" placeholder={$t('session.enemy_modal.name_placeholder')} bind:value={item.name} />
+                                                    <textarea class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm placeholder-slate-600 resize-none focus:border-indigo-500 focus:outline-none" rows="2" placeholder={$t('session.enemy_modal.desc_placeholder')} bind:value={item.desc}></textarea>
                                                 </div>
                                                 <button onclick={() => removeAbility(section.key, idx)} class="mt-1 text-slate-600 hover:text-red-400 p-2 hover:bg-slate-800 rounded"><Trash2 size={16}/></button>
                                             </div>
@@ -199,7 +199,7 @@
                     <button onclick={() => onSave(form)} class="px-6 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold flex items-center gap-2 transition-colors"><Save size={18}/> {$t('common.buttons.save')}</button>
                 </div>
           </div>
-          
+
           <!-- Preview Column -->
           <div class="hidden lg:flex w-1/2 bg-slate-950 flex-col border-l border-slate-800">
                 <div class="p-4 border-b border-slate-800 bg-slate-950">
@@ -209,7 +209,7 @@
                      <!-- Card Preview -->
                      <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl p-5 shadow-2xl relative">
                          <div class="absolute -top-3 -right-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border border-red-400">{$t('session.enemy_modal.difficulty')} {form.difficulty}</div>
-                         
+
                          <div class="flex items-center gap-3 mb-4">
                             {#if form.imageUrl}
                             <div class="w-16 h-16 rounded-lg overflow-hidden border border-slate-700 shadow-lg flex-shrink-0">
@@ -221,14 +221,14 @@
                                 <div class="h-1 w-20 bg-red-600 rounded-full"></div>
                             </div>
                          </div>
-                         
+
                          <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
                              <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center"><span class="text-slate-500 uppercase font-bold text-[10px]">{$t('session.enemy_modal.defense')}</span> <span class="text-white font-mono font-bold text-lg">{form.defense}</span></div>
                              <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center"><span class="text-slate-500 uppercase font-bold text-[10px]">{$t('session.enemy_modal.health')}</span> <span class="text-white font-mono font-bold text-lg">{form.health}</span></div>
                              <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center"><span class="text-slate-500 uppercase font-bold text-[10px]">{$t('session.enemy_modal.size')}</span> <span class="text-white font-mono font-bold">{form.size}</span></div>
                              <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center"><span class="text-slate-500 uppercase font-bold text-[10px]">{$t('session.enemy_modal.speed')}</span> <span class="text-white font-mono font-bold">{form.speed}</span></div>
                          </div>
-                         
+
                          <!-- Stats -->
                          <div class="grid grid-cols-4 gap-2 mb-6 text-center font-mono text-slate-300">
                              {#each ['str', 'agi', 'int', 'wil'] as attr}
@@ -238,7 +238,7 @@
                                  </div>
                              {/each}
                          </div>
-                         
+
                          <!-- Resistances/Senses -->
                          <div class="mb-6 space-y-2 text-xs">
                             {#if form.senses}
@@ -251,7 +251,7 @@
                                 <div class="flex gap-2"><span class="font-bold text-slate-500 uppercase">{$t('session.enemy_modal.immunities')}:</span> <span class="text-white">{form.immune}</span></div>
                             {/if}
                          </div>
-                         
+
                          <div class="space-y-5 text-sm">
                               {#if form.traits.length > 0}
                                   <div><h4 class="font-bold text-indigo-400 uppercase text-xs mb-2 tracking-wider">{$t('session.enemy_modal.traits')}</h4>
@@ -265,7 +265,7 @@
                                      <div class="mb-2 pl-3 border-l-2 border-red-900/50"><span class="font-bold text-white">{t.name}:</span> <span class="text-slate-300">{t.desc}</span></div>
                                   {/each}</div>
                               {/if}
-                               
+
                               {#if form.reactions.length > 0}
                                   <div><h4 class="font-bold text-orange-400 uppercase text-xs mb-2 tracking-wider">{$t('session.enemy_modal.reactions')}</h4>
                                   {#each form.reactions as t}
@@ -286,14 +286,14 @@
     </div>
 </div>
 
-<input 
-    type="file" 
-    bind:this={fileInput} 
-    onchange={handleFileSelect} 
-    hidden 
-    accept="image/*" 
+<input
+    type="file"
+    bind:this={fileInput}
+    onchange={handleFileSelect}
+    hidden
+    accept="image/*"
 />
-<ImageCropperModal 
+<ImageCropperModal
     isOpen={isCropperOpen}
     imageUrl={tempImage}
     onClose={() => isCropperOpen = false}

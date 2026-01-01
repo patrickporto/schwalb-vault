@@ -4,6 +4,7 @@
     import { Ghost, Layers, Plus, Edit, Trash2, GripVertical, Play } from 'lucide-svelte';
     import { enemiesMap, encountersMap, campaignsMap } from '$lib/db';
     import { uuidv7 } from 'uuidv7';
+    import EnemyModalSotDL from './EnemyModalSotDL.svelte';
     import EnemyModal from './EnemyModal.svelte';
     import EncounterModal from './EncounterModal.svelte';
     import ConfirmationModal from './ConfirmationModal.svelte';
@@ -36,7 +37,18 @@
 
     function openEnemyModal(enemy: any = null) {
         editingEnemyId = enemy ? enemy.id : null;
-        enemyFormStr = JSON.stringify(enemy || createDefaultEnemy());
+        if (enemy) {
+            enemyFormStr = JSON.stringify(enemy);
+        } else {
+            // If it's a new enemy (enemy is null)
+            if (currentSystem === 'sofdl') {
+                // For SotDL, pass empty object so the component uses its own internal default
+                enemyFormStr = "{}";
+            } else {
+                // For WW, preserve existing behavior
+                enemyFormStr = JSON.stringify(createDefaultEnemy());
+            }
+        }
         isEnemyModalOpen = true;
     }
 
@@ -270,7 +282,11 @@
         {/if}
     </div>
 
-    <EnemyModal isOpen={isEnemyModalOpen} initialData={enemyFormStr} onClose={() => isEnemyModalOpen = false} onSave={saveEnemy} />
+    {#if currentSystem === 'sofdl'}
+        <EnemyModalSotDL isOpen={isEnemyModalOpen} initialData={enemyFormStr} onClose={() => isEnemyModalOpen = false} onSave={saveEnemy} />
+    {:else}
+        <EnemyModal isOpen={isEnemyModalOpen} initialData={enemyFormStr} onClose={() => isEnemyModalOpen = false} onSave={saveEnemy} />
+    {/if}
     <EncounterModal isOpen={isEncounterModalOpen} initialData={encounterFormStr} onClose={() => isEncounterModalOpen = false} onSave={saveEncounter} />
 
     <ConfirmationModal

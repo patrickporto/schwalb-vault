@@ -620,7 +620,21 @@
             "defense": "Defense",
             "health": "Health",
             "enemy_default": "Enemy",
-            "image_error": "Error saving image"
+            "image_error": "Error saving image",
+            "title_sotdl": "Create Enemy (Demon Lord)",
+            "descriptors": "Descriptors",
+            "special_attacks": "Special Attacks",
+            "attack_options": "Attack Options",
+            "speed_notes": "Speed Notes",
+            "melee": "Melee",
+            "ranged": "Ranged",
+            "attack_placeholder": "Attack (ex: +1 with 1 boon)",
+            "damage_placeholder": "Damage (ex: 1d6 + 1)",
+            "desc_effects_placeholder": "Description / Special Effects...",
+            "descriptors_placeholder": "frightening undead",
+            "speed_notes_placeholder": "Shuffling Advance",
+            "senses_placeholder_sotdl": "shadowsight, darksight",
+            "immunities_placeholder_sotdl": "disease, poison, insanity..."
         },
         "encounter_modal": {
             "title": "Create/Edit Encounter",

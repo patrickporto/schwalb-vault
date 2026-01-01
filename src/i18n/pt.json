@@ -613,7 +613,21 @@
       "defense": "Defesa",
       "health": "Vida",
       "enemy_default": "Inimigo",
-      "image_error": "Erro ao salvar imagem"
+      "image_error": "Erro ao salvar imagem",
+      "title_sotdl": "Criar Inimigo (Demon Lord)",
+      "descriptors": "Descritores",
+      "special_attacks": "Ataques Especiais",
+      "attack_options": "Opções de Ataque",
+      "speed_notes": "Notas de Movimento",
+      "melee": "Corpo a corpo",
+      "ranged": "À distância",
+      "attack_placeholder": "Ataque (ex: +1 com 1 boon)",
+      "damage_placeholder": "Dano (ex: 1d6 + 1)",
+      "desc_effects_placeholder": "Descrição / Efeitos especiais...",
+      "descriptors_placeholder": "morto-vivo assustador",
+      "speed_notes_placeholder": "Avanço Trôpego",
+      "senses_placeholder_sotdl": "visão no escuro",
+      "immunities_placeholder_sotdl": "doença, veneno, insanidade..."
     },
     "encounter_modal": {
       "title": "Criar/Editar Encontro",
