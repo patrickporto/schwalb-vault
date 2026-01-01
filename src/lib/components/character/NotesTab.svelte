@@ -2,14 +2,18 @@
     import { t } from 'svelte-i18n';
     import { character } from '$lib/stores/characterStore';
     import LanguagesSection from './LanguagesSection.svelte';
+    import ProfessionsSection from './ProfessionsSection.svelte';
     import RichTextEditor from '$lib/components/common/RichTextEditor.svelte';
 </script>
 
 <div class="space-y-6">
-    <!-- Languages Section - Mobile Only (shown in sidebar on desktop) -->
-    <div class="lg:hidden">
+    <!-- Languages & Professions - Mobile Only (shown in sidebar on desktop) -->
+    <div class="lg:hidden space-y-4">
         <LanguagesSection />
+        <ProfessionsSection />
     </div>
+
+
 
     <div class="space-y-4">
         <div class="flex justify-between items-center mb-2">

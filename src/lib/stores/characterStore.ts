@@ -110,6 +110,7 @@ export interface WWCharacter {
     spells: WWSpell[];
     talents: WWTalent[];
     equipment: WWItem[];
+    professions: string[];
     imageUrl?: string;
     system?: string;
     campaignApproval?: 'pending' | 'approved' | 'rejected' | null;
@@ -154,6 +155,7 @@ export const defaultCharacter: WWCharacter = {
     speed: 10,
     currentRound: 1,
     languages: [],
+    professions: [],
     senses: [],
     afflictions: [],
     effects: [],

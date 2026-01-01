@@ -21,6 +21,7 @@ describe('Character Store - Expression Evaluation (expr-eval)', () => {
             speed: 10,
             currentRound: 1,
             languages: [],
+          professions: [],
             senses: [],
             afflictions: [],
             effects: [],

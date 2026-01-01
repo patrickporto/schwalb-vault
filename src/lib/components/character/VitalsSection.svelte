@@ -3,6 +3,7 @@
     import { character, modalState, totalDefense, effectiveSpeed } from '$lib/stores/characterStore';
     import { Shield, Zap, Sword, Activity, Edit } from 'lucide-svelte';
     import DiceCounter from '$lib/components/common/DiceCounter.svelte';
+    import ProfessionsSection from './ProfessionsSection.svelte';
 
     function openModal(type: string, data: any) {
         modalState.update(m => ({ ...m, type, isOpen: true, data }));
@@ -78,5 +79,10 @@
             value={$character.bonusDamage || 0}
             onUpdate={updateBonusDamage}
         />
+    </div>
+
+    <!-- Professions (Desktop Only) -->
+    <div class="hidden lg:block">
+        <ProfessionsSection />
     </div>
 </div>
