@@ -288,9 +288,8 @@
                                 { key: 'endOfRound' as const, label: 'end_of_round', color: 'text-yellow-400', border: 'border-yellow-500/30' }
                             ] as section}
                                 <div class="p-4 bg-slate-900 rounded border {section.border}">
-                                    <div class="flex justify-between items-center mb-3">
+                                    <div class="mb-3">
                                         <h4 class="font-bold text-sm uppercase {section.color}">{$t('session.enemy_modal.' + section.label)}</h4>
-                                        <button onclick={() => addAbility(section.key)} class="text-xs bg-slate-800 px-2 py-1 rounded hover:bg-slate-700 text-white flex items-center gap-1 border border-slate-700"><Plus size={12}/> {$t('session.enemy_modal.add')}</button>
                                     </div>
                                     <div class="space-y-3">
                                         {#each form[section.key] as item, idx}
@@ -302,9 +301,10 @@
                                                 <button onclick={() => removeAbility(section.key, idx)} class="mt-1 text-slate-600 hover:text-red-400 p-2 hover:bg-slate-800 rounded"><Trash2 size={16}/></button>
                                             </div>
                                         {/each}
-                                        {#if form[section.key].length === 0}
-                                            <div class="text-xs text-slate-600 italic text-center py-4 border-2 border-dashed border-slate-800 rounded">{$t('session.enemy_modal.empty')}</div>
-                                        {/if}
+                                        <button onclick={() => addAbility(section.key)} class="w-full py-3 border-2 border-dashed border-slate-700 rounded hover:border-slate-500 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 text-slate-500 hover:text-white font-bold text-sm group">
+                                            <div class="p-1 rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors"><Plus size={16}/></div>
+                                            {$t('common.buttons.add')}
+                                        </button>
                                     </div>
                                 </div>
                             {/each}

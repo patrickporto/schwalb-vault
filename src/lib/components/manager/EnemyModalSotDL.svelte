@@ -411,9 +411,8 @@
                     <div class="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <!-- Traits -->
                         <div class="p-4 bg-slate-900 rounded border border-indigo-500/30">
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="mb-3">
                                 <h4 class="font-bold text-sm uppercase text-indigo-400">{$t('session.enemy_modal.traits')}</h4>
-                                <button onclick={addTrait} class="text-xs bg-slate-800 px-2 py-1 rounded hover:bg-slate-700 text-white flex items-center gap-1 border border-slate-700"><Plus size={12}/> {$t('common.buttons.add')}</button>
                             </div>
                             <div class="space-y-3">
                                 {#each form.traits as item, idx}
@@ -425,17 +424,17 @@
                                         <button onclick={() => removeTrait(idx)} class="mt-1 text-slate-600 hover:text-red-400 p-2 hover:bg-slate-800 rounded"><Trash2 size={16}/></button>
                                     </div>
                                 {/each}
-                                {#if form.traits.length === 0}
-                                    <div class="text-xs text-slate-600 italic text-center py-4 border-2 border-dashed border-slate-800 rounded">{$t('session.enemy_modal.empty')}</div>
-                                {/if}
+                                <button onclick={addTrait} class="w-full py-3 border-2 border-dashed border-slate-700 rounded hover:border-slate-500 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 text-slate-500 hover:text-white font-bold text-sm group">
+                                    <div class="p-1 rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors"><Plus size={16}/></div>
+                                    {$t('common.buttons.add')}
+                                </button>
                             </div>
                         </div>
 
                         <!-- Attack Options -->
                         <div class="p-4 bg-slate-900 rounded border border-red-500/30">
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="mb-3">
                                 <h4 class="font-bold text-sm uppercase text-red-400">{$t('session.enemy_modal.attack_options')}</h4>
-                                <button onclick={addAttackOption} class="text-xs bg-slate-800 px-2 py-1 rounded hover:bg-slate-700 text-white flex items-center gap-1 border border-slate-700"><Plus size={12}/> {$t('common.buttons.add')}</button>
                             </div>
                             <div class="space-y-3">
                                 {#each form.attackOptions as item, idx}
@@ -457,17 +456,17 @@
                                         <button onclick={() => removeAttackOption(idx)} class="mt-1 text-slate-600 hover:text-red-400 p-2 hover:bg-slate-800 rounded"><Trash2 size={16}/></button>
                                     </div>
                                 {/each}
-                                {#if form.attackOptions.length === 0}
-                                    <div class="text-xs text-slate-600 italic text-center py-4 border-2 border-dashed border-slate-800 rounded">{$t('session.enemy_modal.empty')}</div>
-                                {/if}
+                                <button onclick={addAttackOption} class="w-full py-3 border-2 border-dashed border-slate-700 rounded hover:border-slate-500 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 text-slate-500 hover:text-white font-bold text-sm group">
+                                    <div class="p-1 rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors"><Plus size={16}/></div>
+                                    {$t('common.buttons.add')}
+                                </button>
                             </div>
                         </div>
 
                         <!-- Special Attacks -->
                         <div class="p-4 bg-slate-900 rounded border border-orange-500/30">
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="mb-3">
                                 <h4 class="font-bold text-sm uppercase text-orange-400">{$t('session.enemy_modal.special_attacks')}</h4>
-                                <button onclick={addSpecialAttack} class="text-xs bg-slate-800 px-2 py-1 rounded hover:bg-slate-700 text-white flex items-center gap-1 border border-slate-700"><Plus size={12}/> {$t('common.buttons.add')}</button>
                             </div>
                             <div class="space-y-3">
                                 {#each form.specialAttacks as item, idx}
@@ -479,17 +478,17 @@
                                         <button onclick={() => removeSpecialAttack(idx)} class="mt-1 text-slate-600 hover:text-red-400 p-2 hover:bg-slate-800 rounded"><Trash2 size={16}/></button>
                                     </div>
                                 {/each}
-                                {#if form.specialAttacks.length === 0}
-                                    <div class="text-xs text-slate-600 italic text-center py-4 border-2 border-dashed border-slate-800 rounded">{$t('session.enemy_modal.empty')}</div>
-                                {/if}
+                                <button onclick={addSpecialAttack} class="w-full py-3 border-2 border-dashed border-slate-700 rounded hover:border-slate-500 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 text-slate-500 hover:text-white font-bold text-sm group">
+                                    <div class="p-1 rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors"><Plus size={16}/></div>
+                                    {$t('common.buttons.add')}
+                                </button>
                             </div>
                         </div>
 
                         <!-- End of Round -->
                         <div class="p-4 bg-slate-900 rounded border border-yellow-500/30">
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="mb-3">
                                 <h4 class="font-bold text-sm uppercase text-yellow-400">{$t('session.enemy_modal.end_of_round')}</h4>
-                                <button onclick={addEndOfRound} class="text-xs bg-slate-800 px-2 py-1 rounded hover:bg-slate-700 text-white flex items-center gap-1 border border-slate-700"><Plus size={12}/> {$t('common.buttons.add')}</button>
                             </div>
                             <div class="space-y-3">
                                 {#each form.endOfRound as item, idx}
@@ -501,9 +500,10 @@
                                         <button onclick={() => removeEndOfRound(idx)} class="mt-1 text-slate-600 hover:text-red-400 p-2 hover:bg-slate-800 rounded"><Trash2 size={16}/></button>
                                     </div>
                                 {/each}
-                                {#if form.endOfRound.length === 0}
-                                    <div class="text-xs text-slate-600 italic text-center py-4 border-2 border-dashed border-slate-800 rounded">{$t('session.enemy_modal.empty')}</div>
-                                {/if}
+                                <button onclick={addEndOfRound} class="w-full py-3 border-2 border-dashed border-slate-700 rounded hover:border-slate-500 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 text-slate-500 hover:text-white font-bold text-sm group">
+                                    <div class="p-1 rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors"><Plus size={16}/></div>
+                                    {$t('common.buttons.add')}
+                                </button>
                             </div>
                         </div>
                     </div>
