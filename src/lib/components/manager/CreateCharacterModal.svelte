@@ -27,6 +27,9 @@
     let otherAncestry = $state('');
     let otherPath = $state('');
 
+    // Profession Selection State
+    let selectedCategory = $state('');
+
     // Professions Data
     const PROFESSION_KEYS = {
         sofdl: {
@@ -60,6 +63,7 @@
             form.novicePath = '';
             otherAncestry = '';
             otherPath = '';
+            selectedCategory = '';
         }
     });
 
@@ -69,6 +73,9 @@
 
         if (step === 2 && form.ancestry === 'Other') form.ancestry = otherAncestry;
         if (step === 4 && form.novicePath === 'Other') form.novicePath = otherPath;
+
+        // Reset category when leaving profession step
+        if (step === 3) selectedCategory = '';
 
         step += 1;
     }
@@ -99,6 +106,13 @@
 
         const translatedProfession = $t(`professions.${currentSystem}.${randomCategory.toLowerCase()}.${randomKey}`);
         form.profession = `${translatedProfession} (${randomCategory})`;
+        selectedCategory = ''; // Close any open category view
+    }
+
+    function selectProfession(category: string, key: string) {
+        const currentSystem = (form.system === 'sofdl' || form.system === 'sofww') ? form.system : 'sofww';
+        const translatedProfession = $t(`professions.${currentSystem}.${category.toLowerCase()}.${key}`);
+        form.profession = `${translatedProfession} (${category})`;
     }
 
     function handleFinish() {
@@ -213,25 +227,61 @@
                             <p class="text-slate-400">{$t('wizard.character.step3_subtitle')}</p>
                         </div>
 
-                        <div class="bg-slate-900/50 border-2 border-slate-800 rounded-2xl p-8 text-center space-y-6">
-                            {#if !form.profession}
-                                <div class="w-20 h-20 bg-slate-800 rounded-full mx-auto flex items-center justify-center mb-4">
-                                    <BookOpen size={32} class="text-slate-600" />
+                        <div class="space-y-4">
+                            <!-- Category Selection or Profession List -->
+                            {#if !selectedCategory}
+                                <div class="grid grid-cols-2 gap-2">
+                                    {#each Object.keys(PROFESSION_KEYS[form.system === 'sofdl' ? 'sofdl' : 'sofww']) as category}
+                                        <button
+                                            onclick={() => selectedCategory = category}
+                                            class="p-3 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-widest transition-all"
+                                        >
+                                            {category}
+                                        </button>
+                                    {/each}
                                 </div>
-                                <p class="text-slate-500">{$t('wizard.character.step3_empty_message')}</p>
                             {:else}
-                                <div in:fade class="space-y-2">
-                                    <div class="text-xs text-indigo-400 font-bold uppercase tracking-widest">{$t('wizard.character.step3_your_profession')}</div>
-                                    <div class="text-2xl font-black text-white">{form.profession}</div>
+                                <div in:fade={{ duration: 200 }} class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <button onclick={() => selectedCategory = ''} class="text-xs text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest flex items-center gap-1 transition-all">
+                                            <ChevronLeft size={14} /> {selectedCategory}
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                                        {#each PROFESSION_KEYS[form.system === 'sofdl' ? 'sofdl' : 'sofww'][selectedCategory] as key}
+                                            {@const profName = $t(`professions.${form.system === 'sofdl' ? 'sofdl' : 'sofww'}.${selectedCategory.toLowerCase()}.${key}`)}
+                                            <button
+                                                onclick={() => selectProfession(selectedCategory, key)}
+                                                class="p-2.5 rounded-lg border text-left text-xs font-bold transition-all {form.profession.includes(profName) ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.2)]' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'}"
+                                            >
+                                                {profName}
+                                            </button>
+                                        {/each}
+                                    </div>
                                 </div>
                             {/if}
 
-                            <button
-                                onclick={getRandomProfession}
-                                class="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 hover:border-white/20"
-                            >
-                                <Dices size={18} /> {form.profession ? $t('wizard.character.step3_roll_again') : $t('wizard.character.step3_roll')}
-                            </button>
+                            <!-- Chosen Profession Display & Random Roll -->
+                            <div class="bg-slate-900/50 border-2 border-slate-800 rounded-2xl p-6 text-center space-y-4">
+                                {#if !form.profession}
+                                    <div class="w-16 h-16 bg-slate-800 rounded-full mx-auto flex items-center justify-center mb-2">
+                                        <BookOpen size={28} class="text-slate-600" />
+                                    </div>
+                                    <p class="text-xs text-slate-500">{$t('wizard.character.step3_empty_message')}</p>
+                                {:else}
+                                    <div in:fade class="space-y-1">
+                                        <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">{$t('wizard.character.step3_your_profession')}</div>
+                                        <div class="text-xl font-black text-white">{form.profession}</div>
+                                    </div>
+                                {/if}
+
+                                <button
+                                    onclick={getRandomProfession}
+                                    class="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 hover:border-white/20 text-xs"
+                                >
+                                    <Dices size={16} /> {form.profession ? $t('wizard.character.step3_roll_again') : $t('wizard.character.step3_roll')}
+                                </button>
+                            </div>
                         </div>
 
                         <button onclick={nextStep} disabled={!form.profession} class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-lg font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
