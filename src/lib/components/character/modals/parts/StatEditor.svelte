@@ -60,19 +60,20 @@
         };
         const targetKey = targetKeyMap[key] || key;
 
-        const mods: { effectName: string; type: string; value: number | string; evaluatedValue: number }[] = [];
+        const mods: { effectName: string; type: string; value: number | string; rawValue: number; evaluatedValue: number }[] = [];
 
         currentEffects.forEach((eff: any) => {
             if (!eff.modifiers || !eff.isActive) return;
             eff.modifiers.forEach((mod: any) => {
                 if (mod.target === targetKey) {
                     const evalFn = isSotDL ? evaluateModifierValueSotDL : evaluateModifierValue;
-                    const evalValue = evalFn(mod.value, currentChar as any);
+                    const rawValue = evalFn(mod.value, currentChar as any);
                     mods.push({
                         effectName: eff.name,
                         type: mod.type,
                         value: mod.value,
-                        evaluatedValue: evalValue
+                        rawValue: rawValue,
+                        evaluatedValue: Math.floor(rawValue)
                     });
                 }
             });
@@ -108,7 +109,7 @@
         }
     });
 
-    // Build formula string
+    // Build formula string - SET replaces value entirely, not added to base
     let formulaBreakdown = $derived(() => {
         const mods = affectingModifiers();
         if (mods.length === 0) return null;
@@ -118,22 +119,27 @@
 
         const setMod = mods.find((m: any) => m.type === MOD_TYPES.SET);
         if (setMod) {
+            // SET completely replaces the value - don't show base
             parts.push(`= ${setMod.evaluatedValue}`);
+            // After SET, only MULTs apply (ADDs are ignored when SET exists)
+            mods.filter((m: any) => m.type === MOD_TYPES.MULT).forEach((m: any) => {
+                parts.push(`× ${m.evaluatedValue}`);
+            });
         } else {
             parts.push(`${base}`);
+
+            mods.filter((m: any) => m.type === MOD_TYPES.ADD).forEach((m: any) => {
+                if (m.evaluatedValue >= 0) {
+                    parts.push(`+ ${m.evaluatedValue}`);
+                } else {
+                    parts.push(`- ${Math.abs(m.evaluatedValue)}`);
+                }
+            });
+
+            mods.filter((m: any) => m.type === MOD_TYPES.MULT).forEach((m: any) => {
+                parts.push(`× ${m.evaluatedValue}`);
+            });
         }
-
-        mods.filter((m: any) => m.type === MOD_TYPES.ADD).forEach((m: any) => {
-            if (m.evaluatedValue >= 0) {
-                parts.push(`+ ${m.evaluatedValue}`);
-            } else {
-                parts.push(`- ${Math.abs(m.evaluatedValue)}`);
-            }
-        });
-
-        mods.filter((m: any) => m.type === MOD_TYPES.MULT).forEach((m: any) => {
-            parts.push(`× ${m.evaluatedValue}`);
-        });
 
         return parts.join(' ');
     });
@@ -261,6 +267,8 @@
                 <div class="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
                     {#each affectingModifiers() as mod}
                         {@const ModIcon = getModTypeIcon(mod.type)}
+                        {@const isFormula = typeof mod.value === 'string' && mod.value.includes('@')}
+                        {@const showRaw = mod.rawValue !== mod.evaluatedValue}
                         <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800 transition-all hover:border-slate-700">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg {getModTypeColor(mod.type)} flex items-center justify-center border">
@@ -276,11 +284,21 @@
                                         {:else}
                                             {$t('character.modals.mod_types.mult')}
                                         {/if}
+                                        {#if isFormula}
+                                            <span class="text-indigo-400 font-mono ml-1">({mod.value})</span>
+                                        {/if}
                                     </div>
                                 </div>
                             </div>
-                            <div class="text-lg font-black {mod.evaluatedValue >= 0 && mod.type !== MOD_TYPES.SET ? 'text-green-400' : mod.type === MOD_TYPES.SET ? 'text-yellow-400' : 'text-red-400'}">
-                                {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? '×' : (mod.evaluatedValue >= 0 ? '+' : '')}{mod.evaluatedValue}
+                            <div class="text-right">
+                                <div class="text-lg font-black {mod.evaluatedValue >= 0 && mod.type !== MOD_TYPES.SET ? 'text-green-400' : mod.type === MOD_TYPES.SET ? 'text-yellow-400' : 'text-red-400'}">
+                                    {mod.type === MOD_TYPES.SET ? '=' : mod.type === MOD_TYPES.MULT ? '×' : (mod.evaluatedValue >= 0 ? '+' : '')}{mod.evaluatedValue}
+                                </div>
+                                {#if showRaw}
+                                    <div class="text-[10px] text-slate-500 font-mono">
+                                        ({mod.rawValue.toFixed(2)} → {mod.evaluatedValue})
+                                    </div>
+                                {/if}
                             </div>
                         </div>
                     {/each}

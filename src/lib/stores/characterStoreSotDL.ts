@@ -189,7 +189,8 @@ export const sotdlCharacter = writable<SotDLCharacter>(JSON.parse(JSON.stringify
 export const sotdlActiveEffects = derived(sotdlCharacter, $c => $c.effects.filter(e => e.isActive));
 
 export const sotdlDerivedStats = derived([sotdlCharacter, sotdlActiveEffects], ([$c, $effects]) => {
-  const stats = {
+  // Start with base values
+  const stats: Record<string, number> = {
     strength: $c.attributes.strength,
     agility: $c.attributes.agility,
     intellect: $c.attributes.intellect,
@@ -203,28 +204,67 @@ export const sotdlDerivedStats = derived([sotdlCharacter, sotdlActiveEffects], (
     boons: 0
   };
 
+  // Collect all modifiers from active effects
+  const allMods: { target: string; type: string; value: number | string }[] = [];
   $effects.forEach(eff => {
     if (!eff.modifiers) return;
     eff.modifiers.forEach((mod: any) => {
-      const val = evaluateModifierValueSotDL(mod.value, $c);
-      switch (mod.target) {
-        case 'strength': stats.strength = Math.floor(stats.strength + val); break;
-        case 'agility': stats.agility = Math.floor(stats.agility + val); break;
-        case 'intellect': stats.intellect = Math.floor(stats.intellect + val); break;
-        case 'will': stats.will = Math.floor(stats.will + val); break;
-        case 'perception': stats.perception = Math.floor(stats.perception + val); break;
-        case 'defense': stats.defense = Math.floor(stats.defense + val); break;
-        case 'health': stats.health = Math.floor(stats.health + val); break;
-        case 'speed': stats.speed = Math.floor(stats.speed + val); break;
-        case 'healingRate':
-        case 'healing_rate': stats.healingRate = Math.floor(stats.healingRate + val); break;
-        case 'power': stats.power = Math.floor(stats.power + val); break;
-        case 'boons': stats.boons = Math.floor(stats.boons + val); break;
-      }
+      allMods.push(mod);
     });
   });
 
-  return stats;
+  // Helper to get normalized target key
+  const normalizeTarget = (target: string): string => {
+    if (target === 'healing_rate') return 'healingRate';
+    return target;
+  };
+
+  // Apply modifiers in order: SET -> ADD -> MULT
+  const statKeys = Object.keys(stats);
+
+  statKeys.forEach(key => {
+    const targetMods = allMods.filter(m => normalizeTarget(m.target) === key);
+    if (targetMods.length === 0) return;
+
+    // 1. Apply SET (last one wins, completely replaces the value)
+    const setMods = targetMods.filter(m => m.type === 'SET');
+    if (setMods.length > 0) {
+      const lastSet = setMods[setMods.length - 1];
+      stats[key] = evaluateModifierValueSotDL(lastSet.value, $c);
+    }
+
+    // 2. Apply ADDs (only if no SET, or after SET)
+    // When SET exists, ADDs are ignored (SET completely overrides)
+    if (setMods.length === 0) {
+      const addMods = targetMods.filter(m => m.type === 'ADD');
+      addMods.forEach(m => {
+        stats[key] += evaluateModifierValueSotDL(m.value, $c);
+      });
+    }
+
+    // 3. Apply MULTs
+    const multMods = targetMods.filter(m => m.type === 'MULT');
+    multMods.forEach(m => {
+      stats[key] *= evaluateModifierValueSotDL(m.value, $c);
+    });
+
+    // Floor the final value
+    stats[key] = Math.floor(stats[key]);
+  });
+
+  return {
+    strength: stats.strength,
+    agility: stats.agility,
+    intellect: stats.intellect,
+    will: stats.will,
+    perception: stats.perception,
+    defense: stats.defense,
+    health: stats.health,
+    speed: stats.speed,
+    healingRate: stats.healingRate,
+    power: stats.power,
+    boons: stats.boons
+  };
 });
 
 export const sotdlAttributes = derived(sotdlDerivedStats, $s => ({
