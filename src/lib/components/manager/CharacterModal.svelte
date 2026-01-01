@@ -10,24 +10,24 @@
         onSave: (form: any) => void;
     }
 
-    let { 
-        isOpen = false, 
-        initialData = "{}", 
-        onClose, 
-        onSave 
+    let {
+        isOpen = false,
+        initialData = "{}",
+        onClose,
+        onSave
     }: Props = $props();
 
-    let form = $state({ 
-        name: '', 
+    let form = $state({
+        name: '',
         playerName: '',
-        ancestry: '', 
-        novicePath: '', 
-        level: 1, 
-        defense: 10, 
+        ancestry: '',
+        novicePath: '',
+        level: 1,
+        defense: 10,
         health: 24,
         system: DEFAULT_SYSTEM
     });
-    
+
     $effect(() => {
         if (isOpen && initialData) {
             try {
@@ -58,33 +58,15 @@
     }
 </script>
 
-<Modal {isOpen} {onClose} title="Novo Personagem" maxWidth="max-w-md">
+<Modal {isOpen} {onClose} title="Editar Personagem" maxWidth="max-w-md">
     <div class="space-y-4">
         <div>
             <label class="text-xs text-slate-500 uppercase font-black block mb-2 tracking-widest flex items-center gap-1">
                 <Gamepad2 size={12} /> Sistema de Jogo
             </label>
-            <div class="grid grid-cols-1 gap-2">
-                {#each SYSTEMS as system}
-                    <button 
-                        class="relative flex items-center p-3 rounded-lg border text-left transition-all {form.system === system.id ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'} {system.disabled ? 'opacity-60 cursor-not-allowed' : ''}"
-                        onclick={() => !system.disabled && (form.system = system.id)}
-                        disabled={system.disabled}
-                    >
-                        <div class="flex-1">
-                            <div class="font-bold text-sm flex items-center gap-2">
-                                {system.name}
-                                {#if system.comingSoon}
-                                    <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Em Breve</span>
-                                {/if}
-                            </div>
-                            <div class="text-[10px] opacity-60 mt-0.5">{system.description}</div>
-                        </div>
-                        {#if form.system === system.id}
-                            <div class="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-                        {/if}
-                    </button>
-                {/each}
+            <div class="p-3 bg-slate-800 rounded-lg border border-slate-700 text-slate-300 text-sm font-bold flex items-center gap-2">
+                 {SYSTEMS.find(s => s.id === form.system)?.name || 'Sistema Desconhecido'}
+                 <span class="text-[9px] bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider ml-auto">Fixo</span>
             </div>
         </div>
 
@@ -126,6 +108,6 @@
 
     <div class="flex gap-3 mt-8">
         <button onclick={onClose} class="flex-1 bg-slate-700 hover:bg-slate-600 transition-all py-3 rounded-xl text-white font-bold active:scale-95">Cancelar</button>
-        <button onclick={handleSave} class="flex-1 bg-indigo-600 hover:bg-indigo-500 transition-all py-3 rounded-xl text-white font-bold shadow-lg shadow-indigo-900/20 active:scale-95">Criar Personagem</button>
+        <button onclick={handleSave} class="flex-1 bg-indigo-600 hover:bg-indigo-500 transition-all py-3 rounded-xl text-white font-bold shadow-lg shadow-indigo-900/20 active:scale-95">Salvar Alterações</button>
     </div>
 </Modal>

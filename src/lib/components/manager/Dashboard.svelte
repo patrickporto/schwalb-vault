@@ -10,7 +10,9 @@
     import { publicCampaigns } from '$lib/logic/sync';
     import ConfirmationModal from './ConfirmationModal.svelte';
     import CampaignModal from './CampaignModal.svelte';
+    import CreateCampaignModal from './CreateCampaignModal.svelte';
     import CharacterModal from './CharacterModal.svelte';
+    import CreateCharacterModal from './CreateCharacterModal.svelte';
     import CharacterSettingsModal from './CharacterSettingsModal.svelte';
     import { hashPassword } from '$lib/logic/crypto';
     import { initializeGoogleAuth, googleSession, syncFromCloud, syncToCloud } from '$lib/logic/googleDrive';
@@ -140,59 +142,64 @@
 
     // Character Creation Modal
     let isCharModalOpen = $state(false);
+    let isCreateCharModalOpen = $state(false);
     let charFormStr = $state("{}");
 
     const defaultCharForm = { name: '', playerName: '', ancestry: 'Humano', novicePath: '', level: 0, defense: 8, health: 5, system: DEFAULT_SYSTEM };
 
     function openCharModal() {
-        charFormStr = JSON.stringify(defaultCharForm);
-        isCharModalOpen = true;
+        isCreateCharModalOpen = true;
     }
 
     async function saveCharacter(formData: any) {
-        const id = uuidv7();
+        const id = formData.id || uuidv7();
+        const existing = charactersMap.get(id) || {};
         let newChar: any;
 
         if (formData.system === 'sofdl') {
             newChar = {
+                ...existing,
                 id,
                 system: 'sofdl',
                 name: formData.name,
                 playerName: formData.playerName || '',
                 ancestry: formData.ancestry,
                 level: formData.level,
-                attributes: {
+                attributes: formData.attributes || existing.attributes || {
                     strength: 10,
                     agility: 10,
                     intellect: 10,
                     will: 10
                 },
-                perception: 10,
+                perception: formData.perception || existing.perception || 10,
                 defense: formData.defense || 10,
                 health: formData.health || 10,
-                healingRate: Math.floor((formData.health || 10) / 4),
-                size: 1,
-                speed: 10,
-                power: 0,
-                damage: 0,
-                insanity: 0,
-                corruption: 0,
-                description: '',
-                notes: '',
-                paths: {
-                    novice: '',
+                healingRate: formData.healingRate || existing.healingRate || Math.floor((formData.health || 10) / 4),
+                // Preserve other fields if editing
+                size: existing.size || 1,
+                speed: existing.speed || 10,
+                power: existing.power || 0,
+                damage: existing.damage || 0,
+                insanity: existing.insanity || 0,
+                corruption: existing.corruption || 0,
+                description: existing.description || '',
+                notes: existing.notes || '',
+                paths: formData.paths || existing.paths || {
+                    novice: formData.novicePath || '',
                     expert: '',
                     master: ''
                 },
-                professions: [],
-                languages: ['Comum'],
-                talents: [],
-                spells: [],
-                equipment: [],
-                effects: []
+                professions: formData.professions || existing.professions || (formData.profession ? [formData.profession] : []),
+                languages: existing.languages || ['Comum'],
+                talents: existing.talents || [],
+                spells: existing.spells || [],
+                equipment: existing.equipment || [],
+                effects: existing.effects || []
             };
         } else {
+             // Weird Wizard
             newChar = {
+                ...existing,
                 id,
                 name: formData.name,
                 playerName: formData.playerName || '',
@@ -200,45 +207,56 @@
                 level: formData.level,
                 defense: formData.defense,
                 system: formData.system || DEFAULT_SYSTEM,
-                paths: {
+                paths: formData.paths || existing.paths || {
                     novice: formData.novicePath || '-',
                     expert: '-',
                     master: '-'
                 },
-                attributes: [
+                attributes: existing.attributes || [
                     { name: "Força", value: 10, key: "str" },
                     { name: "Agilidade", value: 10, key: "agi" },
                     { name: "Intelecto", value: 10, key: "int" },
                     { name: "Vontade", value: 10, key: "wil" }
                 ],
-                speed: 5,
+                speed: existing.speed || 5,
                 health: formData.health,
-                currentHealth: formData.health,
-                spells: [],
-                talents: [],
-                equipment: [],
-                afflictions: [],
-                effects: [],
-                currency: { gp: 0, sp: 0, cp: 0 },
-                languages: ['Comum']
+                currentHealth: existing.currentHealth || formData.health,
+                spells: existing.spells || [],
+                talents: existing.talents || [],
+                equipment: existing.equipment || [],
+                afflictions: existing.afflictions || [],
+                effects: existing.effects || [],
+                currency: existing.currency || { gp: 0, sp: 0, cp: 0 },
+                languages: existing.languages || ['Comum']
             };
+
+            // Add profession if new
+            if (formData.profession && !newChar.professions?.includes(formData.profession)) {
+                 newChar.professions = [...(newChar.professions || []), formData.profession];
+            }
         }
 
         charactersMap.set(id, newChar);
         isCharModalOpen = false;
+        isCreateCharModalOpen = false;
         goto(resolve('/characters/[id]', { id }));
     }
 
     // Campaign Modal
     let isCampModalOpen = $state(false);
+    let isCreateCampModalOpen = $state(false);
     let editingCampId = $state<string | null>(null);
     let campFormStr = $state("{}");
     const defaultCampForm = { name: '', description: '', gmName: '', system: DEFAULT_SYSTEM };
 
     function openCampModal(camp: any = null) {
-        editingCampId = camp ? camp.id : null;
-        campFormStr = JSON.stringify(camp || defaultCampForm);
-        isCampModalOpen = true;
+        if (camp) {
+            editingCampId = camp.id;
+            campFormStr = JSON.stringify(camp);
+            isCampModalOpen = true;
+        } else {
+            isCreateCampModalOpen = true;
+        }
     }
 
     async function saveCampaign(formData: any) {
@@ -268,6 +286,7 @@
 
         campaignsMap.set(id, newCamp);
         isCampModalOpen = false;
+        isCreateCampModalOpen = false;
     }
 
     // Confirm Dialog State
@@ -374,7 +393,7 @@
     style="transform: translateY({isRefreshing ? 60 : pullDistance}px); opacity: {pullDistance > 0 ? 1 : 0}"
 >
     <div class="bg-indigo-600 rounded-full p-2.5 shadow-xl border border-indigo-500/50 text-white">
-        <Loader2 class="{isRefreshing ? 'animate-spin' : ''}" size={20} style="transform: rotate({pullDistance * 2}deg)" />
+        <Loader2 class={isRefreshing ? 'animate-spin' : ''} size={20} style="transform: rotate({pullDistance * 2}deg)" />
     </div>
 </div>
 
@@ -644,6 +663,9 @@
 
        {/if}
    </div>
+
+    <CreateCharacterModal isOpen={isCreateCharModalOpen} onClose={() => isCreateCharModalOpen = false} onSave={saveCharacter} />
+    <CreateCampaignModal isOpen={isCreateCampModalOpen} onClose={() => isCreateCampModalOpen = false} onSave={saveCampaign} />
 
    <CharacterModal isOpen={isCharModalOpen} initialData={charFormStr} onClose={() => isCharModalOpen = false} onSave={saveCharacter} />
    <CampaignModal isOpen={isCampModalOpen} initialData={campFormStr} onClose={() => isCampModalOpen = false} onSave={saveCampaign} />

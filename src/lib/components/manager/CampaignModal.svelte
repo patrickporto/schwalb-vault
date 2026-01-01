@@ -54,37 +54,18 @@
     }
 </script>
 
-<Modal {isOpen} {onClose} title={isEditing ? "Configurações da Campanha" : "Nova Campanha"} maxWidth="max-w-md">
+<Modal {isOpen} {onClose} title="Configurações da Campanha" maxWidth="max-w-md">
     <div class="space-y-4">
-        {#if !isEditing}
-            <div>
-                <label class="text-xs text-slate-500 uppercase font-black block mb-2 tracking-widest flex items-center gap-1">
-                    <Gamepad2 size={12} /> Sistema de Jogo
-                </label>
-                <div class="grid grid-cols-1 gap-2">
-                    {#each SYSTEMS as system}
-                        <button
-                            class="relative flex items-center p-3 rounded-lg border text-left transition-all {form.system === system.id ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'} {system.disabled ? 'opacity-60 cursor-not-allowed' : ''}"
-                            onclick={() => !system.disabled && (form.system = system.id)}
-                            disabled={system.disabled}
-                        >
-                            <div class="flex-1">
-                                <div class="font-bold text-sm flex items-center gap-2">
-                                    {system.name}
-                                    {#if system.comingSoon}
-                                        <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Em Breve</span>
-                                    {/if}
-                                </div>
-                                <div class="text-[10px] opacity-60 mt-0.5">{system.description}</div>
-                            </div>
-                            {#if form.system === system.id}
-                                <div class="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-                            {/if}
-                        </button>
-                    {/each}
-                </div>
+        <div>
+            <label class="text-xs text-slate-500 uppercase font-black block mb-2 tracking-widest flex items-center gap-1">
+                <Gamepad2 size={12} /> Sistema de Jogo
+            </label>
+            <div class="p-3 bg-slate-800 rounded-lg border border-slate-700 text-slate-300 text-sm font-bold flex items-center gap-2">
+                 <!-- Find system name from ID -->
+                 {SYSTEMS.find(s => s.id === form.system)?.name || 'Sistema Desconhecido'}
+                 <span class="text-[9px] bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider ml-auto">Fixo</span>
             </div>
-        {/if}
+        </div>
 
         <div>
             <label class="text-xs text-slate-500 uppercase font-black block mb-2 tracking-widest flex items-center gap-1">
@@ -159,6 +140,6 @@
     </div>
     <div class="flex flex-col-reverse sm:flex-row gap-3 mt-6">
         <button onclick={onClose} class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-4 sm:py-3 rounded-xl font-bold transition-all active:scale-95">Cancelar</button>
-        <button onclick={handleSave} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-4 sm:py-3 rounded-xl font-bold shadow-lg shadow-indigo-900/20 transition-all active:scale-95">{isEditing ? 'Salvar' : 'Criar Campanha'}</button>
+        <button onclick={handleSave} class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-4 sm:py-3 rounded-xl font-bold shadow-lg shadow-indigo-900/20 transition-all active:scale-95">Salvar</button>
     </div>
 </Modal>

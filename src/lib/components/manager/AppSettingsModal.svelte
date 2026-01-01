@@ -1,7 +1,9 @@
 <script lang="ts">
     import { t, locale } from 'svelte-i18n';
     import { appSettings } from '$lib/stores/characterStore';
-    import { X, Settings, History, Monitor, Smartphone, Palette, Globe, ArrowLeft, Check } from 'lucide-svelte';
+    import { googleSession } from '$lib/logic/googleDrive';
+    import { generateRandomName } from '$lib/logic/nameGenerator';
+    import { X, Settings, History, Monitor, Smartphone, Palette, Globe, ArrowLeft, Check, User, Dices } from 'lucide-svelte';
     import Toggle from '../common/Toggle.svelte';
     import { slide, fly, fade } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
@@ -129,6 +131,58 @@
                                 <Check size={18} class="text-indigo-400" />
                             {/if}
                         </button>
+                    </div>
+                </div>
+
+
+                <!-- Section: User Identity -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 mb-2 text-indigo-400">
+                        <User size={16} />
+                        <h3 class="text-xs font-black uppercase tracking-widest">Identidade</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nome de Jogador Padrão</label>
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 pr-10 text-white focus:border-indigo-500 outline-none transition-all"
+                                    placeholder="Seu nome"
+                                    value={$appSettings.defaultPlayerName || ''}
+                                    oninput={(e) => updateSetting('defaultPlayerName', e.currentTarget.value)}
+                                />
+                                {#if !$appSettings.defaultPlayerName && $googleSession.userProfile}
+                                    <button
+                                        onclick={() => updateSetting('defaultPlayerName', $googleSession.userProfile?.name)}
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-indigo-400 hover:text-white bg-indigo-500/10 hover:bg-indigo-500 px-2 py-1 rounded transition-all"
+                                    >
+                                        Usar Google
+                                    </button>
+                                {/if}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nome de Mestre (GM) Padrão</label>
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 pr-10 text-white focus:border-indigo-500 outline-none transition-all"
+                                    placeholder="Como quer ser chamado como Mestre"
+                                    value={$appSettings.defaultGmName || ''}
+                                    oninput={(e) => updateSetting('defaultGmName', e.currentTarget.value)}
+                                />
+                                <button
+                                    onclick={() => updateSetting('defaultGmName', generateRandomName('person'))}
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                    title="Gerar Aleatório"
+                                >
+                                    <Dices size={14} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

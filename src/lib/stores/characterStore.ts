@@ -131,10 +131,13 @@ export interface RollHistoryEntry {
     system?: string;
 }
 
+
 export interface AppSettings {
     autoOpenHistory: boolean;
     stickyHistory: boolean;
     theme: string;
+    defaultPlayerName?: string;
+    defaultGmName?: string;
 }
 
 // --- STATE ---
@@ -188,7 +191,9 @@ export const hasUnreadRolls = writable(false);
 const initialSettings: AppSettings = {
     autoOpenHistory: false,
     stickyHistory: false,
-    theme: 'dark'
+    theme: 'dark',
+    defaultPlayerName: '',
+    defaultGmName: ''
 };
 
 function createAppSettings() {
