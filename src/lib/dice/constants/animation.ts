@@ -1,0 +1,6 @@
+export const ANIMATION = {
+    SOUND_DELAY: 10,
+    MIN_SOUND_SPEED: 250,
+    SOUND_VOLUME_DIVIDER: 8000,
+    AFTER_THROW_TIME_DIFF: 3
+} as const;
