@@ -42,7 +42,7 @@
         quickRollState = { isOpen: true, sides, count, modifier: 0 };
     }
 
-    function confirmQuickRoll(mod: number) {
+    function confirmQuickRoll(mod: number, selectedEffects: any[] = [], options?: { suppressHistory?: boolean }) {
         if (!campaign) return;
 
         const res = calculateDiceRoll(quickRollState.sides, quickRollState.count, mod);
@@ -52,18 +52,34 @@
 
         const gmName = campaign.gmName || get(t)('common.labels.master');
 
-        characterActions.addToHistory({
-            source: 'GM',
-            charName: gmName,
-            name: `${quickRollState.count}d${quickRollState.sides} ${mod ? (mod > 0 ? `+${mod}` : mod) : ''}`,
-            description: desc.trim() || null,
+        const commit = () => {
+             characterActions.addToHistory({
+                source: 'GM',
+                charName: gmName,
+                name: `${quickRollState.count}d${quickRollState.sides} ${mod ? (mod > 0 ? `+${mod}` : mod) : ''}`,
+                description: desc.trim() || null,
+                total: res.total,
+                formula: res.formula,
+                crit: res.crit
+            });
+            isHistoryOpen.set(true);
+        };
+
+        if (!options?.suppressHistory) {
+            commit();
+            quickRollState.isOpen = false;
+        }
+
+        const isD20 = quickRollState.sides === 20 && quickRollState.count === 1;
+
+        return {
+            d20: isD20 ? res.results[0] : undefined,
+            boonBaneDice: isD20 ? res.bonusRolls : [],
+            damageDice: !isD20 ? res.results : [],
             total: res.total,
             formula: res.formula,
-            crit: res.crit
-        });
-
-        isHistoryOpen.set(true);
-        quickRollState.isOpen = false;
+            commit
+        };
     }
 </script>
 

@@ -418,7 +418,8 @@
                 return sotdlCharacterActions.finalizeRoll(
                     $modalState.data,
                     mod,
-                    selectedEffects.map(e => e.name)
+                    selectedEffects.map(e => e.name),
+                    options
                 );
             } else {
                 return characterActions.finalizeRoll(

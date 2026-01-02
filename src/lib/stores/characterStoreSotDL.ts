@@ -597,7 +597,7 @@ export const sotdlCharacterActions = {
   })),
 
   // Roll Logic
-  finalizeRoll: (data: any, modifier: number, selectedEffects: string[] = []) => {
+  finalizeRoll: (data: any, modifier: number, selectedEffects: string[] = [], options: { suppressHistory?: boolean } = {}) => {
     const char = get(sotdlCharacter);
     const mods = get(sotdlModifiers);
     const derivedStats = get(sotdlDerivedStats);
@@ -605,6 +605,9 @@ export const sotdlCharacterActions = {
     const isDamage = data?.type === 'weapon_damage' || data?.type === 'spell_damage';
     const t = get(_);
     const sourceName = data?.source?.name || data?.key || t('character.modals.attribute');
+
+    let resultData: any = {};
+    let commitFn = () => { };
 
     if (!isDamage) {
       const d20 = Math.floor(Math.random() * 20) + 1;
@@ -623,11 +626,12 @@ export const sotdlCharacterActions = {
       let netModifier = modifier + (derivedStats.boons || 0);
       let boonBaneTotal = 0;
       let boonBaneStr = '';
+      let boonBaneRolls: number[] = [];
+
       if (netModifier !== 0) {
         const numDice = Math.abs(netModifier);
-        let rolls = [];
-        for (let i = 0; i < numDice; i++) rolls.push(Math.floor(Math.random() * 6) + 1);
-        const highest = Math.max(...rolls);
+        for (let i = 0; i < numDice; i++) boonBaneRolls.push(Math.floor(Math.random() * 6) + 1);
+        const highest = Math.max(...boonBaneRolls);
 
         if (netModifier > 0) {
           boonBaneTotal = highest;
@@ -643,26 +647,32 @@ export const sotdlCharacterActions = {
       else if (data.type === 'luck' || data.type === 'luck_ends') source = 'luck';
 
       const total = d20 + attrMod + boonBaneTotal;
+      const formula = `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr}`;
 
-      sotdlCharacterActions.addToHistory({
-        source,
-        name: attrLabel,
-        description: data.type === 'luck_ends'
-          ? t('sofdl.rolls.luck_ends', { values: { effect: sourceName } })
-          : t('sofdl.rolls.attribute_test', { values: { attr: attrLabel, modifier } }),
-        formula: `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr}`,
-        total: total,
-        crit: d20 === 20,
-        effectsApplied: selectedEffects
-      });
+      resultData = { d20, boonBaneDice: boonBaneRolls, total, formula };
 
-      // Special logic for luck_ends
-      if (data.type === 'luck_ends' && total >= 10) {
-        sotdlCharacter.update(c => ({
-          ...c,
-          effects: c.effects.map(e => e.id === data.effectId ? { ...e, isActive: false } : e)
-        }));
-      }
+      commitFn = () => {
+        sotdlCharacterActions.addToHistory({
+          source,
+          name: attrLabel,
+          description: data.type === 'luck_ends'
+            ? t('sofdl.rolls.luck_ends', { values: { effect: sourceName } })
+            : t('sofdl.rolls.attribute_test', { values: { attr: attrLabel, modifier } }),
+          formula,
+          total: total,
+          crit: d20 === 20,
+          effectsApplied: selectedEffects
+        });
+
+        // Special logic for luck_ends
+        if (data.type === 'luck_ends' && total >= 10) {
+          sotdlCharacter.update(c => ({
+            ...c,
+            effects: c.effects.map(e => e.id === data.effectId ? { ...e, isActive: false } : e)
+          }));
+        }
+      };
+
     } else {
       // Damage roll for SotDL
       const rawDamage = data.source?.damage ?? data.source?.damageDice ?? '1d6';
@@ -699,17 +709,28 @@ export const sotdlCharacterActions = {
 
       const total = sum + modifier + damageMod;
       const modStr = (modifier + damageMod) !== 0 ? `${(modifier + damageMod) > 0 ? '+' : ''}${modifier + damageMod}` : '';
+      const finalFormula = `${formula}${modStr}`;
 
-      const t = get(_);
-      sotdlCharacterActions.addToHistory({
-        source: 'damage',
-        name: sourceName,
-        description: t('sofdl.rolls.damage_description', { values: { source: sourceName } }),
-        formula: `${formula}${modStr}`,
-        total: total,
-        effectsApplied: selectedEffects
-      });
+      resultData = { damageDice: results, total, formula: finalFormula };
+
+      commitFn = () => {
+        const t = get(_);
+        sotdlCharacterActions.addToHistory({
+          source: 'damage',
+          name: sourceName,
+          description: t('sofdl.rolls.damage_description', { values: { source: sourceName } }),
+          formula: finalFormula,
+          total: total,
+          effectsApplied: selectedEffects
+        });
+      };
     }
+
+    if (!options.suppressHistory) {
+      commitFn();
+    }
+
+    return { ...resultData, commit: commitFn };
   },
   // Rest action
   rest: () => {
