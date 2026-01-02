@@ -137,7 +137,7 @@ export class DiceBox {
   private surface: string = '';
   private renderer!: THREE.WebGLRenderer;
   private camera!: THREE.PerspectiveCamera;
-  private light!: THREE.SpotLight;
+  private light!: THREE.DirectionalLight;
   private light_amb!: THREE.HemisphereLight;
   private desk!: THREE.Mesh;
   private colorData: any;
@@ -227,6 +227,8 @@ export class DiceBox {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = this.shadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
     this.renderer.setClearColor(0x000000, 0);
 
     this.setDimensions(this.dimensions);
@@ -560,29 +562,42 @@ export class DiceBox {
 
     if (this.light) this.scene.remove(this.light);
     if (this.light_amb) this.scene.remove(this.light_amb);
-    this.light = new THREE.SpotLight(
-      this.color_spotlight,
-      this.light_intensity
+
+    // Ambient hemisphere light: bright sky color + dark ground color
+    this.light_amb = new THREE.HemisphereLight(
+      0xffffff,  // sky color (bright white)
+      0x080820,  // ground color (dark blue)
+      4.0        // high intensity for ambient fill
     );
-    this.light.position.set(-maxwidth / 2, maxwidth / 2, maxwidth * 3);
+    this.scene.add(this.light_amb);
+
+    // Main directional light for sharp specular highlights
+    this.light = new THREE.DirectionalLight(
+      0xffffff,
+      1.5  // moderate intensity, balanced with hemisphere
+    );
+    this.light.position.set(
+      -this.display.containerWidth / 20,
+      this.display.containerHeight / 20,
+      maxwidth / 2
+    );
     this.light.target.position.set(0, 0, 0);
-    this.light.distance = maxwidth * 5;
-    this.light.angle = Math.PI / 4;
     this.light.castShadow = this.shadows;
     this.light.shadow.camera.near = maxwidth / 10;
     this.light.shadow.camera.far = maxwidth * 5;
-    this.light.shadow.camera.fov = CAMERA.SHADOW_FOV;
-    this.light.shadow.bias = CAMERA.SHADOW_BIAS;
-    this.light.shadow.mapSize.width = CAMERA.SHADOW_MAP_SIZE;
-    this.light.shadow.mapSize.height = CAMERA.SHADOW_MAP_SIZE;
-    this.scene.add(this.light);
+    this.light.shadow.bias = -0.0001;
+    this.light.shadow.mapSize.width = 2048;
+    this.light.shadow.mapSize.height = 2048;
 
-    this.light_amb = new THREE.HemisphereLight(
-      0xffffbb,
-      0x676771,
-      this.light_intensity
-    );
-    this.scene.add(this.light_amb);
+    // Orthographic shadow camera bounds
+    const halfWidth = this.display.containerWidth / 2;
+    const halfHeight = this.display.containerHeight / 2;
+    const d = Math.max(halfWidth, halfHeight) * 1.05;
+    this.light.shadow.camera.left = -d * 2;
+    this.light.shadow.camera.right = d * 2;
+    this.light.shadow.camera.top = d;
+    this.light.shadow.camera.bottom = -d;
+    this.scene.add(this.light);
 
     if (this.desk) this.scene.remove(this.desk);
     let shadowplane = new THREE.ShadowMaterial();
