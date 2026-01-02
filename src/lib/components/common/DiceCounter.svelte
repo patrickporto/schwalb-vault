@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Plus, Minus } from 'lucide-svelte';
+    import { t } from 'svelte-i18n';
 
     interface Props {
         value: number | string;
@@ -13,16 +14,15 @@
 
     function decrease() {
         if (typeof value === 'number') {
-            if (value > 1) {
+            if (value > min && value > 1) {
                 onUpdate(value - 1);
-            } else if (value === 1) {
+            } else if (value === 1 && value > min) {
                 if (customSteps.length > 0) {
                     onUpdate(customSteps[customSteps.length - 1]);
                 } else {
                     onUpdate(min);
                 }
             } else {
-                // val is 0 or min
                 onUpdate(min);
             }
         } else {
@@ -72,7 +72,7 @@
             type="button"
             onclick={decrease}
             class="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-all active:scale-90"
-            aria-label="Diminuir"
+            aria-label={$t('common.buttons.decrease')}
         >
             <Minus size={18}/>
         </button>
@@ -83,7 +83,7 @@
             type="button"
             onclick={increase}
             class="w-10 h-10 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all active:scale-90 shadow-lg shadow-indigo-500/20"
-            aria-label="Aumentar"
+            aria-label={$t('common.buttons.increase')}
         >
             <Plus size={18}/>
         </button>

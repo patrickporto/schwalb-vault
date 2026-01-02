@@ -19,7 +19,10 @@
             "settings": "Settings",
             "copied": "Copied!",
             "cancel_cap": "CANCEL",
-            "locked": "Locked"
+            "locked": "Locked",
+            "increase": "Increase",
+            "decrease": "Decrease",
+            "roll": "Roll"
         },
         "labels": {
             "level": "Level",
@@ -28,7 +31,10 @@
             "bestiary": "Bestiary",
             "language": "Language",
             "coming_soon": "Coming Soon",
-            "result": "Result"
+            "result": "Result",
+            "size_selector": "Size Selector",
+            "total": "Total",
+            "boons_banes": "Boons / Banes"
         },
         "status": {
             "syncing": "Syncing",
@@ -194,6 +200,7 @@
         "vitals": {
             "defense": "Defense",
             "speed": "Speed",
+            "size": "Size",
             "bonus_damage": "Bonus Damage",
             "extra_dice": "Extra Dice",
             "healing_rate": "Healing Rate"

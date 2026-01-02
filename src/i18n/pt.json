@@ -19,7 +19,10 @@
       "settings": "Configurações",
       "copied": "Copiado!",
       "cancel_cap": "CANCELAR",
-      "locked": "Travado"
+      "locked": "Travado",
+      "increase": "Aumentar",
+      "decrease": "Diminuir",
+      "roll": "Rolar"
     },
     "labels": {
       "level": "Nível",
@@ -29,7 +32,10 @@
       "language": "Idioma",
       "health_label": "Vida",
       "coming_soon": "Em breve",
-      "result": "Resultado"
+      "result": "Resultado",
+      "size_selector": "Seletor de Tamanho",
+      "total": "Total",
+      "boons_banes": "Dádivas / Perdições"
     },
     "status": {
       "syncing": "Sincronizando",

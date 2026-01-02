@@ -2,6 +2,7 @@
     import Modal from './Modal.svelte';
     import { Plus, Minus, Dices, Check, X } from 'lucide-svelte';
     import { t } from 'svelte-i18n';
+    import { untrack } from 'svelte';
     import { appSettings } from '$lib/stores/characterStore';
     import DiceRoller from '$lib/components/dice/DiceRoller.svelte';
 
@@ -38,15 +39,16 @@
         isOpen,
         title,
         initialModifier = 0,
-        label = 'Boons / Banes',
-        rollLabel = 'ROLAR',
+        label,
+        rollLabel,
         effects = [],
         onClose,
         onRoll,
         children
     }: Props = $props();
 
-    import { untrack } from 'svelte';
+    const displayLabel = $derived(label || $t('common.labels.boons_banes'));
+    const displayRollLabel = $derived(rollLabel || $t('common.buttons.roll'));
 
     let modifier = $state(0);
     let selectedEffectsIds = $state<string[]>([]);
@@ -202,7 +204,7 @@
                          <div class="absolute inset-0 bg-indigo-500/10 blur-xl"></div>
 
                          <div class="relative z-10">
-                             <div class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Total</div>
+                             <div class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">{$t('common.labels.total')}</div>
                              <div class="text-5xl font-black text-white tracking-tighter drop-shadow-lg scale-110 transform transition-transform duration-300">
                                  {rollResult.total}
                              </div>
@@ -231,7 +233,7 @@
                         <button
                             onclick={() => modifier--}
                             class="w-12 h-12 rounded-full bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-500/30 flex items-center justify-center transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Diminuir"
+                            aria-label={$t('common.buttons.decrease')}
                             disabled={isRolling}
                         >
                             <Minus size={24}/>
@@ -246,14 +248,14 @@
                         <button
                             onclick={() => modifier++}
                             class="w-12 h-12 rounded-full bg-slate-800 hover:bg-green-500/20 text-slate-300 hover:text-green-400 border border-slate-700 hover:border-green-500/30 flex items-center justify-center transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Aumentar"
+                            aria-label={$t('common.buttons.increase')}
                             disabled={isRolling}
                         >
                             <Plus size={24}/>
                         </button>
                     </div>
 
-                    <div class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] relative z-10">{label}</div>
+                    <div class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] relative z-10">{displayLabel}</div>
                 </div>
 
                 <!-- Active Effects Selection -->
@@ -302,11 +304,10 @@
                         <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         <span>{$t('character.modals.rolling')}...</span>
                     {:else}
-                        <Dices size={18} /> {rollLabel}
+                        <Dices size={18} /> {displayRollLabel}
                     {/if}
                 </button>
             {/if}
         </div>
     </Modal>
 {/if}
-

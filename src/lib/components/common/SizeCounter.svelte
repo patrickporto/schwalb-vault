@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Plus, Minus } from 'lucide-svelte';
+    import { t } from 'svelte-i18n';
 
     interface Props {
         value: number;
@@ -47,12 +48,12 @@
     {#if label}
         <span class="text-[10px] text-indigo-300 uppercase font-bold mb-2 block">{label}</span>
     {/if}
-    <div class="flex items-center justify-between bg-black/40 rounded-xl p-1.5 border border-white/5" role="group" aria-label="Seletor de Tamanho">
+    <div class="flex items-center justify-between bg-black/40 rounded-xl p-1.5 border border-white/5" role="group" aria-label={$t('common.labels.size_selector')}>
         <button
             type="button"
             onclick={decrease}
             class="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-all active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Diminuir"
+            aria-label={$t('common.buttons.decrease')}
             disabled={value <= steps[0]}
         >
             <Minus size={18}/>
@@ -64,7 +65,7 @@
             type="button"
             onclick={increase}
             class="w-10 h-10 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all active:scale-90 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Aumentar"
+            aria-label={$t('common.buttons.increase')}
             disabled={value >= steps[steps.length - 1]}
         >
             <Plus size={18}/>

@@ -18,15 +18,15 @@ describe('SizeCounter', () => {
     });
 
     it('renders label if provided', () => {
-        render(SizeCounter, { value: 1, onUpdate: vi.fn(), label: 'Tamanho' });
-        expect(screen.getByText('Tamanho')).toBeInTheDocument();
+        render(SizeCounter, { value: 1, onUpdate: vi.fn(), label: 'Size' });
+        expect(screen.getByText('Size')).toBeInTheDocument();
     });
 
     it('decreases value from 1 to 0.5 (1/2)', async () => {
         const onUpdate = vi.fn();
         render(SizeCounter, { value: 1, onUpdate });
 
-        const decreaseBtn = screen.getByLabelText('Diminuir');
+        const decreaseBtn = screen.getByLabelText('Decrease');
         await fireEvent.click(decreaseBtn);
 
         expect(onUpdate).toHaveBeenCalledWith(0.5);
@@ -36,7 +36,7 @@ describe('SizeCounter', () => {
         const onUpdate = vi.fn();
         render(SizeCounter, { value: 0.5, onUpdate });
 
-        const decreaseBtn = screen.getByLabelText('Diminuir');
+        const decreaseBtn = screen.getByLabelText('Decrease');
         await fireEvent.click(decreaseBtn);
 
         expect(onUpdate).toHaveBeenCalledWith(0.125);
@@ -46,7 +46,7 @@ describe('SizeCounter', () => {
         const onUpdate = vi.fn();
         render(SizeCounter, { value: 0.125, onUpdate });
 
-        const increaseBtn = screen.getByLabelText('Aumentar');
+        const increaseBtn = screen.getByLabelText('Increase');
         await fireEvent.click(increaseBtn);
 
         expect(onUpdate).toHaveBeenCalledWith(0.5);
@@ -56,7 +56,7 @@ describe('SizeCounter', () => {
         const onUpdate = vi.fn();
         render(SizeCounter, { value: 0.5, onUpdate });
 
-        const increaseBtn = screen.getByLabelText('Aumentar');
+        const increaseBtn = screen.getByLabelText('Increase');
         await fireEvent.click(increaseBtn);
 
         expect(onUpdate).toHaveBeenCalledWith(1);
@@ -66,7 +66,7 @@ describe('SizeCounter', () => {
         const onUpdate = vi.fn();
         render(SizeCounter, { value: 0.125, onUpdate });
 
-        const decreaseBtn = screen.getByLabelText('Diminuir');
+        const decreaseBtn = screen.getByLabelText('Decrease');
         expect(decreaseBtn).toBeDisabled();
         await fireEvent.click(decreaseBtn);
 
@@ -77,7 +77,7 @@ describe('SizeCounter', () => {
         const onUpdate = vi.fn();
         render(SizeCounter, { value: 20, onUpdate });
 
-        const increaseBtn = screen.getByLabelText('Aumentar');
+        const increaseBtn = screen.getByLabelText('Increase');
         expect(increaseBtn).toBeDisabled();
         await fireEvent.click(increaseBtn);
 

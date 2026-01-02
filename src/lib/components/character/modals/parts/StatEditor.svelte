@@ -156,8 +156,8 @@
                 };
             } else {
                  formData = data === 'defense'
-                    ? { key: 'naturalDefense', name: 'Defesa Natural', value: $character.naturalDefense }
-                    : { key: 'speed', name: 'Velocidade', value: $character.speed };
+                    ? { key: 'naturalDefense', value: $character.naturalDefense }
+                    : { key: 'speed', value: $character.speed };
             }
         }
     });
