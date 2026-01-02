@@ -195,7 +195,7 @@
     },
     "vitals": {
       "defense": "Defesa",
-      "speed": "Deslocamento",
+      "speed": "Velocidade",
       "bonus_damage": "Bônus de Dano",
       "extra_dice": "Dados Extras",
       "healing_rate": "Taxa de Cura"
@@ -447,7 +447,7 @@
         "will": "Vontade",
         "perception": "Percepção",
         "defense": "Defesa",
-        "speed": "Deslocamento",
+        "speed": "Velocidade",
         "health": "Vida",
         "damage": "Dano",
         "boons": "Boons/Banes",
@@ -592,7 +592,7 @@
       "add_affliction": "Aflição",
       "attributes": "Atributos",
       "size": "Tamanho",
-      "speed": "Deslocamento",
+      "speed": "Velocidade",
       "traits": "Traços",
       "actions": "Ações",
       "reactions": "Reações",
@@ -735,7 +735,7 @@
       "int": "Intelecto",
       "wil": "Vontade",
       "defense": "Defesa",
-      "speed": "Deslocamento",
+      "speed": "Velocidade",
       "health": "Vida",
       "damage": "Dano (Dados)",
       "boons": "Boons/Banes"
@@ -759,7 +759,7 @@
     "afflictions": {
       "blinded": {
         "name": "Cego",
-        "effect": "Faz rolagens com 3 impedimentos. Sem reações de visão. Deslocamento reduzido pela metade."
+        "effect": "Faz rolagens com 3 impedimentos. Sem reações de visão. Velocidade reduzido pela metade."
       },
       "confused": {
         "name": "Confuso",
@@ -783,7 +783,7 @@
       },
       "held": {
         "name": "Imobilizado",
-        "effect": "Deslocamento 0. Não pode aumentar Deslocamento. Falha automática em rolagens de defesa de Agilidade."
+        "effect": "Velocidade 0. Não pode aumentar Velocidade. Falha automática em rolagens de defesa de Agilidade."
       },
       "impaired": {
         "name": "Prejudicado",
@@ -791,7 +791,7 @@
       },
       "incapacitated": {
         "name": "Incapacitado",
-        "effect": "Dano igual ou superior à Vida. Não pode usar ações ou reações. Deslocamento 0."
+        "effect": "Dano igual ou superior à Vida. Não pode usar ações ou reações. Velocidade 0."
       },
       "on_fire": {
         "name": "Em Chamas",
@@ -807,15 +807,15 @@
       },
       "slowed": {
         "name": "Lento",
-        "effect": "Deslocamento cai para 2 (se maior). Não pode se beneficiar de aumentos de Deslocamento."
+        "effect": "Velocidade cai para 2 (se maior). Não pode se beneficiar de aumentos de Velocidade."
       },
       "stunned": {
         "name": "Atordoado",
-        "effect": "Sem ações/reações. Deslocamento 0. Concede 2 bônus contra você. Rolagens de atributo com 2 impedimentos."
+        "effect": "Sem ações/reações. Velocidade 0. Concede 2 bônus contra você. Rolagens de atributo com 2 impedimentos."
       },
       "unconscious": {
         "name": "Inconsciente",
-        "effect": "Sem ações/reações. Deslocamento 0. Concede 3 bônus contra você. Falha automática em rolagens de atributo."
+        "effect": "Sem ações/reações. Velocidade 0. Concede 3 bônus contra você. Falha automática em rolagens de atributo."
       },
       "vulnerable": {
         "name": "Vulnerável",
@@ -823,7 +823,7 @@
       },
       "weakened": {
         "name": "Enfraquecido",
-        "effect": "Rolagens de Força/Agilidade com 1 impedimento. Concede 1 bônus vs For/Agi. Deslocamento reduzido pela metade."
+        "effect": "Rolagens de Força/Agilidade com 1 impedimento. Concede 1 bônus vs For/Agi. Velocidade reduzido pela metade."
       }
     }
   },
@@ -871,7 +871,7 @@
       "insanity": "Insanidade",
       "corruption": "Corrupção",
       "power": "Poder",
-      "speed": "Deslocamento",
+      "speed": "Velocidade",
       "size": "Tamanho"
     },
     "spells": {
@@ -935,7 +935,7 @@
       },
       "blinded": {
         "name": "Cego",
-        "description": "Uma criatura cega não pode ver. Ela trata tudo como totalmente obscurecido. Outras criaturas fazem rolagens de ataque com 1 boon contra a Defesa ou Agilidade de uma criatura cega. Desafios de Percepção que dependem da visão falham automaticamente. Finalmente, o Deslocamento da criatura cega torna-se 2, a menos que seu normal seja menor."
+        "description": "Uma criatura cega não pode ver. Ela trata tudo como totalmente obscurecido. Outras criaturas fazem rolagens de ataque com 1 boon contra a Defesa ou Agilidade de uma criatura cega. Desafios de Percepção que dependem da visão falham automaticamente. Finalmente, o Velocidade da criatura cega torna-se 2, a menos que seu normal seja menor."
       },
       "charmed": {
         "name": "Enfeitiçado",
@@ -943,7 +943,7 @@
       },
       "compelled": {
         "name": "Compelido",
-        "description": "Uma criatura compelida não pode usar ações ou se mover. Em vez disso, durante cada turno rápido, a criatura que causou a aflição pode forçar a criatura compelida a se mover até seu Deslocamento ou usar uma ação. A criatura causadora toma todas as decisões pela criatura compelida."
+        "description": "Uma criatura compelida não pode usar ações ou se mover. Em vez disso, durante cada turno rápido, a criatura que causou a aflição pode forçar a criatura compelida a se mover até seu Velocidade ou usar uma ação. A criatura causadora toma todas as decisões pela criatura compelida."
       },
       "dazed": {
         "name": "Atordoado",
@@ -975,7 +975,7 @@
       },
       "immobilized": {
         "name": "Imobilizado",
-        "description": "Uma criatura imobilizada tem Deslocamento 0 e não se beneficia de bônus de Deslocamento. Outras criaturas fazem ataques contra ela com 1 boon."
+        "description": "Uma criatura imobilizada tem Velocidade 0 e não se beneficia de bônus de Velocidade. Outras criaturas fazem ataques contra ela com 1 boon."
       },
       "impaired": {
         "name": "Prejudicado",
@@ -991,7 +991,7 @@
       },
       "slowed": {
         "name": "Lento",
-        "description": "Uma criatura lenta pode realizar apenas um turno lento, seu Deslocamento é reduzido à metade e não se beneficia de aumentos de Deslocamento."
+        "description": "Uma criatura lenta pode realizar apenas um turno lento, seu Velocidade é reduzido à metade e não se beneficia de aumentos de Velocidade."
       },
       "stunned": {
         "name": "Aturdido",
