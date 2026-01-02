@@ -1,4 +1,7 @@
+import { appSettings } from '$lib/stores/characterStore';
+import { get } from 'svelte/store';
 import { DiceBox } from '$lib/dice/services/renderer';
+import { THEMES } from '$lib/dice/constants/themes';
 import type { DiceShape } from '$lib/dice/constants/dice';
 
 export type DiceStatus = 'idle' | 'initializing' | 'ready' | 'rolling' | 'error';
@@ -36,6 +39,17 @@ export interface RollOptions {
   dicePool: DieConfig[];
 }
 
+function getThemeConfig(themeId: string) {
+  const theme = THEMES[themeId as keyof typeof THEMES];
+  if (!theme) return {};
+
+  return {
+    theme_surface: themeId,
+    theme_customColorset: theme.dice,
+    theme_colorset: 'white' // valid default to satisfy types if needed
+  };
+}
+
 /**
  * Creates the dice store for managing 3D dice state
  * Uses Svelte 5 runes for reactive state management
@@ -46,6 +60,13 @@ function createDiceStore() {
   let container: HTMLDivElement | null = $state(null);
   let lastResults: RollResult | null = $state(null);
   let error: string | null = $state(null);
+
+  // Subscribe to theme changes
+  appSettings.subscribe(settings => {
+    if (diceBox && settings.diceTheme) {
+      diceBox.updateConfig(getThemeConfig(settings.diceTheme));
+    }
+  });
 
   const isReady = $derived(status === 'ready');
   const isRolling = $derived(status === 'rolling');
@@ -61,10 +82,10 @@ function createDiceStore() {
     error = null;
 
     try {
+      const settings = get(appSettings);
       diceBox = new DiceBox(containerElement, {
-        assetPath: '/dice/',
-        theme_colorset: 'white',
-        theme_material: 'glass',
+        assetPath: '/assets/dice-box/',
+        ...getThemeConfig(settings.diceTheme || 'default'),
         shadows: true,
       });
 

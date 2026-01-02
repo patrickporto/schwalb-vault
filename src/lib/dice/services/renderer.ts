@@ -100,7 +100,7 @@ const DEFAULT_CONFIG: DiceBoxConfig = {
 export class DiceBox {
   #initialized = false;
   #last_time = 0;
-  #running = false;
+  #running: number | boolean = false;
   #rolling = false;
   #soundDelay = 10;
   #animstate = '';
@@ -145,6 +145,7 @@ export class DiceBox {
   private iteration: number = 0;
   private steps: number = 0;
   private DiceFunctions: any;
+  private selector: { dice: string[] } = { dice: [] };
 
   // Propriedades do DiceBoxConfig com inicializadores
   private assetPath: string = './';
@@ -462,7 +463,7 @@ export class DiceBox {
     // 		scale: options.scale
     // 	})
     // }
-    Object.apply(this, options);
+    Object.assign(this, options);
     this.theme_customColorset = options.theme_customColorset
       ? options.theme_customColorset
       : null;
@@ -503,11 +504,13 @@ export class DiceBox {
       this.display.currentWidth / this.display.containerWidth,
       this.display.currentHeight / this.display.containerHeight
     );
-    this.display.scale =
+    if (this.display.aspect) {
+      this.display.scale =
       Math.sqrt(
         this.display.containerWidth * this.display.containerWidth +
         this.display.containerHeight * this.display.containerHeight
       ) / 13;
+    }
 
     this.makeWorldBox();
 
@@ -536,9 +539,9 @@ export class DiceBox {
     switch (this.#animstate) {
       case 'selector':
         this.camera.position.z =
-          this.selector.dice.length > 9
+          (this.selector?.dice?.length || 1) > 9
             ? this.cameraHeight.far
-            : this.selector.dice.length < 6
+          : (this.selector?.dice?.length || 1) < 6
               ? this.cameraHeight.close
               : this.cameraHeight.medium;
         break;
@@ -739,21 +742,21 @@ export class DiceBox {
     }
 
     let values = diceobj.values;
-    let value = parseInt(dicemesh.getLastValue().value);
-    result = parseInt(result);
+    let value = parseInt(String(dicemesh.getLastValue().value));
+    let resultParsed: number = parseInt(String(result));
 
     if (dicemesh.notation.type == 'd10' && value == 0) value = 10;
     if (dicemesh.notation.type == 'd100' && value == 0) value = 100;
     if (dicemesh.notation.type == 'd100' && value > 0 && value < 10)
       value *= 10;
 
-    if (dicemesh.notation.type == 'd10' && result == 0) result = 10;
-    if (dicemesh.notation.type == 'd100' && result == 0) result = 100;
-    if (dicemesh.notation.type == 'd100' && result > 0 && result < 10)
-      result *= 10;
+    if (dicemesh.notation.type == 'd10' && resultParsed == 0) resultParsed = 10;
+    if (dicemesh.notation.type == 'd100' && resultParsed == 0) resultParsed = 100;
+    if (dicemesh.notation.type == 'd100' && resultParsed > 0 && resultParsed < 10)
+      resultParsed *= 10;
 
     let valueindex = diceobj.values.indexOf(value);
-    let resultindex = diceobj.values.indexOf(result);
+    let resultindex = diceobj.values.indexOf(resultParsed);
 
     if (valueindex < 0 || resultindex < 0) return;
     if (valueindex == resultindex) return;
@@ -818,8 +821,8 @@ export class DiceBox {
 
   swapDiceFace_D4(dicemesh: any, result: number): void {
     const diceobj = this.DiceFactory.get(dicemesh.notation.type);
-    let value = parseInt(dicemesh.getLastValue().value);
-    result = parseInt(result);
+    let value = parseInt(String(dicemesh.getLastValue().value));
+    const resultInt = parseInt(String(result));
 
     if (!(value >= 1 && value <= 4)) return;
 
@@ -1075,7 +1078,7 @@ export class DiceBox {
 
     // update physics interactions visually
     for (let i in this.scene.children) {
-      let interact = this.scene.children[i];
+      let interact: any = this.scene.children[i];
       if (interact.body != undefined) {
         interact.position.copy(interact.body.position);
         interact.quaternion.copy(interact.body.quaternion);
@@ -1102,6 +1105,68 @@ export class DiceBox {
         this.animateThrow(threadid, callback);
       });
     }
+  }
+
+  animateSelector(threadid: number): void {
+    // Check if we are still the active thread before doing anything
+    if (this.#running !== threadid) return;
+
+    this.#animstate = 'selector';
+    // Do NOT set this.#running = threadid here; strictly reader.
+
+    const time = Date.now();
+    const time_diff = (time - this.#last_time) / 1000;
+    this.#last_time = time;
+
+    // Rotate dice
+    this.diceList.forEach((dice, index) => {
+      if (dice) {
+        dice.rotation.y += 0.01;
+        dice.rotation.x += 0.005;
+
+        // Ensure they stay in place (center)
+        dice.position.set(0, 0, 0);
+        if (dice.body) {
+          dice.body.position.set(0, 0, 0);
+          dice.body.quaternion.setFromEuler(dice.rotation.x, dice.rotation.y, dice.rotation.z);
+        }
+      }
+    });
+
+    this.renderer.render(this.scene, this.camera);
+
+    if (this.#running == threadid) {
+      requestAnimationFrame(() => {
+        this.animateSelector(threadid);
+      });
+    }
+  }
+
+  async showSelector(dice: string[] = ['d20']): Promise<void> {
+    this.clearDice();
+    this.#rolling = false;
+    this.#animstate = 'selector';
+    this.selector = { dice }; // Populate selector data
+    this.setDimensions(this.dimensions); // Update camera for selector
+
+    const threadid = Date.now();
+    this.#running = threadid;
+    this.#last_time = threadid;
+
+    for (const type of dice) {
+      // Create dummy vector data for spawn
+      const vectordata = {
+        type,
+        pos: { x: 0, y: 0, z: 0 },
+        velocity: { x: 0, y: 0, z: 0 },
+        angle: { x: 0, y: 0, z: 0 },
+        axis: { x: 0, y: 0, z: 0, a: 0 }
+      };
+
+      await this.spawnDice(vectordata);
+    }
+
+    this.animateSelector(threadid);
   }
 
   animateAfterThrow(threadid: number): void {

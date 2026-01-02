@@ -858,7 +858,8 @@
     "title": "Configurações do App",
     "description": "Personalize sua experiência",
     "sections": {
-      "interface": "Interface & Comportamento",
+      "interface": "Interface",
+      "dice_theme": "Tema dos Dados",
       "identity": "Identidade",
       "appearance": "Aparência"
     },

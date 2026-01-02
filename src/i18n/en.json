@@ -864,7 +864,8 @@
       "title": "App Settings",
       "description": "Customize your experience",
       "sections": {
-        "interface": "Interface & Behavior",
+        "interface": "Interface",
+        "dice_theme": "Dice Theme",
         "identity": "Identity",
         "appearance": "Appearance"
       },

@@ -1,5 +1,5 @@
 import { TEXTURELIST } from '$lib/dice/constants/texturelist';
-import { COLORSETS } from '$lib/dice/constants/colorsets';
+import { THEMES, type DiceTheme } from '$lib/dice/constants/themes';
 
 interface DiceColorsOptions {
   assetPath?: string;
@@ -24,10 +24,10 @@ interface ColorSet {
   name: string;
   texture: TextureData;
   material?: string;
+  [key: string]: any; // Allow other colorset props
 }
 
 type TextureList = Record<string, TextureData>;
-type ColorSets = Record<string, ColorSet>;
 
 export class DiceColors {
   #colorsets: Map<string, ColorSet> = new Map();
@@ -64,7 +64,13 @@ export class DiceColors {
     return result;
   }
 
-  #getTexture(textureName: string): TextureData {
+  #getTexture(textureName: string | string[]): TextureData {
+    if (Array.isArray(textureName)) {
+      // Handle array of textures if needed, or pick first.
+      // For now, let's assume single texture or handle specific logic.
+      // Current logic seems to expect a single string key for TEXTURELIST.
+      return (TEXTURELIST as TextureList)[textureName[0]] ?? (TEXTURELIST as TextureList).none;
+    }
     return (TEXTURELIST as TextureList)[textureName] ?? (TEXTURELIST as TextureList).none;
   }
 
@@ -75,13 +81,20 @@ export class DiceColors {
       return this.#colorsets.get(setName)!;
     }
 
-    const baseColorset = (COLORSETS as ColorSets)[setName || 'white'];
-    const colorset: ColorSet = { ...baseColorset };
+    const theme = THEMES[setName || 'white'] || THEMES['default'];
+    // Use theme.dice as the base colorset
+    const baseColorset = theme.dice;
+
+    const colorset: ColorSet = {
+      name: theme.name,
+      ...baseColorset,
+      texture: { ...((TEXTURELIST as TextureList).none) } // placeholder
+    };
 
     // Get texture name from options or use the base colorset's texture source
     const textureName = typeof options === 'string'
-      ? baseColorset.texture.source
-      : options.texture ?? baseColorset.texture.source;
+      ? baseColorset.texture
+      : options.texture ?? baseColorset.texture;
 
     // Get and load texture data
     colorset.texture = await this.#imageLoader(this.#getTexture(textureName || 'none'));
@@ -89,6 +102,8 @@ export class DiceColors {
     // Apply material type if specified
     if (typeof options !== 'string' && options?.material) {
       colorset.texture.material = options.material;
+    } else if (baseColorset.material) {
+      colorset.texture.material = baseColorset.material;
     }
 
     // Cache for later use
@@ -99,28 +114,32 @@ export class DiceColors {
     return colorset;
   }
 
-  async makeColorSet(options: ColorSetOptions = {}): Promise<ColorSet> {
-    if (options.name && this.#colorsets.has(options.name)) {
-      return this.#colorsets.get(options.name)!;
+  async makeColorSet(options: any = {}): Promise<ColorSet> {
+    // Generate a unique name since custom colorsets don't have named IDs
+    const customName = options.name ?? Date.now().toString();
+
+    if (this.#colorsets.has(customName)) {
+      return this.#colorsets.get(customName)!;
     }
 
-    const defaultSet = (COLORSETS as ColorSets).white;
-    const colorset: ColorSet = {
-      ...defaultSet,
-      name:
-        options.name?.toLowerCase() === 'white'
-          ? Date.now().toString()
-          : options.name ?? Date.now().toString(),
-      texture: defaultSet.texture
-    };
+    // Get texture from options or default to 'none'
+    const textureName = options.texture ?? 'none';
+    const textureData = await this.#imageLoader(this.#getTexture(textureName));
 
-    // Get and load texture data
-    const textureName = options.texture ?? defaultSet.texture.source ?? 'none';
-    colorset.texture = await this.#imageLoader(this.#getTexture(textureName));
-
+    // Apply material type if specified
     if (options.material) {
-      colorset.texture.material = options.material;
+      textureData.material = options.material;
     }
+
+    const colorset: ColorSet = {
+      name: customName,
+      foreground: options.foreground ?? '#ffffff',
+      background: options.background ?? '#000000',
+      outline: options.outline,
+      edge: options.edge,
+      texture: textureData,
+      material: options.material ?? 'plastic'
+    };
 
     // Cache for later use
     this.#colorsets.set(colorset.name, colorset);

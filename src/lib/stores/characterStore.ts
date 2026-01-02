@@ -139,6 +139,7 @@ export interface AppSettings {
     theme: string;
     userName?: string;
     enable3DDice: boolean;
+    diceTheme: string;
 }
 
 // --- STATE ---
@@ -194,7 +195,8 @@ const initialSettings: AppSettings = {
     stickyHistory: false,
     theme: 'dark',
     userName: '',
-    enable3DDice: false
+    enable3DDice: false,
+    diceTheme: 'default',
 };
 
 function createAppSettings() {

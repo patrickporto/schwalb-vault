@@ -4,6 +4,7 @@
     import { googleSession } from '$lib/logic/googleDrive';
     import { X, Settings, History, Monitor, Smartphone, Palette, Globe, ArrowLeft, Check, User, Dices } from 'lucide-svelte';
     import Toggle from '../common/Toggle.svelte';
+    import DiceThemeSelector from '$lib/components/dice/DiceThemeSelector.svelte';
     import { slide, fly, fade } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
     import { onMount } from 'svelte';
@@ -102,6 +103,19 @@
                         />
                     </div>
                 </div>
+
+                <!-- Section: Dice Theme -->
+                {#if $appSettings.enable3DDice}
+                    <div class="space-y-4" transition:slide>
+                        <div class="flex items-center gap-2 mb-2 text-pink-400">
+                            <Dices size={16} />
+                            <h3 class="text-xs font-black uppercase tracking-widest">{$t('settings.sections.dice_theme')}</h3>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5 h-[500px] overflow-hidden">
+                            <DiceThemeSelector />
+                        </div>
+                    </div>
+                {/if}
 
                 <!-- Section: Language -->
                 <div class="space-y-4">
