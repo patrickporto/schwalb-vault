@@ -868,6 +868,10 @@
         "theme": {
           "label": "Theme (Coming Soon)",
           "description": "The Vault will be dark-only for now."
+        },
+        "enable_3d_dice": {
+            "label": "Enable 3D Dice",
+            "description": "Show animated 3D dice when rolling. Requires more processing power."
         }
       },
       "sync_info": "Your settings are automatically synchronized with your Google Drive account whenever they are changed."

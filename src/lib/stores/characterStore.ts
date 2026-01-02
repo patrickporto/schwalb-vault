@@ -138,6 +138,7 @@ export interface AppSettings {
     stickyHistory: boolean;
     theme: string;
     userName?: string;
+    enable3DDice: boolean;
 }
 
 // --- STATE ---
@@ -192,7 +193,8 @@ const initialSettings: AppSettings = {
     autoOpenHistory: false,
     stickyHistory: false,
     theme: 'dark',
-    userName: ''
+    userName: '',
+    enable3DDice: false
 };
 
 function createAppSettings() {

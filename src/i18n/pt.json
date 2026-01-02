@@ -863,6 +863,10 @@
       "theme": {
         "label": "Tema (Em breve)",
         "description": "O Vault será apenas escuro por enquanto."
+      },
+      "enable_3d_dice": {
+        "label": "Habilitar Dados 3D",
+        "description": "Mostra dados 3D animados ao rolar. Requer mais poder de processamento."
       }
     },
     "sync_info": "Suas configurações são sincronizadas automaticamente com sua conta do Google Drive sempre que forem alteradas."

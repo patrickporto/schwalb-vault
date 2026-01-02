@@ -2,7 +2,7 @@
     import { t, locale } from 'svelte-i18n';
     import { appSettings } from '$lib/stores/characterStore';
     import { googleSession } from '$lib/logic/googleDrive';
-    import { X, Settings, History, Monitor, Smartphone, Palette, Globe, ArrowLeft, Check, User } from 'lucide-svelte';
+    import { X, Settings, History, Monitor, Smartphone, Palette, Globe, ArrowLeft, Check, User, Dices } from 'lucide-svelte';
     import Toggle from '../common/Toggle.svelte';
     import { slide, fly, fade } from 'svelte/transition';
     import { quintOut } from 'svelte/easing';
@@ -93,6 +93,12 @@
                             onToggle={(val) => updateSetting('autoOpenHistory', val)}
                             label={$t('settings.options.auto_open_history.label')}
                             description={$t('settings.options.auto_open_history.description')}
+                        />
+                        <Toggle
+                            checked={$appSettings.enable3DDice}
+                            onToggle={(val) => updateSetting('enable3DDice', val)}
+                            label={$t('settings.options.enable_3d_dice.label')}
+                            description={$t('settings.options.enable_3d_dice.description')}
                         />
                     </div>
                 </div>
