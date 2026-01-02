@@ -489,7 +489,7 @@
                      <div class="flex-1">
                         <h3 class="font-black text-xl text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight truncate pr-16">{char.name}</h3>
                         <div class="flex items-center gap-2 mt-1 flex-wrap">
-                            <span class="text-[10px] bg-indigo-500/10 text-indigo-400 font-black px-2 py-0.5 rounded uppercase tracking-wider">{$t(`ancestries.${char.system === 'sofdl' ? 'sofdl' : 'sofww'}.${(char.ancestry || 'Human').toLowerCase()}`)}</span>
+                            <span class="text-[10px] bg-indigo-500/10 text-indigo-400 font-black px-2 py-0.5 rounded uppercase tracking-wider">{char.ancestry || 'Human'}</span>
                             <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{$t('common.labels.level')} {char.level}</span>
                             {#if char.playerName}
                                 <span class="text-[10px] text-slate-400 font-medium">• {char.playerName}</span>
