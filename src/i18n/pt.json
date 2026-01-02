@@ -875,6 +875,11 @@
       "speed": "Velocidade",
       "size": "Tamanho"
     },
+    "professions": {
+      "title": "Profissões",
+      "none": "Nenhuma profissão.",
+      "add_placeholder": "Adicionar profissão..."
+    },
     "spells": {
       "title": "Grimório",
       "subtitle": "Magias conhecidas e conjurações disponíveis",
