@@ -58,36 +58,56 @@ export const lobbyStatus = writable<LobbyStatus>('disconnected');
 /**
  * Check connectivity to a WebSocket tracker
  */
-async function checkTrackerConnection(url: string, timeout = 5000): Promise<boolean> {
+async function checkTrackerConnection(url: string, timeout = 10000): Promise<boolean> {
   if (!url) return false;
   return new Promise((resolve) => {
     let ws: WebSocket | null = null;
-    try {
-      ws = new WebSocket(url);
+    let resolved = false;
 
-      const timer = setTimeout(() => {
+    // Prevent hanging promise
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
         if (ws) {
           ws.onopen = null;
           ws.onerror = null;
-          try { ws.close(); } catch { }
+          try {
+            // Only close if appropriate to reduce console noise
+            if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+              ws.close();
+            }
+          } catch { }
         }
         resolve(false);
-      }, timeout);
+      }
+    }, timeout);
+
+    try {
+      ws = new WebSocket(url);
 
       ws.onopen = () => {
-        clearTimeout(timer);
-        if (ws) {
-          try { ws.close(); } catch { }
+        if (resolved) {
+          try { ws?.close(); } catch { }
+          return;
         }
+        resolved = true;
+        clearTimeout(timer);
+        try { ws?.close(); } catch { }
         resolve(true);
       };
 
       ws.onerror = () => {
+        if (resolved) return;
+        resolved = true;
         clearTimeout(timer);
         resolve(false); // Connection failed
       };
     } catch (e) {
-      resolve(false);
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        resolve(false);
+      }
     }
   });
 }
@@ -95,7 +115,8 @@ async function checkTrackerConnection(url: string, timeout = 5000): Promise<bool
 function startConnectionMonitor(url: string) {
   if (connectionMonitorInterval) clearInterval(connectionMonitorInterval);
   connectionMonitorInterval = setInterval(async () => {
-    const isOnline = await checkTrackerConnection(url, 3000);
+    // Increased timeout for monitor
+    const isOnline = await checkTrackerConnection(url, 10000);
     syncState.update(s => {
       if (!isOnline && s.connectionStatus === 'connected') {
         return { ...s, connectionStatus: 'reconnecting' };
@@ -104,7 +125,7 @@ function startConnectionMonitor(url: string) {
       }
       return s;
     });
-  }, 15000); // Check every 15s to be responsive
+  }, 20000); // Check every 20s
 }
 
 /**
@@ -135,7 +156,7 @@ let lobbyMonitorInterval: any = null;
 function startLobbyMonitor(url: string) {
   if (lobbyMonitorInterval) clearInterval(lobbyMonitorInterval);
   lobbyMonitorInterval = setInterval(async () => {
-    const isOnline = await checkTrackerConnection(url, 3000);
+    const isOnline = await checkTrackerConnection(url, 10000);
     lobbyStatus.update(s => {
       if (!isOnline && s === 'connected') {
         console.warn('Lobby monitor: Tracker unreachable');
@@ -144,7 +165,7 @@ function startLobbyMonitor(url: string) {
       if (isOnline && (s === 'disconnected' || s === 'error')) return 'connected';
       return s;
     });
-  }, 10000); // Check every 10s
+  }, 20000); // Check every 20s
 }
 
 let sendDiscovery: any;
@@ -293,6 +314,10 @@ function cleanupAllConnections() {
   if (lobbyCleanupInterval) {
     clearInterval(lobbyCleanupInterval);
     lobbyCleanupInterval = null;
+  }
+  if (lobbyMonitorInterval) {
+    clearInterval(lobbyMonitorInterval);
+    lobbyMonitorInterval = null;
   }
   if (campaignHeartbeatInterval) {
     clearInterval(campaignHeartbeatInterval);
@@ -661,6 +686,14 @@ export function resetSyncStateForTesting() {
   if (lobbyCleanupInterval) {
     clearInterval(lobbyCleanupInterval);
     lobbyCleanupInterval = null;
+  }
+  if (lobbyMonitorInterval) {
+    clearInterval(lobbyMonitorInterval);
+    lobbyMonitorInterval = null;
+  }
+  if (connectionMonitorInterval) {
+    clearInterval(connectionMonitorInterval);
+    connectionMonitorInterval = null;
   }
   if (campaignHeartbeatInterval) {
     clearInterval(campaignHeartbeatInterval);
