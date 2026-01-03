@@ -46,7 +46,7 @@ function getThemeConfig(themeId: string) {
   return {
     theme_surface: themeId,
     theme_customColorset: theme.dice,
-    theme_colorset: 'white' // valid default to satisfy types if needed
+    theme_colorset: themeId // Use themeId for boon/bane styles
   };
 }
 
