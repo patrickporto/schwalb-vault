@@ -593,21 +593,47 @@ export async function syncFromCloud() {
 
     // Sync Enemies
     if (cloudData.enemies && Array.isArray(cloudData.enemies)) {
+      console.log('[DEBUG] Syncing', cloudData.enemies.length, 'enemies from cloud');
       for (const cloudEnemy of cloudData.enemies) {
         const id = String(cloudEnemy.id);
-        if (!deletedIds.has(id) && !enemiesMap.has(id)) {
-          enemiesMap.set(id, cloudEnemy);
+        if (deletedIds.has(id) || deletedIdsMap.has(id)) {
+          // If marked as deleted, ensure it is removed
+          if (enemiesMap.has(id)) enemiesMap.delete(id);
+          continue;
         }
+
+        const localEnemy = enemiesMap.get(id);
+        const cloudTime = cloudEnemy.lastUpdate || 0;
+        const localTime = localEnemy?.lastUpdate || 0;
+
+        if (localEnemy && localTime > cloudTime) {
+          // Local is newer, keep it
+          continue;
+        }
+
+        enemiesMap.set(id, cloudEnemy);
       }
     }
 
     // Sync Encounters
     if (cloudData.encounters && Array.isArray(cloudData.encounters)) {
+      console.log('[DEBUG] Syncing', cloudData.encounters.length, 'encounters from cloud');
       for (const cloudEnc of cloudData.encounters) {
         const id = String(cloudEnc.id);
-        if (!deletedIds.has(id) && !encountersMap.has(id)) {
-          encountersMap.set(id, cloudEnc);
+        if (deletedIds.has(id) || deletedIdsMap.has(id)) {
+          if (encountersMap.has(id)) encountersMap.delete(id);
+          continue;
         }
+
+        const localEnc = encountersMap.get(id);
+        const cloudTime = cloudEnc.lastUpdate || 0;
+        const localTime = localEnc?.lastUpdate || 0;
+
+        if (localEnc && localTime > cloudTime) {
+          continue;
+        }
+
+        encountersMap.set(id, cloudEnc);
       }
     }
 
