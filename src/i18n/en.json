@@ -728,6 +728,7 @@
             "preview": "Preview",
             "defense": "Defense",
             "health": "Health",
+            "damage": "Damage",
             "enemy_default": "Enemy",
             "image_error": "Error saving image",
             "descriptors": "Descriptors",

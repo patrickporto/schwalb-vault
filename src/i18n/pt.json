@@ -721,6 +721,7 @@
       "preview": "Pré-visualização",
       "defense": "Defesa",
       "health": "Vida",
+      "damage": "Dano",
       "enemy_default": "Inimigo",
       "image_error": "Erro ao salvar imagem",
       "descriptors": "Descritores",
