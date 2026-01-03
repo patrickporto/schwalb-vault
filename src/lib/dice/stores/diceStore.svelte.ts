@@ -1,3 +1,4 @@
+import { resolve } from '$app/paths';
 import { appSettings } from '$lib/stores/characterStore';
 import { get } from 'svelte/store';
 import { DiceBox } from '$lib/dice/services/renderer';
@@ -84,7 +85,7 @@ function createDiceStore() {
     try {
       const settings = get(appSettings);
       diceBox = new DiceBox(containerElement, {
-        assetPath: '/assets/dice-box/',
+        assetPath: resolve('/'),
         ...getThemeConfig(settings.diceTheme || 'default'),
         shadows: true,
       });

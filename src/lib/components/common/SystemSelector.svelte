@@ -2,6 +2,7 @@
     import { t } from 'svelte-i18n';
     import { SYSTEMS } from '$lib/systems';
     import { Check, Lock } from 'lucide-svelte';
+    import { resolve } from '$app/paths';
 
     interface Props {
         selectedSystem: string;
@@ -11,9 +12,9 @@
     let { selectedSystem, onSelect }: Props = $props();
 
     const cover = {
-        sofdl: '/artworks/books/sofdl-core.webp',
-        sofww: '/artworks/books/sofww-core.webp',
-        dle: '/artworks/books/dle-core.webp',
+        sofdl: resolve('/artworks/books/sofdl-core.webp'),
+        sofww: resolve('/artworks/books/sofww-core.webp'),
+        dle: resolve('/artworks/books/dle-core.webp'),
     };
 
     const positions: Record<string, string> = {

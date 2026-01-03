@@ -1,3 +1,5 @@
+import { resolve } from '$app/paths';
+
 /** Style properties for a dice type */
 export interface DiceStyle {
   foreground: string | string[];
@@ -81,8 +83,8 @@ export const THEMES: Record<string, DiceTheme> = {
       material: 'perfectmetal',
       font: '"Uncial Antiqua", system-ui',
       labels: {
-        d6: ['1', '2', '3', '4', '5', '/artworks/dice/demonlord-face-white.webp'],
-        d20: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '/artworks/dice/demonlord-face-white.webp']
+        d6: ['1', '2', '3', '4', '5', resolve('/artworks/dice/demonlord-face-white.webp')],
+        d20: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', resolve('/artworks/dice/demonlord-face-white.webp')]
       }
     },
     boon: {
@@ -92,7 +94,7 @@ export const THEMES: Record<string, DiceTheme> = {
       outline: '#000',
       fontOffsetY: -15,
       labels: {
-        d6: ['1', '2', '3', '4', '5', '/artworks/dice/demonlord-face.webp'],
+        d6: ['1', '2', '3', '4', '5', resolve('/artworks/dice/demonlord-face.webp')],
       }
     },
     bane: {
