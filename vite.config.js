@@ -82,14 +82,11 @@ export default {
       workbox: {
           // Precache all static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot,json}'],
-          // Fallback for SPA navigation
-          navigateFallback: '/',
-          navigateFallbackDenylist: [/^\/api/],
           // Runtime caching strategies
           runtimeCaching: [
             {
-                // Cache IndexedDB-backed pages (app shell)
-                urlPattern: /^https?:\/\/localhost(:\d+)?\//,
+              // Cache App Shell (Navigation requests)
+              urlPattern: ({ request }) => request.mode === 'navigate',
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: 'app-shell-cache',
