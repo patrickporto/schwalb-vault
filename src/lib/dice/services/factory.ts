@@ -716,6 +716,13 @@ export class DiceFactory {
   }
 
   applyColorSet(colordata: DiceColorData): void {
+    // Clear caches to ensure fresh materials
+    this.#materials_cache.clear();
+
+    // Reset to defaults
+    this.#dice_font = 'Arial';
+    this.#dice_labels = {};
+
     this.colordata = colordata;
     this.#label_color = colordata.foreground;
     this.#dice_color = colordata.background;

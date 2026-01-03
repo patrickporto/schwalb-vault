@@ -78,10 +78,6 @@ export class DiceColors {
   async getColorSet(options: string | ColorSetOptions): Promise<ColorSet> {
     const setName = typeof options === 'string' ? options : options?.colorset;
 
-    if (setName && this.#colorsets.has(setName)) {
-      return this.#colorsets.get(setName)!;
-    }
-
     const theme = THEMES[setName || 'white'] || THEMES['default'];
     // Use theme.dice as the base colorset
     const baseColorset = theme.dice;

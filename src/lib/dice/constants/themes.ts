@@ -23,10 +23,29 @@ const TABLE_CUBEMAP = ['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png
 
 export const THEMES: Record<string, DiceTheme> = {
   // Original Themes (Apps/Presets)
+  'default': {
+    name: 'Default',
+    author: 'Patrick Porto',
+    surface: 'wood_tray',
+    category: 'RPG',
+    dice: {
+      foreground: '#fff',
+      background: '#000',
+      outline: '#fff',
+      edge: '#000',
+      texture: 'none',
+      material: 'perfectmetal',
+      font: 'Arial, system-ui',
+      labels: {
+        d6: ['1', '2', '3', '4', '5', '6'],
+        d20: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20']
+      }
+    },
+    cubeMap: DEFAULT_CUBEMAP
+  },
   'demonlord': {
     name: 'Demon Lord',
     author: 'Patrick Porto',
-    showColorPicker: true,
     surface: 'wood_tray',
     category: 'RPG',
     dice: {
