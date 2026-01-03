@@ -76,6 +76,12 @@
             "delete_title": "Delete Character",
             "delete_message": "Are you sure you want to permanently delete this character?"
         },
+        "status": {
+          "connecting": "Connecting to Lobby...",
+          "connected": "Lobby Online",
+          "disconnected": "Lobby Offline",
+          "error": "Connection Error"
+        },
         "campaigns": {
             "start_session": "Start Session",
             "new_campaign": "New Campaign",

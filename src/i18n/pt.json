@@ -69,6 +69,12 @@
     "title": "Schwalb Vault",
     "tabs": {
       "characters": "Personagens",
+      "status": {
+        "connecting": "Conectando ao Lobby...",
+        "connected": "Lobby Online",
+        "disconnected": "Lobby Offline",
+        "error": "Erro de Conexão"
+      },
       "campaigns": "Campanhas"
     },
     "characters": {

@@ -48,6 +48,10 @@ const MIN_JOIN_INTERVAL_MS = 2000; // Minimum 2 seconds between join attempts
 const lobbyConfig = { appId: 'weird-wizard-vault-lobby' };
 export const publicCampaigns = writable<any[]>([]);
 
+// Lobby connection status
+export type LobbyStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+export const lobbyStatus = writable<LobbyStatus>('disconnected');
+
 /**
  * Safely leave a room/lobby, handling any errors gracefully
  */
@@ -74,6 +78,7 @@ export function joinLobby() {
   // If lobby already exists, return the existing sendDiscovery function
   if (lobby && sendDiscovery) {
     console.log('Lobby already connected, reusing existing connection');
+    lobbyStatus.set('connected');
     return sendDiscovery;
   }
 
@@ -93,6 +98,8 @@ export function joinLobby() {
   // If lobby already exists, leave it first to prevent peer connection leaks
   safeLeave(lobby, 'existing lobby');
   lobby = null;
+
+  lobbyStatus.set('connecting');
 
   try {
     lobby = joinRoom(lobbyConfig, 'public-discovery');
@@ -116,10 +123,12 @@ export function joinLobby() {
       publicCampaigns.update(list => list.filter(c => (now - c.lastSeen) < 120000));
     }, 60000);
 
+    lobbyStatus.set('connected');
     return sendFn;
   } catch (e) {
     console.error('Failed to join lobby:', e);
     lobby = null;
+    lobbyStatus.set('error');
     return null;
   }
 }
@@ -189,6 +198,7 @@ function cleanupAllConnections() {
   lobby = null;
   room = null;
   sendDiscovery = null; // Reset to prevent using stale function reference
+  lobbyStatus.set('disconnected');
 }
 
 

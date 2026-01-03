@@ -7,7 +7,7 @@
     import { goto } from '$app/navigation';
     import { resolve, base } from '$app/paths';
     import { Skull, Users, Scroll, Plus, Edit, Play, Trash2, Globe, Wifi, Settings, Gamepad2, Loader2 } from 'lucide-svelte';
-    import { publicCampaigns } from '$lib/logic/sync';
+    import { publicCampaigns, lobbyStatus } from '$lib/logic/sync';
     import ConfirmationModal from './ConfirmationModal.svelte';
     import CampaignModal from './CampaignModal.svelte';
     import CreateCampaignModal from './CreateCampaignModal.svelte';
@@ -615,8 +615,27 @@
                  <div class="flex items-center gap-3 mb-4">
                      <div class="h-px flex-1 bg-slate-800"></div>
                      <h3 class="text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2">
-                         <Globe size={14}/> {$t('dashboard.campaigns.public_campaigns')}
+                         <Globe size={14}/>
+                         {$t('dashboard.campaigns.public_campaigns')}
                      </h3>
+
+                     <!-- Lobby Status Indicator -->
+                     <div class="flex items-center gap-2 ml-2 px-2 py-1 bg-slate-900 rounded-full border border-slate-800">
+                        {#if $lobbyStatus === 'connecting'}
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
+                            <span class="text-[9px] font-bold text-amber-400 uppercase tracking-wider">{$t('dashboard.status.connecting')}</span>
+                        {:else if $lobbyStatus === 'connected'}
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                            <span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">{$t('dashboard.status.connected')}</span>
+                        {:else if $lobbyStatus === 'error'}
+                             <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                             <span class="text-[9px] font-bold text-red-500 uppercase tracking-wider">{$t('dashboard.status.error')}</span>
+                        {:else}
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-500"></div>
+                            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{$t('dashboard.status.disconnected')}</span>
+                        {/if}
+                     </div>
+
                      <div class="h-px flex-1 bg-slate-800"></div>
                  </div>
 
