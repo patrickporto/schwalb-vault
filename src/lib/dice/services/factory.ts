@@ -217,11 +217,47 @@ export class DiceFactory {
     }
     if (!geom) return null;
 
-    // Apply the specific colorset
-    this.applyColorSet(colordata);
+    // Save current state
+    const originalColorData = this.colordata;
+    const originalLabelColor = this.#label_color;
+    const originalDiceColor = this.#dice_color;
+    const originalLabelOutline = this.#label_outline;
+    const originalDiceTexture = this.#dice_texture;
+    const originalDiceMaterial = this.#dice_material;
+    const originalEdgeColor = this.#edge_color;
+    const originalDiceFont = this.#dice_font;
+    const originalDiceLabels = this.#dice_labels;
+
+    // Temporarily apply the specific colorset
+    this.colordata = colordata;
+    this.#label_color = colordata.foreground;
+    this.#dice_color = colordata.background;
+    this.#label_outline = colordata.outline;
+    this.#dice_texture = colordata.texture;
+    this.#dice_material = colordata.texture?.material || 'none';
+    this.#edge_color = colordata.edge || colordata.background;
+    if (colordata.font) {
+      this.#dice_font = colordata.font;
+    }
+    if (colordata.labels) {
+      this.#dice_labels = colordata.labels;
+    }
     this.setMaterialInfo();
 
     const materials = await this.createMaterials(diceobj, this.baseScale / 2, 1.0);
+
+    // Restore original state
+    this.colordata = originalColorData;
+    this.#label_color = originalLabelColor;
+    this.#dice_color = originalDiceColor;
+    this.#label_outline = originalLabelOutline;
+    this.#dice_texture = originalDiceTexture;
+    this.#dice_material = originalDiceMaterial;
+    this.#edge_color = originalEdgeColor;
+    this.#dice_font = originalDiceFont;
+    this.#dice_labels = originalDiceLabels;
+    this.setMaterialInfo();
+
     if (!materials || materials.length === 0) return null;
 
     const mesh = new THREE.Mesh(geom, materials);

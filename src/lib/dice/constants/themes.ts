@@ -55,11 +55,15 @@ export const THEMES: Record<string, DiceTheme> = {
     boon: {
       background: '#1a4d2e',  // Verde escuro
       foreground: '#4ade80',  // Verde claro
+      edge: '#1a4d2e',
+      outline: '#fff',
     },
     // Override para banes (opcional)
     bane: {
       background: '#4d1a1a',  // Vermelho escuro
       foreground: '#f87171',  // Vermelho claro
+      edge: '#4d1a1a',
+      outline: '#fff',
     },
     cubeMap: DEFAULT_CUBEMAP
   },
@@ -80,6 +84,21 @@ export const THEMES: Record<string, DiceTheme> = {
         d6: ['1', '2', '3', '4', '5', '/artworks/dice/demonlord-face-white.webp'],
         d20: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '/artworks/dice/demonlord-face-white.webp']
       }
+    },
+    boon: {
+      background: '#fff',
+      foreground: '#000',
+      edge: '#fff',
+      outline: '#000',
+      labels: {
+        d6: ['1', '2', '3', '4', '5', '/artworks/dice/demonlord-face.webp'],
+      }
+    },
+    bane: {
+      background: '#ff0000',
+      foreground: '#fff',
+      edge: '#ff0000',
+      outline: '#fff',
     },
     cubeMap: DEFAULT_CUBEMAP
   },
