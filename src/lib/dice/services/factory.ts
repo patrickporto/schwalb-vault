@@ -6,6 +6,7 @@ import type { DiceShape } from '$lib/dice/constants/dice';
 
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createCanvas } from '$lib/dice/services/platform';
 
 
@@ -49,6 +50,7 @@ interface DiceObject {
   font?: string;
   normals?: any[];
   type?: string;
+  modelFile?: string; // Path to external GLTF/GLB model
 }
 
 interface GeometryGroup {
@@ -139,10 +141,84 @@ export class DiceFactory {
   private dice_material_rand = '';
   private edge_color_rand = '';
 
+  private loaderGLTF = new GLTFLoader();
+  private loaderTexture = new THREE.TextureLoader();
+  #roughness_maps_cache = new Map<string, THREE.Texture>();
+
   constructor(options: Partial<DiceFactoryConfig> = {}) {
     const config = { ...DEFAULT_CONFIG, ...options };
     this.baseScale = config.baseScale;
     this.bumpMapping = config.bumpMapping;
+  }
+
+  async loadModel(diceobj: DiceObject): Promise<THREE.Group | null> {
+    if (!diceobj.modelFile) return null;
+
+    return new Promise((resolve, reject) => {
+      this.loaderGLTF.load(diceobj.modelFile!, (gltf) => {
+        const model = gltf.scene;
+
+        // Normalize scale if needed, or rely on baseScale application later
+        // model.scale.set(diceobj.scale, diceobj.scale, diceobj.scale);
+
+        model.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            // Ensure geometry is centered if needed
+            mesh.geometry.center();
+          }
+        });
+        resolve(model);
+      }, undefined, (error) => {
+        console.error(`Failed to load model for ${diceobj.type}:`, error);
+        resolve(null); // Resolve null to fallback to generated geometry
+      });
+    });
+  }
+
+  // Generate a procedural noise texture for roughness maps
+  createNoiseTexture(size = 512, intensity = 0.5): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    if (!context) return new THREE.CanvasTexture(canvas);
+
+    context.fillStyle = '#000';
+    context.fillRect(0, 0, size, size);
+
+    const imageData = context.getImageData(0, 0, size, size);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const val = Math.floor(Math.random() * 255 * intensity + (255 * (1 - intensity)));
+      data[i] = val;     // r
+      data[i + 1] = val; // g
+      data[i + 2] = val; // b
+      data[i + 3] = 255; // alpha
+    }
+    context.putImageData(imageData, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    return texture;
+  }
+
+  disposeCachedMaterials(): void {
+    this.#materials_cache.forEach((material) => {
+      material.composite.dispose();
+      if (material.bump) material.bump.dispose();
+      if (material.emissive) material.emissive.dispose();
+    });
+    this.#materials_cache.clear();
+
+    this.#roughness_maps_cache.forEach((texture) => texture.dispose());
+    this.#roughness_maps_cache.clear();
+
+    this.#geometries.forEach((geom) => geom.dispose());
+    this.#geometries.clear();
   }
 
   updateConfig(options: Partial<DiceFactoryConfig> = {}) {
@@ -161,26 +237,56 @@ export class DiceFactory {
     const diceobj = this.get(type);
     if (!diceobj) return null;
 
-    let geom = this.#geometries.get(type);
-    if (!geom) {
-      const newGeom = this.createGeometry(
-        type as DiceShape,
-        diceobj.scale * this.baseScale,
-        this.createDiceGeometry.bind(this)
-      );
-      if (newGeom instanceof THREE.BufferGeometry) {
-        this.#geometries.set(type, newGeom);
-        geom = newGeom;
+    let mesh: THREE.Mesh | THREE.Group | null = null;
+
+    // Try to load external model first
+    if (diceobj.modelFile) {
+      const modelGroup = await this.loadModel(diceobj);
+      if (modelGroup) {
+        // Clone the model for this instance
+        mesh = modelGroup.clone();
+        // We need to handle scaling and materials for external models specifically if needed
+        // For now, we assume the model is ready or we apply standard materials to its children
+        mesh.scale.set(this.baseScale / 100, this.baseScale / 100, this.baseScale / 100);
+        // Note: External models might not need the standard createMaterials pipeline if they come with textures
+        // But if we want to re-texture them (skins), we would traverse and apply materials here.
+        // For simplicity in this iteration, we return the mesh as is if it's a model.
+
+        // However, to maintain compatibility with DiceMesh interface and physics, we might need a distinct path.
+        // A simplified approach: Use the first child mesh if available to apply our dice logic (materials)
+        const childMesh = mesh.getObjectByProperty('isMesh', true) as THREE.Mesh;
+        if (childMesh) {
+          // Use the geometry from the loaded model for caching/physics matching if possible
+          // geom = childMesh.geometry;
+          // But physics worker expects 'createGeometry' procedural data usually.
+          // We'll proceed with generated geometry for now for physics, but render the visual model.
+        }
       }
     }
-    if (!geom) return null;
 
-    this.setMaterialInfo();
+    if (!mesh) {
+      let geom = this.#geometries.get(type);
+      if (!geom) {
+        const newGeom = this.createGeometry(
+          type as DiceShape,
+          diceobj.scale * this.baseScale,
+          this.createDiceGeometry.bind(this)
+        );
+        if (newGeom instanceof THREE.BufferGeometry) {
+          this.#geometries.set(type, newGeom);
+          geom = newGeom;
+        }
+      }
+      if (!geom) return null;
 
-    const materials = await this.createMaterials(diceobj, this.baseScale / 2, 1.0);
-    if (!materials || materials.length === 0) return null;
+      this.setMaterialInfo();
 
-    const mesh = new THREE.Mesh(geom, materials);
+      const materials = await this.createMaterials(diceobj, this.baseScale / 2, 1.0);
+      if (!materials || materials.length === 0) return null;
+
+      mesh = new THREE.Mesh(geom, materials);
+    }
+
     const dicemesh = mesh as unknown as DiceMesh;
 
     Object.assign(dicemesh, {
@@ -427,8 +533,8 @@ export class DiceFactory {
     margin: number,
     allowcache = true,
     d4specialindex = 0
-  ): Promise<Array<THREE.MeshStandardMaterial | THREE.MeshPhongMaterial>> {
-    let materials: Array<THREE.MeshStandardMaterial | THREE.MeshPhongMaterial> = [];
+  ): Promise<Array<THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshPhysicalMaterial>> {
+    let materials: Array<THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshPhysicalMaterial> = [];
     let labels = diceobj.labels;
 
     if (diceobj.shape == 'd4') {
@@ -437,6 +543,7 @@ export class DiceFactory {
       margin = this.baseScale * 2;
     }
 
+    // Process overrides if configured
     if (this.#dice_labels[diceobj.type]) {
       labels = this.#getProcessedLabels(diceobj.type, this.#dice_labels[diceobj.type]);
       if (diceobj.shape == 'd4') {
@@ -444,12 +551,88 @@ export class DiceFactory {
       }
     }
 
+    // Generate or load roughness map only once per material set if needed
+    let roughnessTexture: THREE.Texture | null = null;
+    let materialType = this.dice_material_rand as MaterialType;
+    let materialConfig = MATERIALTYPES[materialType];
+
+    // Ensure we have a valid config, fallback to plastic if needed
+    if (!materialConfig && this.dice_material_rand !== 'none') {
+      materialConfig = MATERIALTYPES['plastic'] || MATERIALTYPES['none'];
+    }
+
+    if (this.bumpMapping && materialConfig?.roughnessMap) {
+      const mapName = materialConfig.roughnessMap;
+
+      // Check cache first
+      if (this.#roughness_maps_cache.has(mapName)) {
+        roughnessTexture = this.#roughness_maps_cache.get(mapName)!;
+      } else {
+        let fileName = '';
+        if (mapName === 'roughnessMap_fingerprint') fileName = 'finger.webp';
+        if (mapName === 'roughnessMap_metal') fileName = 'metal.webp';
+        if (mapName === 'roughnessMap_wood') fileName = 'wood.webp';
+        if (mapName === 'roughnessMap_stone') fileName = 'stone.webp';
+
+        if (fileName) {
+          roughnessTexture = await new Promise((resolve) => {
+            this.loaderTexture.load(`/roughness-map/${fileName}`, (texture) => {
+              texture.wrapS = THREE.RepeatWrapping;
+              texture.wrapT = THREE.RepeatWrapping;
+              this.#roughness_maps_cache.set(mapName, texture);
+              resolve(texture);
+            }, undefined, (err) => {
+              console.warn(`Failed to load roughness map ${fileName}`, err);
+              resolve(null);
+            });
+          });
+        }
+
+        // Fallback to procedural if load fails or mapping missing
+        if (!roughnessTexture) {
+          roughnessTexture = this.createNoiseTexture(512, 0.7);
+          this.#roughness_maps_cache.set(mapName, roughnessTexture);
+        }
+      }
+    }
+
     for (let i = 0; i < labels.length; ++i) {
-      let mat: THREE.MeshStandardMaterial | THREE.MeshPhongMaterial;
+      let mat: THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshPhysicalMaterial;
+
       if (this.dice_material_rand && this.dice_material_rand !== 'none') {
-        const materialType = this.dice_material_rand as MaterialType;
-        mat = new THREE.MeshStandardMaterial(MATERIALTYPES[materialType]);
-        mat.envMapIntensity = MATERIALTYPES[materialType].envMapIntensity ?? 1;
+        const config = MATERIALTYPES[this.dice_material_rand as MaterialType];
+
+        if (config && config.type === 'physical') {
+          mat = new THREE.MeshPhysicalMaterial(MATERIAL_OPTIONS); // Start with default options
+          // Apply specific physical properties
+          if (config.clearcoat) mat.clearcoat = config.clearcoat;
+          if (config.clearcoatRoughness) mat.clearcoatRoughness = config.clearcoatRoughness;
+          if (config.iridescence) mat.iridescence = config.iridescence;
+          if (config.iridescenceIOR) mat.iridescenceIOR = config.iridescenceIOR;
+          if (config.iridescenceThicknessRange) mat.iridescenceThicknessRange = config.iridescenceThicknessRange;
+          if (config.transmission) mat.transmission = config.transmission;
+          if (config.thickness) mat.thickness = config.thickness;
+          if (config.roughness !== undefined) mat.roughness = config.roughness;
+          if (config.metalness !== undefined) mat.metalness = config.metalness;
+
+        } else if (config && config.type === 'standard') {
+          mat = new THREE.MeshStandardMaterial(MATERIAL_OPTIONS);
+          if (config.roughness !== undefined) mat.roughness = config.roughness;
+          if (config.metalness !== undefined) mat.metalness = config.metalness;
+        } else if (config) {
+          mat = new THREE.MeshPhongMaterial(MATERIAL_OPTIONS);
+        } else {
+          // Fallback
+          mat = new THREE.MeshStandardMaterial(MATERIAL_OPTIONS);
+        }
+
+        if (config && config.envMapIntensity !== undefined) mat.envMapIntensity = config.envMapIntensity;
+
+        if (this.bumpMapping && roughnessTexture && config?.roughnessMap) {
+          mat.roughnessMap = roughnessTexture;
+          mat.roughness = 1.0; // Roughness map modulates the roughness, so set base to 1 or controlled value
+        }
+
       } else {
         mat = new THREE.MeshPhongMaterial(MATERIAL_OPTIONS);
       }
