@@ -2,7 +2,7 @@ import { joinRoom, selfId } from 'trystero/torrent';
 import { writable, get, derived } from 'svelte/store';
 import { characterActions, character, isHistoryOpen, damage, currentHealth, normalHealth } from '$lib/stores/characterStore';
 import { sotdlCharacter, sotdlCharacterActions } from '$lib/stores/characterStoreSotDL';
-import { campaignsMap } from '$lib/db';
+import { campaignsMap, charactersMap } from '$lib/db';
 import { appId } from '../../app';
 import { trackerUrl } from '../stores/settingsStore';
 
@@ -595,7 +595,7 @@ export async function joinCampaignRoom(campaignId: string, isGM: boolean = false
       console.log('Peer joined:', peerId);
       // Send current character data if player
       if (!isGM && charId) {
-        broadcastCharacterUpdate({ type: 'full', character: get(appSettings).characters?.[charId] });
+        broadcastCharacterUpdate({ type: 'full', character: charactersMap.get(charId) });
       }
       syncState.update(s => ({ ...s, peers: [...s.peers, peerId] }));
       // If GM, send current state to the new peer
