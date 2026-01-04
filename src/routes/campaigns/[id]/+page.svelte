@@ -41,11 +41,6 @@
     let customRollMode = $state(false);
     let customFormulaInput = $state('');
 
-    // Autocomplete suggestions
-    const diceSuggestions = ['1d4', '1d6', '1d8', '1d10', '1d12', '1d20', '1d100', '2d6', '3d6', '1d3', '1d6 + 1d3'];
-    let filteredSuggestions = $derived(
-        diceSuggestions.filter(s => s.startsWith(customFormulaInput) && s !== customFormulaInput)
-    );
 
     function startQuickRoll(sides: number, count = 1) {
         quickRollState = { isOpen: true, sides, count, modifier: 0, isCustom: false, customFormula: '' };
@@ -228,20 +223,8 @@
                             class="bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 w-48 font-mono placeholder:text-slate-600"
                             onkeydown={(e) => e.key === 'Enter' && handleCustomRoll(customFormulaInput)}
                             autofocus
+                            autocomplete="off"
                         />
-
-                        {#if filteredSuggestions.length > 0}
-                             <div class="absolute bottom-full left-0 right-0 mb-2 bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-xl p-1 shadow-xl max-h-48 overflow-y-auto z-50 flex flex-col gap-0.5 min-w-[12rem]">
-                                {#each filteredSuggestions as suggestion}
-                                    <button
-                                        class="px-3 py-2 text-left hover:bg-indigo-600/50 rounded-lg text-xs font-mono text-slate-300 transition-colors w-full"
-                                        onclick={() => handleCustomRoll(suggestion)}
-                                    >
-                                        {suggestion}
-                                    </button>
-                                {/each}
-                            </div>
-                        {/if}
                     </div>
 
                     <button
