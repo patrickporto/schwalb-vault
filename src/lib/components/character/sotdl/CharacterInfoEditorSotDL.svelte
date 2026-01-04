@@ -3,6 +3,7 @@
     import { sotdlCharacter } from '$lib/stores/characterStoreSotDL';
     import { modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
+    import LevelCounter from '$lib/components/common/LevelCounter.svelte';
 
     let isOpen = $derived($modalState.isOpen && $modalState.type === 'character_info_sotdl');
     let formData = $state<any>({});
@@ -50,10 +51,11 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label for="charLevel" class="text-xs font-bold text-slate-400 uppercase block mb-1">
-                    {$t('character.modals.level')}
-                </label>
-                <input id="charLevel" type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.level} />
+                <LevelCounter
+                    label={$t('character.modals.level')}
+                    value={Number(formData.level || 0)}
+                    onUpdate={(val) => formData.level = val}
+                />
             </div>
             <div>
                 <label for="charAncestry" class="text-xs font-bold text-slate-400 uppercase block mb-1">

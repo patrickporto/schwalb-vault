@@ -2,20 +2,21 @@
     import { t } from 'svelte-i18n';
     import { character, normalHealth, currentHealth, modalState } from '$lib/stores/characterStore';
     import Modal from '$lib/components/common/Modal.svelte';
+    import LevelCounter from '$lib/components/common/LevelCounter.svelte';
 
     let isOpen = $derived($modalState.isOpen && $modalState.type === 'character_info');
     let formData = $state<any>({});
 
     $effect(() => {
         if (isOpen) {
-             formData = { 
-                name: $character.name, 
-                level: $character.level, 
+             formData = {
+                name: $character.name,
+                level: $character.level,
                 ancestry: $character.ancestry,
-                novicePath: $character.paths.novice, 
-                expertPath: $character.paths.expert, 
+                novicePath: $character.paths.novice,
+                expertPath: $character.paths.expert,
                 masterPath: $character.paths.master,
-                normalHealth: $normalHealth, 
+                normalHealth: $normalHealth,
                 currentHealth: $currentHealth
             };
         }
@@ -31,10 +32,10 @@
             name: formData.name,
             level: parseInt(formData.level as any) || 0,
             ancestry: formData.ancestry,
-            paths: { 
-                novice: formData.novicePath, 
-                expert: formData.expertPath, 
-                master: formData.masterPath 
+            paths: {
+                novice: formData.novicePath,
+                expert: formData.expertPath,
+                master: formData.masterPath
             }
         }));
         normalHealth.set(parseInt(formData.normalHealth as any));
@@ -47,20 +48,21 @@
     <div class="space-y-4 p-1">
         <div>
             <label class="text-xs font-bold text-slate-400 uppercase">
-                {$t('character.modals.name')} 
+                {$t('character.modals.name')}
                 <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.name} />
             </label>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="text-xs font-bold text-slate-400 uppercase">
-                    {$t('character.modals.level')} 
-                    <input type="number" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.level} />
-                </label>
+                <LevelCounter
+                    label={$t('character.modals.level')}
+                    value={Number(formData.level || 0)}
+                    onUpdate={(val) => formData.level = val}
+                />
             </div>
             <div>
                 <label class="text-xs font-bold text-slate-400 uppercase">
-                    {$t('character.modals.ancestry')} 
+                    {$t('character.modals.ancestry')}
                     <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white" bind:value={formData.ancestry} />
                 </label>
             </div>
@@ -68,19 +70,19 @@
         <div class="pt-2 border-t border-slate-700 space-y-3">
             <div>
                 <label class="text-[10px] font-bold text-slate-400 uppercase">
-                    Novice 
+                    Novice
                     <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.novicePath} />
                 </label>
             </div>
             <div>
                 <label class="text-[10px] font-bold text-slate-400 uppercase">
-                    Expert 
+                    Expert
                     <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.expertPath} />
                 </label>
             </div>
             <div>
                 <label class="text-[10px] font-bold text-slate-400 uppercase">
-                    Master 
+                    Master
                     <input class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" bind:value={formData.masterPath} />
                 </label>
             </div>
