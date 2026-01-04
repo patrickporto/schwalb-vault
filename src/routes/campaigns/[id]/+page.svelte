@@ -1,5 +1,6 @@
 <script lang="ts">
     import { t } from 'svelte-i18n';
+    import { resolve } from '$app/paths';
     import { page } from '$app/stores';
     import { campaignsMap } from '$lib/db';
     import { liveCampaigns } from '$lib/stores/live';
@@ -335,7 +336,7 @@
     <!-- Combat Viewer Floating Button (Desktop) -->
     <div class="hidden md:block fixed bottom-8 right-8 z-[60]">
         <button
-            onclick={() => window.open(`/campaigns/${id}/combat`, '_blank', 'width=500,height=700,resizable=yes,scrollbars=yes')}
+            onclick={() => window.open(resolve(`/campaigns/${id}/combat`), '_blank', 'width=500,height=700,resizable=yes,scrollbars=yes')}
             class="w-14 h-14 bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-90 border border-white/10"
             title={$t('session.combat_viewer.open')}
         >
