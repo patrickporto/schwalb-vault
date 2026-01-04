@@ -15,6 +15,7 @@
     dsn: "https://4b8a05e066880f2bd60f406918bd2b27@o4510625307295744.ingest.de.sentry.io/4510625327677520",
     sendDefaultPii: true,
     environment: import.meta.env.MODE,
+    release: "weird-wizard-vault@" + process.env.npm_package_version,
   });
 
   let { children } = $props();
