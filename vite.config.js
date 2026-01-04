@@ -4,6 +4,10 @@ import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { readFileSync } from 'fs';
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
+const releaseName = `weird-wizard-vault@${pkg.version}`;
 
 /** @type {import('vite').UserConfig} */
 export default {
@@ -136,8 +140,17 @@ export default {
       }
   }), sentryVitePlugin({
     org: "patrick-porto",
-    project: "schwalb-vault"
+    project: "schwalb-vault",
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    release: {
+      name: releaseName,
+      inject: true
+    }
   })],
+
+  define: {
+    'process.env.APP_VERSION': JSON.stringify(pkg.version),
+  },
 
   build: {
     sourcemap: true
