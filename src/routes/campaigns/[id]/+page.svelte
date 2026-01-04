@@ -12,7 +12,7 @@
     import CampaignModal from '$lib/components/manager/CampaignModal.svelte';
     import { syncCampaign } from '$lib/logic/sync';
     import { Sword, Library, Dices, ChevronUp, ChevronDown, X, Calculator, ArrowLeft, Send, Eye } from 'lucide-svelte';
-    import { calculateDiceRoll, evaluateDiceFormula } from '$lib/logic/dice';
+    import { calculateDiceRoll, evaluateDiceFormula, buildVisualIconNotation } from '$lib/logic/dice';
     import { characterActions } from '$lib/stores/characterStore';
     import { get } from 'svelte/store';
     import DiceRollModal from '$lib/components/common/DiceRollModal.svelte';
@@ -65,20 +65,16 @@
         if (!campaign) return;
 
         let res;
-        let notation = '';
 
         if (quickRollState.isCustom) {
             // Custom Formula Roll
             res = evaluateDiceFormula(quickRollState.customFormula);
-            // Build notation: "1d20@14+1d4@2" etc.
-            if (res.dice) {
-                const parts = res.dice.map(d => `${d.count}d${d.sides}@${d.results.join(',')}`);
-                notation = parts.join('+');
-            }
         } else {
             // Standard Quick Roll
             res = calculateDiceRoll(quickRollState.sides, quickRollState.count, mod);
         }
+
+        const notation = buildVisualIconNotation(res, mod);
 
         let desc = "";
         if (quickRollState.count > 1 || quickRollState.isCustom) desc += `Dados: [${res.results.join(', ')}] `;

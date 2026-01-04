@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { calculateDiceRoll, evaluateDiceFormula } from './dice';
+import { calculateDiceRoll, evaluateDiceFormula, buildVisualIconNotation } from './dice';
 
 describe('Dice Logic', () => {
     it('should roll basic d20', () => {
@@ -80,5 +80,43 @@ describe('Dice Logic', () => {
             expect(result.total).toBeGreaterThanOrEqual(1);
             expect(result.total).toBeLessThanOrEqual(3);
         });
+    });
+});
+
+describe('Visual Notation Builder', () => {
+    it('should build notation for d20 with boons', () => {
+        const res: any = {
+            total: 0, results: [15], bonusRolls: [6, 2], modifierTotal: 6, formula: "", crit: false,
+            dice: [{ sides: 20, count: 1, results: [15] }]
+        };
+        const notation = buildVisualIconNotation(res, 2);
+        // Format: 1d20+1d6[boon]+1d6[boon]@15,6,2
+        expect(notation).toBe('1d20+1d6[boon]+1d6[boon]@15,6,2');
+    });
+
+    it('should fallback d3 to d6', () => {
+        const res: any = {
+            total: 0, results: [], bonusRolls: [], modifierTotal: 0, formula: "", crit: false,
+            dice: [{ sides: 3, count: 2, results: [1, 3] }]
+        };
+        const notation = buildVisualIconNotation(res, 0);
+        expect(notation).toBe('1d6+1d6@1,3');
+    });
+
+    it('should apply banes notation', () => {
+        const res: any = {
+            total: 0, results: [10], bonusRolls: [4], modifierTotal: -4, formula: "", crit: false,
+            dice: [{ sides: 20, count: 1, results: [10] }]
+        };
+        const notation = buildVisualIconNotation(res, -1);
+        expect(notation).toBe('1d20+1d6[bane]@10,4');
+    });
+
+    it('should return detailed dice structure from calculateDiceRoll', () => {
+        const result = calculateDiceRoll(6, 2, 0);
+        expect(result.dice).toBeDefined();
+        expect(result.dice![0].sides).toBe(6);
+        expect(result.dice![0].count).toBe(2);
+        expect(result.dice![0].results.length).toBe(2);
     });
 });

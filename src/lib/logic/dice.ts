@@ -1,3 +1,4 @@
+
 export interface DiceRollResult {
     total: number;
     results: number[];
@@ -140,3 +141,47 @@ export function evaluateDiceFormula(formula: string): DiceRollResult {
       dice: detailedDice
     };
 }
+
+/**
+ * Builds a visual notation string for 3D dice rolling from a result object.
+ * Handles d3->d6 mapping and specific boon/bane styling.
+ *
+ * Output format: "1d20+1d6[boon]+1d6[boon]@15,6,2" where results are comma-separated at the end.
+ */
+export function buildVisualIconNotation(res: DiceRollResult, manualModifier: number = 0): string {
+  const diceParts: string[] = [];
+  const resultParts: string[] = [];
+
+  // 1. Base Dice from 'dice' detail
+  if (res.dice) {
+    res.dice.forEach(d => {
+      const sides = d.sides;
+      // Fallback d3 to d6 for visualizer
+      const visualSides = sides === 3 ? 6 : sides;
+
+      d.results.forEach(r => {
+        diceParts.push(`1d${visualSides}`);
+        resultParts.push(String(r));
+      });
+    });
+  }
+
+  // 2. Bonus Rolls (Boons/Banes for d20 system)
+  if (res.bonusRolls && res.bonusRolls.length > 0) {
+    // Determine style based on the resulting modifier total being positive (boon) or negative (bane)
+    // If modifierTotal is 0 (rare?), check manualModifier
+    const isPositive = res.modifierTotal !== 0 ? res.modifierTotal > 0 : manualModifier > 0;
+    const style = isPositive ? 'boon' : 'bane';
+
+    res.bonusRolls.forEach(r => {
+      diceParts.push(`1d6[${style}]`);
+      resultParts.push(String(r));
+    });
+  }
+
+  if (diceParts.length === 0) return '';
+
+  // Combine: "1d20+1d6[boon]@15,5"
+  return `${diceParts.join('+')}@${resultParts.join(',')}`;
+}
+

@@ -7,6 +7,8 @@
     import DiceRoller from '$lib/components/dice/DiceRoller.svelte';
     import { diceStore } from '$lib/dice/stores/diceStore.svelte';
 
+    import { buildVisualIconNotation } from '$lib/logic/dice';
+
     interface Effect {
         id: string;
         name: string;
@@ -20,6 +22,14 @@
         damageDice?: number[];
         total?: number;
         formula?: string;
+        bonusRolls?: number[];
+        // Extended fields for visualizer
+        modifierTotal?: number;
+        dice?: Array<{
+            sides: number;
+            count: number;
+            results: number[];
+        }>;
         commit?: () => void;
         notation?: string; // Explicit notation override
     }
@@ -115,31 +125,6 @@
         }
     }
 
-    /**
-     * Build dice notation with forced results and styles
-     */
-    function buildForcedNotation(d20?: number, boonBaneDice: number[] = [], damageDice: number[] = []): string {
-        // Legacy: if it's a d20 roll
-        if (d20 !== undefined) {
-             const numD6 = boonBaneDice.length;
-             const allResults = [d20, ...boonBaneDice].join(',');
-
-             if (numD6 === 0) {
-                 return `1d20@${d20}`;
-             }
-             const style = modifier > 0 ? 'boon' : modifier < 0 ? 'bane' : '';
-             const styleNotation = style ? `[${style}]` : '';
-             return `1d20+${numD6}d6${styleNotation}@${allResults}`;
-        }
-
-        // Legacy damage roll
-        if (damageDice.length > 0) {
-            return `${damageDice.length}d6@${damageDice.join(',')}`;
-        }
-
-        return '';
-    }
-
     async function handleRoll() {
         const selected = effects.filter(e => selectedEffectsIds.includes(e.id));
 
@@ -152,8 +137,20 @@
             // 1. Play 3D animation if enabled
             if (enable3DDice && diceRoller) {
                 try {
+                    // Ensure compatibility mapping for visualizer
+                    const compatResult = {
+                        ...preRolled,
+                        bonusRolls: preRolled.bonusRolls || preRolled.boonBaneDice || [],
+                        dice: preRolled.dice || [
+                            ...(preRolled.d20 ? [{ sides: 20, count: 1, results: [preRolled.d20] }] : []),
+                            ...(preRolled.damageDice ? [{ sides: 6, count: preRolled.damageDice.length, results: preRolled.damageDice }] : [])
+                        ],
+                        modifierTotal: preRolled.modifierTotal ?? (preRolled.bonusRolls?.length || preRolled.boonBaneDice?.length ? ((modifier > 0 || (preRolled.formula && preRolled.formula.includes('Boon'))) ? 1 : -1) : 0)
+                    };
+
                     // Use explicit notation if provided, otherwise fallback to legacy builder
-                    const notation = preRolled.notation || buildForcedNotation(preRolled.d20, preRolled.boonBaneDice, preRolled.damageDice);
+                    // We pass 'modifier' (manual modifier state) to help determine boon/bane intent if needed
+                    const notation = preRolled.notation || buildVisualIconNotation(compatResult as any, modifier);
 
                     if (notation) {
                         await diceRoller.roll(notation);

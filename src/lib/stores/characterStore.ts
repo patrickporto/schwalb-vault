@@ -587,7 +587,15 @@ export const characterActions = {
 
           const formula = `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr}`;
 
-          resultData = { d20, boonBaneDice: boonBaneRolls, total, formula };
+            resultData = {
+                d20,
+                boonBaneDice: boonBaneRolls,
+                total,
+                formula,
+                modifierTotal: modifier,
+                bonusRolls: boonBaneRolls,
+                dice: [{ sides: 20, count: 1, results: [d20] }]
+            };
 
           commitFn = () => {
               characterActions.addToHistory({
@@ -657,7 +665,14 @@ export const characterActions = {
 
           const formula = `${totalDice}d6 [${results.join(', ')}] ${originalRollsInfo.some(s => s.includes('->')) ? `(Rolagens: ${originalRollsInfo.join(', ')})` : ''}`;
 
-          resultData = { damageDice: results, total: sum, formula };
+            resultData = {
+                damageDice: results,
+                total: sum,
+                formula,
+                dice: [{ sides: 6, count: totalDice, results: results }],
+                bonusRolls: [],
+                modifierTotal: 0
+            };
 
           commitFn = () => {
 

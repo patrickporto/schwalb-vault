@@ -622,8 +622,16 @@ export const sotdlCharacterActions = {
         attrLabel = t('character.luck_test');
       }
 
-      // Boon/Bane Logic (1d6 highest)
-      let netModifier = modifier + (derivedStats.boons || 0);
+      // Calculate boons from selected effects (overriding global derived stats for this roll)
+      const activeSelectedEffects = char.effects.filter(e => selectedEffects.includes(e.name));
+
+      // Simple boon summing for SotDL (assuming ADD)
+      const effectBoons = activeSelectedEffects
+        .flatMap(e => e.modifiers || [])
+        .filter((m: any) => m.target === 'boons' && m.type === 'ADD')
+        .reduce((acc: number, m: any) => acc + evaluateModifierValueSotDL(m.value, char), 0);
+
+      let netModifier = modifier + effectBoons;
       let boonBaneTotal = 0;
       let boonBaneStr = '';
       let boonBaneRolls: number[] = [];
@@ -649,7 +657,15 @@ export const sotdlCharacterActions = {
       const total = d20 + attrMod + boonBaneTotal;
       const formula = `d20(${d20})${attrMod !== 0 ? (attrMod >= 0 ? '+' : '') + attrMod : ''}${boonBaneStr}`;
 
-      resultData = { d20, boonBaneDice: boonBaneRolls, total, formula };
+      resultData = {
+        d20,
+        boonBaneDice: boonBaneRolls,
+        total,
+        formula,
+        modifierTotal: netModifier,
+        bonusRolls: boonBaneRolls,
+        dice: [{ sides: 20, count: 1, results: [d20] }]
+      };
 
       commitFn = () => {
         sotdlCharacterActions.addToHistory({
@@ -682,6 +698,7 @@ export const sotdlCharacterActions = {
       let sum = 0;
       let results: number[] = [];
       let formula = '';
+      let detailedDice: any[] = [];
 
       if (damageStr === '0') {
         sum = 0;
@@ -701,6 +718,7 @@ export const sotdlCharacterActions = {
             results.push(r);
           }
           formula = `${damageStr} [${results.join(', ')}]`;
+          detailedDice = [{ sides, count, results }];
         } else {
           sum = 1;
           formula = '1';
@@ -711,7 +729,14 @@ export const sotdlCharacterActions = {
       const modStr = (modifier + damageMod) !== 0 ? `${(modifier + damageMod) > 0 ? '+' : ''}${modifier + damageMod}` : '';
       const finalFormula = `${formula}${modStr}`;
 
-      resultData = { damageDice: results, total, formula: finalFormula };
+      resultData = {
+        damageDice: results,
+        total,
+        formula: finalFormula,
+        dice: detailedDice,
+        bonusRolls: [],
+        modifierTotal: 0
+      };
 
       commitFn = () => {
         const t = get(_);
