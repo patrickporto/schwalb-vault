@@ -79,14 +79,15 @@ define(['./workbox-43cc9a68'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/",
-    "revision": "0.s0toq0fkhag"
+    "revision": "0.vfdlld530dg"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/"), {
-    allowlist: [/^\/$/],
-    denylist: [/^\/api/]
+    allowlist: [/^\/$/]
   }));
-  workbox.registerRoute(/^https?:\/\/localhost(:\d+)?\//, new workbox.NetworkFirst({
+  workbox.registerRoute(({
+    request
+  }) => request.mode === "navigate", new workbox.NetworkFirst({
     "cacheName": "app-shell-cache",
     "networkTimeoutSeconds": 3,
     plugins: [new workbox.ExpirationPlugin({
@@ -119,3 +120,4 @@ define(['./workbox-43cc9a68'], (function (workbox) { 'use strict';
   }), 'GET');
 
 }));
+//# sourceMappingURL=sw.js.map

@@ -51,12 +51,14 @@
         if (isIncapacitated && !hasIncap) {
             const newList = [...currentAfflictions, "Incapacitated"];
             const updates = { afflictions: newList };
-            if(entity.type === 'player') handleUpdatePlayer(updates);
+            // Double check if we already handled this to prevent loop
+            if (entity.type === 'player') handleUpdatePlayer(updates);
             else updateEnemy(entity.instanceId, updates);
         } else if (!isIncapacitated && hasIncap) {
             const newList = currentAfflictions.filter(a => a !== "Incapacitated");
             const updates = { afflictions: newList };
-            if(entity.type === 'player') handleUpdatePlayer(updates);
+            // Double check if we already handled this to prevent loop
+            if (entity.type === 'player') handleUpdatePlayer(updates);
             else updateEnemy(entity.instanceId, updates);
         }
     });

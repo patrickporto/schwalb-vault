@@ -443,24 +443,38 @@ export async function joinCampaignRoom(campaignId: string, isGM: boolean = false
     getCombat((data: any) => {
       if (!isGM) {
         // Player updates their character state based on GM broadcast
-        character.update(c => ({
-          ...c,
-          currentRound: data.round,
-          combatActive: data.active
-        }));
+        character.update(c => {
+          if (c.currentRound === data.round && c.combatActive === data.active) {
+            return c;
+          }
+          return {
+            ...c,
+            currentRound: data.round,
+            combatActive: data.active
+          };
+        });
       }
     });
 
     getCampaign((data: any) => {
       syncState.update(s => ({ ...s, lastGmUpdate: Date.now() }));
       if (!isGM) {
-        character.update(c => ({
-          ...c,
-          campaignName: data.name,
-          gmName: data.gmName,
-          passwordHash: data.passwordHash,
-          system: data.system
-        }));
+        character.update(c => {
+          // Only update if values actually changed to avoid reactive loops
+          if (c.campaignName === data.name &&
+            c.gmName === data.gmName &&
+            c.passwordHash === data.passwordHash &&
+            c.system === data.system) {
+            return c;
+          }
+          return {
+            ...c,
+            campaignName: data.name,
+            gmName: data.gmName,
+            passwordHash: data.passwordHash,
+            system: data.system
+            };
+          });
       }
     });
 

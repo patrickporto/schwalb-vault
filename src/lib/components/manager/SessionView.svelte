@@ -145,6 +145,17 @@
     function updateCampaign(updates: any) {
         if (!campaign?.id) return;
         const current = campaignsMap.get(campaign.id) || campaign;
+
+        // Shallow check if anything changed
+        let hasChanged = false;
+        for (const key in updates) {
+            if (JSON.stringify(current[key]) !== JSON.stringify(updates[key])) {
+                hasChanged = true;
+                break;
+            }
+        }
+        if (!hasChanged) return;
+
         const updated = { ...current, ...updates, lastUpdate: Date.now() };
         campaignsMap.set(campaign.id, updated);
 
@@ -153,9 +164,14 @@
             syncCombat(campaign.id, updates.combat);
         }
 
-        // Sync campaign info if name or gmName changed
-        if (updates.name || updates.gmName) {
-            syncCampaign(campaign.id, { name: updated.name, gmName: updated.gmName });
+        // Sync campaign info if core fields changed
+        if (updates.name || updates.gmName || updates.system || updates.passwordHash) {
+            syncCampaign(campaign.id, {
+                name: updated.name,
+                gmName: updated.gmName,
+                system: updated.system,
+                passwordHash: updated.passwordHash
+            });
         }
 
         // Broadcast to other tabs in same browser (for combat viewer window)

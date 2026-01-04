@@ -143,31 +143,52 @@
         const def = $totalDefense;
         const maxH = $effectiveMaxHealth;
 
-        // Save to local Yjs
-        const toSave = { ...charData, normalHealth: nh, currentHealth: ch, damage: dmg, lastUpdate: Date.now() };
-        charactersMap.set(currentId, toSave);
+        // Load existing to compare
+        const existing = charactersMap.get(currentId) as any;
 
-        // Sync to GM if in campaign
-        if (charData.campaignId) {
-            syncCharacter({
-                id: currentId,
-                type: 'player',
-                name: charData.name,
-                level: charData.level,
-                ancestry: charData.ancestry,
-                damage: dmg,
-                currentHealth: ch,
-                normalHealth: nh,
-                health: maxH,
-                defense: def,
-                initiative: charData.initiative,
-                acted: charData.acted,
-                afflictions: charData.afflictions || [],
-                senses: charData.senses || [],
-                campaignApproval: charData.campaignApproval,
-                imageUrl: charData.imageUrl,
-                notes: charData.notes
-            });
+        // Prepare data to sync
+        const syncData = {
+            id: currentId,
+            type: 'player',
+            name: charData.name,
+            level: charData.level,
+            ancestry: charData.ancestry,
+            damage: dmg,
+            currentHealth: ch,
+            normalHealth: nh,
+            health: maxH,
+            defense: def,
+            initiative: charData.initiative,
+            acted: charData.acted,
+            afflictions: charData.afflictions || [],
+            senses: charData.senses || [],
+            campaignApproval: charData.campaignApproval,
+            imageUrl: charData.imageUrl,
+            notes: charData.notes
+        };
+
+        // Check if anything meaningful changed before saving/syncing
+        const hasChanged = !existing ||
+            existing.name !== charData.name ||
+            existing.level !== charData.level ||
+            existing.damage !== dmg ||
+            existing.currentHealth !== ch ||
+            existing.defense !== def ||
+            existing.initiative !== charData.initiative ||
+            existing.acted !== charData.acted ||
+            JSON.stringify(existing.afflictions) !== JSON.stringify(charData.afflictions) ||
+            existing.campaignId !== charData.campaignId ||
+            existing.campaignApproval !== charData.campaignApproval;
+
+        if (hasChanged) {
+            // Save to local Yjs
+            const toSave = { ...charData, normalHealth: nh, currentHealth: ch, damage: dmg, lastUpdate: Date.now() };
+            charactersMap.set(currentId, toSave);
+
+            // Sync to GM if in campaign
+            if (charData.campaignId) {
+                syncCharacter(syncData);
+            }
         }
     });
 
