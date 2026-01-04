@@ -5,6 +5,7 @@
     import { untrack } from 'svelte';
     import { appSettings } from '$lib/stores/characterStore';
     import DiceRoller from '$lib/components/dice/DiceRoller.svelte';
+    import { diceStore } from '$lib/dice/stores/diceStore.svelte';
 
     interface Effect {
         id: string;
@@ -31,6 +32,7 @@
         rollLabel?: string;
         effects?: Effect[];
         customFormula?: string; // If set, disables modifier UI
+        autoRoll?: boolean; // If true, rolls immediately on open
         onClose: () => void;
         /** Called when roll button is clicked. Returns pre-rolled results for deterministic 3D dice */
         onRoll: (modifier: number, selectedEffects: Effect[], options?: { suppressHistory?: boolean }) => PreRolledResults | void;
@@ -45,6 +47,7 @@
         rollLabel,
         effects = [],
         customFormula,
+        autoRoll = false,
         onClose,
         onRoll,
         children
@@ -64,21 +67,37 @@
     // Derived: check if 3D dice is enabled
     const enable3DDice = $derived($appSettings.enable3DDice);
 
+    let hasReset = $state(false);
+
     // Reset modifier and effects when modal opens
     $effect(() => {
         if (isOpen) {
-            untrack(() => {
-                if (!rollResult) { // Only reset if not showing result
-                    modifier = initialModifier;
-                    selectedEffectsIds = effects.map(e => e.id);
+            if (!hasReset) {
+                untrack(() => {
+                    // Reset modifier if not showing result
+                    if (!rollResult) {
+                       modifier = initialModifier;
+                       selectedEffectsIds = effects.map(e => e.id);
+                    }
+                });
+                isRolling = false;
+                hasReset = true;
+            }
+
+            // Auto-roll if requested
+            if (autoRoll && !rollResult && !isRolling) {
+                if (enable3DDice && diceStore.status !== 'ready') {
+                    // Wait for 3D engine to be ready (reactivity will re-trigger this effect)
+                    return;
                 }
-            });
-            isRolling = false;
+                untrack(() => handleRoll());
+            }
         } else {
             // Clear when closing
             cleanup();
             selectedEffectsIds = [];
             rollResult = null;
+            hasReset = false;
         }
         return () => cleanup();
     });

@@ -55,7 +55,7 @@
 
     function handleCustomRoll(input: string) {
         if (!input) return;
-        quickRollState = { isOpen: true, sides: 0, count: 0, modifier: 0, isCustom: true, customFormula: input };
+        quickRollState = { isOpen: true, sides: 0, count: 0, modifier: 0, isCustom: true, customFormula: input, autoRoll: true };
         isQuickRollMenuOpen = false;
         customRollMode = false;
         customFormulaInput = '';
@@ -176,53 +176,46 @@
 
     <!-- Dice Roll Popover Menu -->
     {#if isQuickRollMenuOpen}
-        <div class="fixed bottom-24 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 z-[60] flex flex-col items-center gap-2 max-w-[95vw]">
-            <div class="bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-2xl p-2 flex items-center gap-2 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-200 relative overflow-visible">
-                {#if !customRollMode}
-                    <button onclick={() => { startQuickRoll(20); isQuickRollMenuOpen = false; }} class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-indigo-500/20">
+        <div class="fixed bottom-24 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 z-[60] flex flex-col items-center gap-2 max-w-[95vw] w-full md:w-auto">
+            <div class="bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex flex-col gap-3 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-200 w-full md:min-w-[320px]">
+
+                 <!-- Row 1: Quick Buttons -->
+                 <div class="flex items-center justify-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <button onclick={() => { startQuickRoll(20); isQuickRollMenuOpen = false; }} class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-indigo-500/20 shrink-0">
                         <span class="text-[10px] opacity-70">d20</span>
                         <Dices size={16} />
                     </button>
-                    <button onclick={() => { startQuickRoll(6); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5">
+                    <button onclick={() => { startQuickRoll(6); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5 shrink-0">
                         <span class="text-[10px] opacity-70">1d6</span>
                         <Dices size={16} />
                     </button>
 
                     {#if campaign?.system === 'sofdl'}
-                         <button onclick={() => { startQuickRoll(3); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5">
+                         <button onclick={() => { startQuickRoll(3); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5 shrink-0">
                             <span class="text-[10px] opacity-70">1d3</span>
                             <Dices size={16} />
                         </button>
                     {/if}
 
-                    <button onclick={() => { startQuickRoll(6, 2); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5">
+                    <button onclick={() => { startQuickRoll(6, 2); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5 shrink-0">
                         <span class="text-[10px] opacity-70">2d6</span>
                         <Dices size={16} />
                     </button>
-                    <button onclick={() => { startQuickRoll(6, 3); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5">
+                    <button onclick={() => { startQuickRoll(6, 3); isQuickRollMenuOpen = false; }} class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5 shrink-0">
                         <span class="text-[10px] opacity-70">3d6</span>
                         <Dices size={16} />
                     </button>
+                 </div>
 
-                    <div class="w-px h-8 bg-white/10 mx-1"></div>
-
-                     <button onclick={toggleCustomMode} class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border border-white/5" title={$t('session.quick.custom_roll')}>
-                        <Calculator size={20} />
-                    </button>
-
-                {:else}
-                    <button onclick={toggleCustomMode} class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-white transition-colors">
-                        <ArrowLeft size={20} />
-                    </button>
-
-                    <div class="relative">
+                 <!-- Row 2: Custom Input -->
+                 <div class="flex items-center gap-2 pt-2 border-t border-white/5">
+                    <div class="relative flex-1">
                         <input
                             type="text"
                             bind:value={customFormulaInput}
                             placeholder={$t('session.quick.custom_roll_placeholder')}
-                            class="bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 w-48 font-mono placeholder:text-slate-600"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono placeholder:text-slate-600"
                             onkeydown={(e) => e.key === 'Enter' && handleCustomRoll(customFormulaInput)}
-                            autofocus
                             autocomplete="off"
                         />
                     </div>
@@ -230,18 +223,15 @@
                     <button
                         onclick={() => handleCustomRoll(customFormulaInput)}
                         disabled={!customFormulaInput}
-                        class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-lg"
+                        class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-lg shrink-0"
                     >
                         <Send size={18} />
                     </button>
-                {/if}
 
-                {#if !customRollMode}
-                    <div class="w-px h-8 bg-white/10 mx-1"></div>
-                    <button onclick={() => isQuickRollMenuOpen = false} class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-white transition-colors">
+                    <button onclick={() => isQuickRollMenuOpen = false} class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-white transition-colors shrink-0">
                         <X size={20} />
                     </button>
-                {/if}
+                 </div>
             </div>
         </div>
         <!-- Backdrop for menu -->
@@ -314,6 +304,7 @@
         onClose={() => quickRollState.isOpen = false}
         onRoll={confirmQuickRoll}
         initialModifier={0}
+        autoRoll={quickRollState.autoRoll}
     />
 
     <!-- Combat Viewer Floating Button (Desktop) -->
