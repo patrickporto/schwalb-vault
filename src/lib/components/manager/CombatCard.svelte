@@ -43,6 +43,14 @@
 
     let showAfflictionModal = $state(false);
 
+    let sections = $derived([
+        { label: 'Traços', items: entity.traits || [], color: 'text-amber-500' },
+        { label: 'Ações', items: [...(entity.actions || []), ...(entity.attackOptions || [])], color: 'text-red-400' },
+        { label: 'Reações', items: entity.reactions || [], color: 'text-indigo-400' },
+        { label: 'Ações Especiais', items: [...(entity.specialAttacks || []), ...(entity.special_actions || [])], color: 'text-orange-400' },
+        { label: 'Fim da Rodada', items: [...(entity.end_of_round || []), ...(entity.endOfRound || [])], color: 'text-emerald-400' }
+    ]);
+
     // Auto-apply/remove Incapacitated affliction
     $effect(() => {
         const currentAfflictions = entity.afflictions || [];
@@ -401,22 +409,26 @@
                     </div>
                  {/if}
 
-                 {#each [
-                     { key: 'traits', label: 'Traços', color: 'text-amber-500' },
-                     { key: 'actions', label: 'Ações', color: 'text-red-400' },
-                     { key: 'reactions', label: 'Reações', color: 'text-indigo-400' },
-                     { key: 'end_of_round', label: 'Fim da Rodada', color: 'text-emerald-400' }
-                 ] as section}
-                    {#if entity[section.key] && entity[section.key].length > 0}
+                 {#each sections as section}
+                    {#if section.items && section.items.length > 0}
                          <div>
                              <div class="{section.color} text-[10px] font-black uppercase mb-2 flex items-center gap-2">
                                  {section.label} <span class="h-px flex-1 bg-current opacity-20"></span>
                              </div>
                              <div class="grid gap-2">
-                                 {#each entity[section.key] as item}
+                                 {#each section.items as item}
                                      <div class="text-sm bg-slate-900/30 p-2 rounded border border-slate-800/30">
-                                         <span class="font-bold text-slate-300">{item.name}</span>
-                                         <span class="text-slate-400 text-xs block mt-1 leading-relaxed">{item.description || item.effect}</span>
+                                         <div class="flex justify-between items-baseline mb-1">
+                                             <span class="font-bold text-slate-300">{item.name}</span>
+                                             {#if item.attackRoll || item.damage}
+                                                <span class="text-[10px] text-slate-500 font-mono">
+                                                    {item.attackRoll ? item.attackRoll : ''}
+                                                    {item.attackRoll && item.damage ? ' • ' : ''}
+                                                    {item.damage ? `(${item.damage})` : ''}
+                                                </span>
+                                             {/if}
+                                         </div>
+                                         <span class="text-slate-400 text-xs block leading-relaxed whitespace-pre-line">{item.desc || item.description || item.effect}</span>
                                      </div>
                                  {/each}
                              </div>
