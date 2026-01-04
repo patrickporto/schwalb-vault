@@ -9,6 +9,8 @@
   import { beforeNavigate } from '$app/navigation';
   import { browser } from '$app/environment';
   import * as Sentry from "@sentry/svelte";
+  import { googleSession } from '$lib/logic/googleDrive';
+  import { appSettings } from '$lib/stores/characterStore';
 
 
   Sentry.init({
@@ -16,6 +18,33 @@
     sendDefaultPii: true,
     environment: import.meta.env.MODE,
     release: "weird-wizard-vault@" + process.env.APP_VERSION,
+    integrations: [
+      Sentry.replayIntegration()
+    ],
+    // Session Replay
+    replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+    replaysOnErrorSampleRate: 1.0 // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+  });
+
+  $effect(() => {
+    if (browser) {
+        const session = $googleSession;
+        const settings = $appSettings;
+
+        if (session.signedIn && session.userProfile) {
+            Sentry.setUser({
+                id: session.userProfile.id,
+                username: session.userProfile.name,
+                email: session.userProfile.email
+            });
+        } else if (settings.userName) {
+            Sentry.setUser({
+                username: settings.userName
+            });
+        } else {
+            Sentry.setUser(null);
+        }
+    }
   });
 
   let { children } = $props();

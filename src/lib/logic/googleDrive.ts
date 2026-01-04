@@ -22,7 +22,7 @@ export const googleSession = writable<{
   signedIn: boolean;
   accessToken: string | null;
   tokenExpiry: number | null; // Timestamp when token expires
-  userProfile: { name: string; picture: string } | null;
+  userProfile: { id?: string; name: string; picture: string; email?: string } | null;
   isInited: boolean;
 }>({
   signedIn: false,
@@ -86,8 +86,10 @@ async function fetchUserProfile(token: string) {
       googleSession.update(s => ({
         ...s,
         userProfile: {
+          id: data.id || data.sub,
           name: data.name,
-          picture: data.picture
+          picture: data.picture,
+          email: data.email
         }
       }));
       saveSession(); // Save updated profile to storage
