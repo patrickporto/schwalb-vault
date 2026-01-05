@@ -37,6 +37,7 @@
     "vitest-browser-svelte": "^2.0.1"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^5.0.1",
     "@sentry/svelte": "^10.32.1",
     "@sentry/vite-plugin": "^4.6.1",
     "@tailwindcss/vite": "^4.1.18",

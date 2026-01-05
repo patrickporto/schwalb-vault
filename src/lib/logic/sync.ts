@@ -5,6 +5,8 @@ import { sotdlCharacter, sotdlCharacterActions } from '$lib/stores/characterStor
 import { campaignsMap, charactersMap } from '$lib/db';
 import { appId } from '../../app';
 import { trackerUrl } from '../stores/settingsStore';
+import { getBrowserFingerprint } from './fingerprint';
+import { broadcastCombatUpdate, broadcastCampaignUpdate, broadcastCharacterUpdate as broadcastTabCharUpdate } from './tabSync';
 
 // Dynamic config to support user-defined tracker URL
 export function getTrackerConfig() {
@@ -25,7 +27,8 @@ export const syncState = writable({
   lastGmUpdate: 0,
   isGM: false,
   isConnected: false,
-  connectionStatus: 'disconnected' as ConnectionStatus
+  connectionStatus: 'disconnected' as ConnectionStatus,
+  isLeader: false // NEW: Track if this tab is the WebRTC leader
 });
 
 export const isGmOnline = derived(syncState, $s => {
@@ -55,6 +58,121 @@ export const publicCampaigns = writable<any[]>([]);
 // Lobby connection status
 export type LobbyStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 export const lobbyStatus = writable<LobbyStatus>('disconnected');
+
+// --- LEADER ELECTION LOGIC ---
+const LEADER_CHANNEL_NAME = 'sync-leader-election';
+let leaderChannel: BroadcastChannel | null = null;
+let myFingerprint: string | null = null;
+let isLeader = false;
+let leaderHeartbeatInterval: any = null;
+let lastLeaderHeartbeat = 0;
+const ELECTION_TIMEOUT = 1000; // Time to wait for leader response
+const LEADER_TTL = 3000; // Time before considering leader dead
+
+async function initLeaderElection() {
+  if (typeof window === 'undefined') return;
+
+  myFingerprint = await getBrowserFingerprint();
+  // Unique ID for this specific tab instance
+  const tabId = crypto.randomUUID();
+
+  leaderChannel = new BroadcastChannel(LEADER_CHANNEL_NAME);
+
+  leaderChannel.onmessage = (event) => {
+    const { type, senderId, fingerprint } = event.data;
+
+    // Ignore messages from other devices/browsers (different fingerprint)
+    if (fingerprint !== myFingerprint) return;
+
+    if (type === 'heartbeat') {
+      lastLeaderHeartbeat = Date.now();
+      if (isLeader && senderId !== tabId) {
+        // Conflict: Two leaders? Back off if my ID is 'lower' or just resign
+        // Simple resolution: If I see another leader, and I just became one, I resign.
+        // Ideally, incumbent wins.
+      }
+    } else if (type === 'who-is-leader') {
+      if (isLeader) {
+        leaderChannel?.postMessage({ type: 'heartbeat', senderId: tabId, fingerprint: myFingerprint });
+      }
+    } else if (type === 'resign') {
+      // Leader resigned, start election
+      attemptToBecomeLeader(tabId);
+    }
+  };
+
+  // Check if leader exists
+  lastLeaderHeartbeat = 0; // Reset
+  leaderChannel.postMessage({ type: 'who-is-leader', senderId: tabId, fingerprint: myFingerprint });
+
+  setTimeout(() => {
+    if (Date.now() - lastLeaderHeartbeat > ELECTION_TIMEOUT) {
+      becomeLeader(tabId);
+    } else {
+      // Leader exists, becomes follower
+      becomeFollower(tabId);
+    }
+  }, ELECTION_TIMEOUT);
+
+  // Watchdog for leader death
+  setInterval(() => {
+    if (!isLeader && (Date.now() - lastLeaderHeartbeat > LEADER_TTL)) {
+      console.log('[Sync] Leader died, attempting takeover...');
+      attemptToBecomeLeader(tabId);
+    }
+  }, 1000);
+}
+
+function becomeLeader(tabId: string) {
+  if (isLeader) return;
+  console.log('[Sync] Becoming WebRTC Leader');
+  isLeader = true;
+  syncState.update(s => ({ ...s, isLeader: true }));
+
+  // Start Heartbeat
+  if (leaderHeartbeatInterval) clearInterval(leaderHeartbeatInterval);
+  leaderHeartbeatInterval = setInterval(() => {
+    leaderChannel?.postMessage({ type: 'heartbeat', senderId: tabId, fingerprint: myFingerprint });
+  }, 1000);
+
+  // If we were supposed to be connected, connect now
+  // Re-trigger join logic if needed
+  const currentStatus = get(lobbyStatus);
+  if (currentStatus !== 'disconnected') {
+    joinLobby();
+  }
+
+  const state = get(syncState);
+  if (state.roomId) {
+    joinCampaignRoom(state.roomId, state.isGM, state.currentCharacterId);
+  }
+}
+
+function becomeFollower(tabId: string) {
+  if (!isLeader) return;
+  console.log('[Sync] Becoming Follower (stopping WebRTC)');
+  isLeader = false;
+  syncState.update(s => ({ ...s, isLeader: false }));
+
+  if (leaderHeartbeatInterval) {
+    clearInterval(leaderHeartbeatInterval);
+    leaderHeartbeatInterval = null;
+  }
+
+  // Disconnect physical WebRTC, rely on TabSync
+  cleanupAllConnections(false); // False = don't clear state, just connections
+}
+
+function attemptToBecomeLeader(tabId: string) {
+  // Simple election: wait random small delay to reduce conflict, then check again
+  setTimeout(() => {
+    if (Date.now() - lastLeaderHeartbeat > LEADER_TTL) {
+      becomeLeader(tabId);
+    }
+  }, Math.random() * 500);
+}
+
+// --- EXISTING LOGIC MODIFIED ---
 
 /**
  * Check connectivity to a WebSocket tracker
@@ -116,6 +234,8 @@ async function checkTrackerConnection(url: string, timeout = 60000): Promise<boo
 function startConnectionMonitor(url: string) {
   if (connectionMonitorInterval) clearInterval(connectionMonitorInterval);
   connectionMonitorInterval = setInterval(async () => {
+    if (!isLeader) return; // Only leader monitors
+
     // Increased timeout for monitor
     const isOnline = await checkTrackerConnection(url, 60000);
     syncState.update(s => {
@@ -157,6 +277,8 @@ let lobbyMonitorInterval: any = null;
 function startLobbyMonitor(url: string) {
   if (lobbyMonitorInterval) clearInterval(lobbyMonitorInterval);
   lobbyMonitorInterval = setInterval(async () => {
+    if (!isLeader) return;
+
     const isOnline = await checkTrackerConnection(url, 60000);
     lobbyStatus.update(s => {
       if (!isOnline && s === 'connected') {
@@ -172,6 +294,11 @@ function startLobbyMonitor(url: string) {
 let sendDiscovery: any;
 
 export async function joinLobby() {
+  if (!isLeader) {
+    console.log('[Sync] Skipping joinLobby (Is Follower)');
+    return null;
+  }
+
   const currentTracker = get(trackerUrl);
 
   // If lobby already exists, return the existing sendDiscovery function
@@ -257,6 +384,17 @@ export async function joinLobby() {
  * Should be called when a campaign is published to ensure immediate visibility.
  */
 export function announceCampaign(campaignData: { id: string; name: string; gmName?: string; description?: string; system?: string }) {
+  if (!isLeader) {
+    // If we are follower, we can't announce directly via WebRTC.
+    // But user action "Publish" needs to happen.
+    // For now, assume Publish is only triggered by user interaction, and if they are leader it works.
+    // If follower, they might be desynced. Ideally, we should forward this request to Leader via TabSync.
+    // But simplicity first: The "Publish" button likely calls this.
+    // TODO: Handle follower announcement via TabSync if robust robustness needed.
+    console.warn('Cannot announce campaign: Not WebRTC Leader');
+    return false;
+  }
+
   if (!sendDiscovery) {
     console.warn('Cannot announce campaign: lobby not initialized');
     return false;
@@ -275,8 +413,8 @@ export function announceCampaign(campaignData: { id: string; name: string; gmNam
 
 function initLobby() {
   if (typeof window !== 'undefined') {
-    // joinLobby now handles duplicate detection internally and sets sendDiscovery
-    joinLobby().catch(err => console.error('Error initializing lobby:', err));
+    initLeaderElection();
+    // joinLobby() is now called by becomeLeader() if appropriate
   }
 }
 
@@ -289,6 +427,8 @@ if (typeof window !== 'undefined') {
   trackerUrl.subscribe(newUrl => {
     if (newUrl === lastTrackerUrl) return;
     lastTrackerUrl = newUrl;
+
+    if (!isLeader) return;
 
     console.log('Tracker URL changed, reconnecting...');
 
@@ -307,13 +447,15 @@ if (typeof window !== 'undefined') {
 
   // Cleanup on page unload to prevent dangling peer connections
   window.addEventListener('beforeunload', () => {
+    if (isLeader) {
+      leaderChannel?.postMessage({ type: 'resign', senderId: 'leaving', fingerprint: myFingerprint });
+    }
     cleanupAllConnections();
   });
 
   window.addEventListener('online', () => {
+    if (!isLeader) return;
     syncState.update(s => s.isConnected ? { ...s, connectionStatus: 'reconnecting' } : s);
-    // Optionally trigger a reconnnect logic here if needed, but WebRTC might handle it.
-    // For UI feedback, show reconnecting.
     setTimeout(() => {
       if (get(syncState).isConnected) {
         syncState.update(s => ({ ...s, connectionStatus: 'connected' }));
@@ -324,15 +466,12 @@ if (typeof window !== 'undefined') {
   window.addEventListener('offline', () => {
     syncState.update(s => s.isConnected ? { ...s, connectionStatus: 'disconnected' } : s);
   });
-
-  // Note: Removed visibilitychange cleanup as it was causing excessive reconnections
-  // WebRTC connections can survive brief page hides and will be cleaned up on actual navigation
 }
 
 /**
  * Cleanup all WebRTC connections
  */
-function cleanupAllConnections() {
+function cleanupAllConnections(clearState = true) {
   if (lobbyCleanupInterval) {
     clearInterval(lobbyCleanupInterval);
     lobbyCleanupInterval = null;
@@ -353,20 +492,34 @@ function cleanupAllConnections() {
   safeLeave(room, 'room');
   lobby = null;
   room = null;
-  sendDiscovery = null; // Reset to prevent using stale function reference
-  lobbyStatus.set('disconnected');
-  syncState.update(s => ({ ...s, isConnected: false, connectionStatus: 'disconnected' }));
+  sendDiscovery = null;
+
+  if (clearState) {
+    lobbyStatus.set('disconnected');
+    syncState.update(s => ({ ...s, isConnected: false, connectionStatus: 'disconnected' }));
+  }
 }
 
 
 let currentRoomId: string | null = null;
 
 export async function joinCampaignRoom(campaignId: string, isGM: boolean = false, charId: string | null = null) {
+  if (!isLeader) {
+    // Store desire to join, so if we become leader we join
+    syncState.update(s => ({
+      ...s,
+      roomId: campaignId,
+      isGM,
+      currentCharacterId: charId
+    }));
+    console.log('[Sync] Skipping joinCampaignRoom (Follower mode).');
+    return null;
+  }
+
   const targetRoomId = `campaign-${campaignId}`;
 
   // Prevent duplicate connections to the same room
   if (currentRoomId === targetRoomId && room) {
-    // Just update the state if we're already in this room
     syncState.update(s => ({
       ...s,
       isGM,
@@ -422,7 +575,8 @@ export async function joinCampaignRoom(campaignId: string, isGM: boolean = false
       currentCharacterId: charId,
       peers: [],
       roomId: campaignId,
-      lastGmUpdate: 0
+      lastGmUpdate: 0,
+      isLeader: true
     });
 
     // Start monitoring connection stability
@@ -441,6 +595,9 @@ export async function joinCampaignRoom(campaignId: string, isGM: boolean = false
 
     // Listeners
     getCombat((data: any) => {
+      // Broadcast to tabs
+      broadcastCombatUpdate(campaignId, data);
+
       if (!isGM) {
         // Player updates their character state based on GM broadcast
         character.update(c => {
@@ -458,6 +615,9 @@ export async function joinCampaignRoom(campaignId: string, isGM: boolean = false
 
     getCampaign((data: any) => {
       syncState.update(s => ({ ...s, lastGmUpdate: Date.now() }));
+      // Broadcast to tabs
+      broadcastCampaignUpdate(campaignId, data);
+
       if (!isGM) {
         character.update(c => {
           // Only update if values actually changed to avoid reactive loops
@@ -473,8 +633,8 @@ export async function joinCampaignRoom(campaignId: string, isGM: boolean = false
             gmName: data.gmName,
             passwordHash: data.passwordHash,
             system: data.system
-            };
-          });
+          };
+        });
       }
     });
 
@@ -501,6 +661,9 @@ export async function joinCampaignRoom(campaignId: string, isGM: boolean = false
     });
 
     getCharUpdate((charData: any) => {
+      // Broadcast to tabs
+      broadcastTabCharUpdate(campaignId, charData);
+
       if (isGM) {
         // GM updates the campaign's member list
         const current = campaignsMap.get(campaignId);
@@ -695,7 +858,8 @@ export function leaveCampaignRoom() {
     currentCharacterId: null,
     peers: [],
     roomId: null,
-    lastGmUpdate: 0
+    lastGmUpdate: 0,
+    isLeader: isLeader // Preserve leader status
   });
 }
 
@@ -735,6 +899,10 @@ export function resetSyncStateForTesting() {
     clearInterval(campaignHeartbeatInterval);
     campaignHeartbeatInterval = null;
   }
+  if (leaderHeartbeatInterval) {
+    clearInterval(leaderHeartbeatInterval);
+    leaderHeartbeatInterval = null;
+  }
 
   safeLeave(lobby, 'lobby');
   safeLeave(room, 'room');
@@ -746,8 +914,11 @@ export function resetSyncStateForTesting() {
   broadcastCharacterUpdate = null;
   broadcastCampaign = null;
   sendDiscovery = null;
+  leaderChannel?.close();
+  isLeader = false;
 
   // Reset rate limiting
   lastLobbyJoinAttempt = 0;
   lastCampaignJoinAttempt = 0;
 }
+
