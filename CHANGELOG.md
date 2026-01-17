@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/patrickporto/schwalb-vault/compare/v1.0.0...v1.1.0) (2026-01-17)
+
+
+### Features
+
+* Introduce OpenSpec workflow and command guidance for AI agents. ([a2ce563](https://github.com/patrickporto/schwalb-vault/commit/a2ce563ac1b5b1cea2724322f2d3dfe9316b54a9))
+
 # 1.0.0 (2026-01-17)
 
 
