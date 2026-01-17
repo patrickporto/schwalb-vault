@@ -2,7 +2,7 @@
   "private": true,
   "license": "MIT",
   "name": "schwalb-vault",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "type": "module",
   "author": "Patrick Porto <patrick.porto@schwalb.com.br>",
   "scripts": {
